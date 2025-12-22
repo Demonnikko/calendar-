@@ -237,9 +237,10 @@
                 <button onclick="switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Инфо</button>
             </div>
 
-            <div class="p-5 overflow-y-auto custom-scrollbar flex-1">
+            <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
                 <div id="tab-info" class="space-y-4">
-                    <div class="grid grid-cols-5 gap-2">
+                    <!-- Changed from grid-cols-5 to grid-cols-3 on mobile to prevent horizontal scroll -->
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         <button onclick="setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1">
                             <i data-lucide="zap" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Сцена</span>
                         </button>
@@ -259,18 +260,20 @@
 
                     <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors">
                     
-                    <!-- Time & Duration Grid - Perfectly Even -->
+                    <!-- Time & Duration Grid - More compact & separated -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Начало</label>
                             <div class="relative">
-                                <input type="time" id="inp-time" value="19:00" class="w-full h-12 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-base">
+                                <!-- Reduced height h-12 -> h-10 and text size -->
+                                <input type="time" id="inp-time" value="19:00" class="w-full h-10 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Длительность</label>
                             <div class="relative">
-                                <input type="time" id="inp-duration" value="00:30" class="w-full h-12 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-base">
+                                <!-- Reduced height h-12 -> h-10 and text size -->
+                                <input type="time" id="inp-duration" value="00:30" class="w-full h-10 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
                         </div>
                     </div>
