@@ -2,19 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <!-- Добавлен viewport-fit=cover для использования всего экрана на iPhone с "челкой" -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Illusionist OS</title>
     
     <!-- iOS / PWA Настройки -->
-    <meta name="apple-mobile-web-app-capable" content="yes"> <!-- Запуск без интерфейса браузера -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- Прозрачный статус бар -->
-    <meta name="apple-mobile-web-app-title" content="Illusionist OS"> <!-- Название под иконкой -->
-    
-    <!-- Ссылка на иконку. Загрузите файл icon.png в корень репозитория -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Illusionist OS">
     <link rel="apple-touch-icon" href="icon.png">
-    
-    <!-- Иконка для вкладки браузера (фавикон) -->
     <link rel="icon" type="image/png" href="icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +28,6 @@
             color: #e2e8f0;
             overflow: hidden;
             overscroll-behavior: none;
-            /* Исправление для iOS PWA: блокировка скролла всей страницы */
             position: fixed;
             width: 100%;
             height: 100%;
@@ -99,14 +93,15 @@
             width: 100%;
             overflow: hidden;
             gap: 2px;
+            align-items: center;
         }
         .event-label {
             font-size: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-radius: 2px;
-            padding: 2px 3px;
+            border-radius: 4px;
+            padding: 2px 4px;
             text-align: center;
             cursor: pointer;
             transition: opacity 0.2s;
@@ -114,12 +109,12 @@
             font-weight: 600;
             letter-spacing: 0.02em;
             text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            width: 90%;
         }
         .event-label:hover {
             opacity: 0.8;
         }
 
-        /* Стиль для карточки итога месяца */
         .month-summary {
             margin-top: auto;
             background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2));
@@ -135,11 +130,10 @@
             margin-bottom: 2px;
             font-family: monospace;
         }
-        .text-income { color: #34d399; } /* emerald-400 */
-        .text-expense { color: #f87171; } /* red-400 */
-        .text-net { color: #fbbf24; font-weight: bold; } /* amber-400 */
+        .text-income { color: #34d399; }
+        .text-expense { color: #f87171; }
+        .text-net { color: #fbbf24; font-weight: bold; }
 
-        /* Confetti Styles */
         .confetti {
             position: absolute;
             width: 8px;
@@ -152,7 +146,6 @@
             to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
-        /* iOS Safe Area Utilities */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
         
@@ -160,6 +153,25 @@
             .mobile-hidden { display: none !important; }
             button { min-height: 44px; }
         }
+        
+        /* Styles for type buttons in modal */
+        .type-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .type-btn.selected {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .type-btn.selected i {
+            transform: scale(1.1);
+        }
+        /* Specific colors for selected state */
+        .type-btn#type-stage.selected { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
+        .type-btn#type-closeup.selected { border-color: #a855f7; background-color: rgba(168, 85, 247, 0.1); }
+        .type-btn#type-kids.selected { border-color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+        .type-btn#type-concert.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .type-btn#type-rehearsal.selected { border-color: #94a3b8; background-color: rgba(148, 163, 184, 0.1); }
     </style>
 </head>
 <body class="h-screen flex flex-col text-sm md:text-base no-hor-scroll pt-safe">
@@ -170,45 +182,37 @@
     <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[200]"></div>
 
     <!-- App Container -->
-    <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-20 lg:p-6 lg:pb-6 no-hor-scroll">
+    <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-24 lg:p-6 lg:pb-6 no-hor-scroll">
         
         <!-- HEADER -->
         <header class="flex justify-between items-center mb-4 shrink-0 gap-2">
             <div class="flex items-center gap-2 md:gap-3 overflow-hidden">
-                <!-- Premium Calendar Icon with Volume -->
-                <div class="relative w-10 h-10 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#0f0f13] border border-amber-500/20 shadow-[0_8px_16px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.3)]">
-                   <!-- Subtle amber ambient light -->
+                <div class="relative w-9 h-9 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#0f0f13] border border-amber-500/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-500/10 to-transparent opacity-50"></div>
-                   <!-- Icon -->
-                   <i data-lucide="calendar" class="relative z-10 w-5 h-5 md:w-6 md:h-6 text-amber-500 drop-shadow-[0_2px_4px_rgba(245,158,11,0.25)]"></i>
+                   <i data-lucide="calendar" class="relative z-10 w-4 h-4 md:w-6 md:h-6 text-amber-500 drop-shadow-[0_2px_4px_rgba(245,158,11,0.25)]"></i>
                 </div>
                 
                 <div class="min-w-0 flex flex-col justify-center">
-                    <h1 class="text-lg md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight">ILLUSIONIST OS</h1>
-                    <span class="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase leading-none">Calendar</span>
+                    <h1 class="text-sm md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight tracking-wide">ILLUSIONIST OS</h1>
+                    <span class="text-[8px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase leading-none">Calendar</span>
                 </div>
             </div>
 
-            <!-- Header Actions -->
             <div class="flex items-center gap-2 flex-shrink-0">
-                
-                <!-- Month Nav (Compact & Adaptive) -->
                 <div class="flex items-center glass-panel p-0.5 rounded-lg h-8 md:h-10">
                     <button onclick="window.changeMonth(-1)" class="w-8 md:w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-                    <span id="current-month-display" class="px-2 md:px-4 text-center font-display font-bold text-xs md:text-sm whitespace-nowrap min-w-[80px]"></span>
+                    <span id="current-month-display" class="px-2 md:px-4 text-center font-display font-bold text-xs md:text-sm whitespace-nowrap min-w-[70px]"></span>
                     <button onclick="window.changeMonth(1)" class="w-8 md:w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <!-- Today Button -->
                 <button onclick="window.goToToday()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0" title="Сегодня">
                     <i data-lucide="calendar-clock" class="w-4 h-4"></i>
                 </button>
 
-                <!-- Settings Button -->
                 <button onclick="window.openSettings()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
@@ -248,7 +252,6 @@
                         <div class="text-center mb-3 relative">
                             <span id="stat-profit" class="text-3xl font-display font-bold text-white tracking-tight">0</span>
                             <span class="text-lg text-slate-500 font-display ml-1">₽</span>
-                            <!-- Goal Achievement Badge -->
                             <div id="goal-badge" class="hidden absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">
                                 ЦЕЛЬ!
                             </div>
@@ -289,28 +292,26 @@
         </div>
     </div>
 
-    <!-- MAIN ADD BUTTON -->
+    <!-- MAIN ADD BUTTON (Desktop only) -->
     <button onclick="window.openModal()" class="hidden lg:flex fixed bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-2xl shadow-orange-500/40 items-center justify-center z-50 transform hover:scale-110 transition duration-300">
         <i data-lucide="plus" class="w-8 h-8"></i>
     </button>
 
     <!-- MOBILE BOTTOM NAV -->
-    <div class="lg:hidden fixed bottom-0 left-0 w-full bg-[#050507]/90 backdrop-blur-xl border-t border-white/10 z-40 pb-safe">
-        <div class="flex justify-around items-center h-16">
-            <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center gap-1 text-amber-400 w-full h-full justify-center">
-                <i data-lucide="calendar" class="w-5 h-5"></i>
-                <span class="text-[10px] font-bold">Календарь</span>
-            </button>
-            <div class="relative -top-5">
-                <button onclick="window.openModal()" class="w-14 h-14 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 flex items-center justify-center transform active:scale-95 transition border-4 border-[#050507]">
-                    <i data-lucide="plus" class="w-7 h-7"></i>
-                </button>
-            </div>
-            <button onclick="window.switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-500 w-full h-full justify-center">
-                <i data-lucide="layout-list" class="w-5 h-5"></i>
-                <span class="text-[10px] font-bold">Дашборд</span>
-            </button>
-        </div>
+    <div class="lg:hidden fixed bottom-6 left-4 right-4 h-16 bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl z-40 shadow-2xl flex items-center justify-between px-6 pb-0">
+        <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center justify-center gap-1 text-amber-400 w-16 transition-all duration-300">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+            <span class="text-[9px] font-bold tracking-wide">Календарь</span>
+        </button>
+        
+        <button onclick="window.openModal()" class="relative -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center transform active:scale-95 transition border-4 border-[#050507]">
+            <i data-lucide="plus" class="w-7 h-7"></i>
+        </button>
+
+        <button onclick="window.switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-slate-500 w-16 transition-all duration-300">
+            <i data-lucide="layout-list" class="w-5 h-5"></i>
+            <span class="text-[9px] font-bold tracking-wide">Дашборд</span>
+        </button>
     </div>
 
     <!-- EVENT MODAL -->
@@ -331,46 +332,33 @@
             </div>
 
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
-                <div id="tab-info" class="space-y-4">
+                <div id="tab-info" class="space-y-5 max-w-xs mx-auto">
+                    
+                    <!-- Event Types -->
                     <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                        <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 flex flex-col items-center gap-2 overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30 group-[.selected]:ring-2 group-[.selected]:ring-white">
-                                <i data-lucide="star" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-[.selected]:text-amber-400 transition-colors">Сцена</span>
+                        <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all selected">
+                            <i data-lucide="star" class="w-5 h-5"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Сцена</span>
                         </button>
                         
-                        <button onclick="window.setType('closeup')" id="type-closeup" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 flex flex-col items-center gap-2 overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-[.selected]:ring-2 group-[.selected]:ring-white">
-                                <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-[.selected]:text-purple-400 transition-colors">Микромагия</span>
+                        <button onclick="window.setType('closeup')" id="type-closeup" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Микро</span>
                         </button>
 
-                        <button onclick="window.setType('kids')" id="type-kids" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 flex flex-col items-center gap-2 overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-[.selected]:ring-2 group-[.selected]:ring-white">
-                                <i data-lucide="rabbit" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-[.selected]:text-emerald-400 transition-colors">Детское</span>
+                        <button onclick="window.setType('kids')" id="type-kids" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
+                            <i data-lucide="rabbit" class="w-5 h-5"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Дети</span>
                         </button>
 
-                        <button onclick="window.setType('concert')" id="type-concert" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 flex flex-col items-center gap-2 overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-[.selected]:ring-2 group-[.selected]:ring-white">
-                                <i data-lucide="mic-2" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-[.selected]:text-blue-400 transition-colors">Концерт</span>
+                        <button onclick="window.setType('concert')" id="type-concert" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
+                            <i data-lucide="mic-2" class="w-5 h-5"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Концерт</span>
                         </button>
 
-                        <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 flex flex-col items-center gap-2 overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-slate-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center shadow-lg shadow-slate-500/30 group-[.selected]:ring-2 group-[.selected]:ring-white">
-                                <i data-lucide="hourglass" class="w-5 h-5 text-white"></i>
-                            </div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-[.selected]:text-slate-200 transition-colors">Репетиция</span>
+                        <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
+                            <i data-lucide="hourglass" class="w-5 h-5"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">Реп</span>
                         </button>
                     </div>
 
@@ -497,8 +485,6 @@
 
         // Helper to calculate totals for a specific month
         function getMonthTotals(year, month) {
-            // month is 0-indexed here for rendering logic, but events store ISO strings. 
-            // Let's match strictly. ISO month is 1-12.
             const targetMonth = month + 1; 
             
             const monthEvents = events.filter(e => {
@@ -516,23 +502,15 @@
             let changed = false;
             const out = (Array.isArray(list) ? list : []).map(ev => {
                 const e = { ...ev };
-                
-                // normalize money types
                 e.income = Number(e.income) || 0;
                 e.expense = Number(e.expense) || 0;
-
-                // ensure dateISO
                 if (e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
-                
-                // older versions stored e.date as toDateString()
                 if (typeof e.date === 'string') {
-                    // if date already iso
                     if (/^\d{4}-\d{2}-\d{2}$/.test(e.date)) {
                         e.dateISO = e.date;
                         changed = true;
                         return e;
                     }
-                    
                     const parsed = new Date(e.date);
                     if (!isNaN(parsed)) {
                         e.dateISO = toISODateLocal(parsed);
@@ -540,13 +518,10 @@
                         return e;
                     }
                 }
-                
-                // fallback: if nothing works, keep but mark today to avoid breaking UI
                 e.dateISO = e.dateISO || toISODateLocal(new Date());
                 changed = true;
                 return e;
             });
-            
             return { out, changed };
         }
 
@@ -562,15 +537,9 @@
                 const rawEvents = JSON.parse(localStorage.getItem('illusionist_events') || '[]');
                 const mig = migrateEventsToISO(rawEvents);
                 events = mig.out;
-                
                 monthlyGoal = Number(JSON.parse(localStorage.getItem('illusionist_goal') || '200000')) || 200000;
-                
-                if (mig.changed) {
-                    localStorage.setItem('illusionist_events', JSON.stringify(events));
-                }
-            } catch(e) { 
-                events = []; 
-            }
+                if (mig.changed) localStorage.setItem('illusionist_events', JSON.stringify(events));
+            } catch(e) { events = []; }
             renderApp();
         }
 
@@ -598,18 +567,15 @@
             reader.onload = (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    
                     if (data.events) {
                         const mig = migrateEventsToISO(data.events);
                         events = mig.out;
                         localStorage.setItem('illusionist_events', JSON.stringify(events));
                     }
-                    
                     if (data.goal !== undefined) {
                         monthlyGoal = Number(data.goal) || monthlyGoal;
                         localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
                     }
-                    
                     renderApp();
                     window.closeSettings();
                     window.showToast('Данные восстановлены!');
@@ -621,7 +587,6 @@
         };
 
         window.changeMonth = (delta) => {
-            // stable month switching
             const y = currentDate.getFullYear();
             const m = currentDate.getMonth();
             currentDate = new Date(y, m + delta, 1);
@@ -707,14 +672,37 @@
             document.querySelectorAll('.type-btn').forEach(b => {
                 // Reset styling logic handled by CSS classes now, just managing 'selected' class
                 b.classList.remove('selected');
-                b.classList.remove('ring-1');
-                b.classList.remove('ring-white/20');
+                b.classList.remove('border-amber-500');
+                b.classList.remove('bg-amber-500/10');
+                b.classList.remove('text-amber-400');
+                b.classList.remove('border-purple-500');
+                b.classList.remove('bg-purple-500/10');
+                b.classList.remove('text-purple-400');
+                b.classList.remove('border-emerald-500');
+                b.classList.remove('bg-emerald-500/10');
+                b.classList.remove('text-emerald-400');
+                b.classList.remove('border-blue-500');
+                b.classList.remove('bg-blue-500/10');
+                b.classList.remove('text-blue-400');
+                b.classList.remove('border-slate-500');
+                b.classList.remove('bg-slate-500/10');
+                b.classList.remove('text-slate-300');
+                b.classList.add('border-white/5');
+                b.classList.add('bg-white/5');
+                b.classList.add('text-slate-500');
             });
             const activeBtn = document.getElementById(`type-${type}`);
             if(activeBtn) {
                 activeBtn.classList.add('selected');
-                activeBtn.classList.add('ring-1');
-                activeBtn.classList.add('ring-white/20');
+                activeBtn.classList.remove('border-white/5');
+                activeBtn.classList.remove('bg-white/5');
+                activeBtn.classList.remove('text-slate-500');
+                
+                if(type === 'stage') activeBtn.classList.add('border-amber-500', 'bg-amber-500/10', 'text-amber-400');
+                else if(type === 'closeup') activeBtn.classList.add('border-purple-500', 'bg-purple-500/10', 'text-purple-400');
+                else if(type === 'kids') activeBtn.classList.add('border-emerald-500', 'bg-emerald-500/10', 'text-emerald-400');
+                else if(type === 'concert') activeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-400');
+                else if(type === 'rehearsal') activeBtn.classList.add('border-slate-500', 'bg-slate-500/10', 'text-slate-300');
             }
         };
 
@@ -732,7 +720,6 @@
             if (!ev) return;
 
             editingId = id;
-            
             document.getElementById('inp-title').value = ev.title || '';
             document.getElementById('inp-time').value = ev.time || '19:00';
             document.getElementById('inp-duration').value = ev.duration || '00:30';
@@ -749,7 +736,7 @@
             window.openModal(true);
         };
 
-        window.saveEvent = () => {
+        window.saveEvent = async () => {
             const title = document.getElementById('inp-title').value.trim();
             const dateISO = document.getElementById('inp-date').value;
             
@@ -846,7 +833,6 @@
                 container.appendChild(el);
                 setTimeout(() => { el.remove(); }, 5000);
             }
-            
             window.showToast('🎉 Цель достигнута! Так держать!');
         }
 
@@ -874,20 +860,18 @@
             const selectedISO = toISODateLocal(selectedDate);
             const todayISO = toISODateLocal(new Date());
 
-            // Pre-calculate totals for this month for the summary card
             const monthTotals = getMonthTotals(year, month);
 
             for(let d=1; d<=daysInMonth; d++) {
                 const dateISO = `${year}-${pad2(month+1)}-${pad2(d)}`;
                 const isSelected = dateISO === selectedISO;
                 const isToday = dateISO === todayISO;
-                const isLastDay = d === daysInMonth; // Check if it's the last day
+                const isLastDay = d === daysInMonth;
                 
                 const dayEvents = events.filter(e => e.dateISO === dateISO);
                 const dayProfit = dayEvents.reduce((acc, curr) => acc + (Number(curr.income)||0), 0);
 
                 let eventLabels = '';
-                // Show fewer labels on last day to make room for summary if needed, or just append
                 const sliceCount = isLastDay ? 2 : 3; 
                 dayEvents.slice(0, sliceCount).forEach(e => {
                     const typeConfig = TYPES[e.type] || TYPES.stage;
@@ -898,7 +882,6 @@
                     ? `<span class="hidden md:block absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>` 
                     : '';
 
-                // Month Summary Card Logic
                 let summaryHtml = '';
                 if (isLastDay) {
                     const k = (n) => (n >= 1000 ? (n/1000).toFixed(1) + 'k' : n);
@@ -913,7 +896,6 @@
                 }
 
                 const cell = document.createElement('div');
-                // min-h changed to allow auto growth for summary
                 cell.className = `relative rounded-xl p-1 min-h-[80px] cursor-pointer border transition-all duration-300 flex flex-col items-center justify-start gap-1
                     ${isSelected 
                         ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/30' 
@@ -923,8 +905,7 @@
                     selectedDate = new Date(year, month, d);
                     renderCalendar();
                     renderSidebar();
-                    // Optional: Open modal on tap? Let's keep it to selection for now, double tap or button for add.
-                    // window.openModal(false);
+                    window.openModal(false);
                 };
                 
                 cell.innerHTML = `
@@ -1069,7 +1050,6 @@
             goalBar.style.width = `${pct}%`;
         }
 
-        // Particles: pause on hidden + respect reduced motion
         let particleRAF = null;
         let particleState = { running: false, ctx: null, canvas: null, particles: [] };
 
