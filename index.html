@@ -77,6 +77,25 @@
             max-width: 100vw;
         }
         
+        /* Стили для ячейки календаря, чтобы текст влезал */
+        .calendar-cell-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: hidden;
+        }
+        .event-label {
+            font-size: 9px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            padding: 1px 2px;
+            margin-top: 1px;
+            text-align: center;
+        }
+        
         @media (max-width: 1024px) {
             .mobile-hidden { display: none !important; }
             button { min-height: 44px; }
@@ -227,7 +246,7 @@
                 <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
             </div>
 
-            <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0">
+            <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0 justify-center">
                 <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
                 <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Шоу</button>
                 <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
@@ -235,41 +254,42 @@
             </div>
 
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
-                <div id="tab-info" class="space-y-4">
-                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                        <button onclick="window.setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1">
+                <div id="tab-info" class="space-y-4 max-w-sm mx-auto">
+                    <!-- Types -->
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 justify-center">
+                        <button onclick="window.setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1 justify-center w-full">
                             <i data-lucide="zap" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Сцена</span>
                         </button>
-                        <button onclick="window.setType('closeup')" id="type-closeup" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1">
+                        <button onclick="window.setType('closeup')" id="type-closeup" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full">
                             <i data-lucide="sparkles" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Микро</span>
                         </button>
-                        <button onclick="window.setType('kids')" id="type-kids" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1">
+                        <button onclick="window.setType('kids')" id="type-kids" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full">
                             <i data-lucide="wand-2" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Дети</span>
                         </button>
-                        <button onclick="window.setType('concert')" id="type-concert" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1">
+                        <button onclick="window.setType('concert')" id="type-concert" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full">
                             <i data-lucide="mic-2" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Концерт</span>
                         </button>
-                        <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1">
+                        <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full">
                             <i data-lucide="clock" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Реп</span>
                         </button>
                     </div>
 
-                    <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors">
+                    <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors text-center">
                     
                     <div>
-                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1">Дата</label>
-                        <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Дата</label>
+                        <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div class="flex flex-col gap-1.5">
-                            <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Начало</label>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold pl-1 text-center">Начало</label>
                             <div class="relative">
                                 <input type="time" id="inp-time" value="19:00" class="w-full h-10 bg-black/30 border border-white/10 rounded-lg px-2 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
                         </div>
                         <div class="flex flex-col gap-1.5">
-                            <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Длительность</label>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold pl-1 text-center">Длительность</label>
                             <div class="relative">
                                 <input type="time" id="inp-duration" value="00:30" class="w-full h-10 bg-black/30 border border-white/10 rounded-lg px-2 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
@@ -277,18 +297,18 @@
                     </div>
 
                     <div>
-                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1">Локация</label>
-                        <input type="text" id="inp-location" placeholder="Ресторан..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Локация</label>
+                        <input type="text" id="inp-location" placeholder="Ресторан..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1">Имя Клиента</label>
-                            <input type="text" id="inp-client-name" placeholder="Иван..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Имя Клиента</label>
+                            <input type="text" id="inp-client-name" placeholder="Иван..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
                         </div>
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1">Телефон</label>
-                            <input type="tel" id="inp-client-phone" placeholder="+7..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Телефон</label>
+                            <input type="tel" id="inp-client-phone" placeholder="+7..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
                         </div>
                     </div>
                 </div>
@@ -302,13 +322,13 @@
                 </div>
 
                 <div id="tab-finance" class="hidden space-y-4">
-                    <div class="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                    <div class="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
                         <label class="text-xs text-emerald-400 font-bold uppercase block mb-1">Гонорар</label>
-                        <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none">
+                        <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center">
                     </div>
-                    <div class="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                    <div class="p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
                         <label class="text-xs text-red-400 font-bold uppercase block mb-1">Расход</label>
-                        <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none">
+                        <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center">
                     </div>
                 </div>
 
@@ -674,19 +694,25 @@
                 const dayEvents = events.filter(e => e.date === dateStr);
                 const dayProfit = dayEvents.reduce((acc, curr) => acc + (Number(curr.income)||0), 0);
 
-                let dotsHtml = `<div class="flex gap-0.5 mt-1 justify-center flex-wrap px-1 h-2">`;
-                dayEvents.slice(0, 4).forEach(e => {
+                let eventLabels = '';
+                dayEvents.slice(0, 2).forEach(e => {
                     const colorClass = TYPES[e.type]?.text || 'text-white';
-                    dotsHtml += `<div class="w-1 h-1 rounded-full ${colorClass} bg-current shadow-[0_0_2px_currentColor]"></div>`;
+                    // Using text-white for visibility on dark background, but can use type color.
+                    // Let's use truncated white text for cleanliness or type color.
+                    eventLabels += `<div class="event-label text-slate-200">${e.title}</div>`;
                 });
-                dotsHtml += `</div>`;
-
+                
+                // If more than 2, add dots for others? Or just stick to 2.
+                // Or if only 1 event, show dots if no space? 
+                // Let's rely on eventLabels. If empty, show dots if profit?
+                // Actually user asked for "minimal info of what was added".
+                
                 let profitHtml = dayProfit > 0 
                     ? `<span class="hidden md:block absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>` 
                     : '';
 
                 const cell = document.createElement('div');
-                cell.className = `relative rounded-xl p-1 min-h-[70px] cursor-pointer border transition-all duration-300 flex flex-col items-center justify-between
+                cell.className = `relative rounded-xl p-1 min-h-[80px] cursor-pointer border transition-all duration-300 flex flex-col items-center justify-start gap-1
                     ${isSelected 
                         ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/30' 
                         : 'border-transparent hover:bg-white/5 hover:border-white/10'}`;
@@ -697,11 +723,15 @@
                     renderSidebar();
                 };
                 cell.innerHTML = `
-                    <span class="w-6 h-6 flex items-center justify-center rounded-lg text-xs font-semibold transition ${isToday ? 'bg-amber-500 text-black shadow-lg font-bold' : 'text-slate-400'}">
-                        ${d}
-                    </span>
-                    ${profitHtml}
-                    ${dotsHtml}
+                    <div class="w-full flex justify-center relative">
+                        <span class="w-6 h-6 flex items-center justify-center rounded-lg text-xs font-semibold transition ${isToday ? 'bg-amber-500 text-black shadow-lg font-bold' : 'text-slate-400'}">
+                            ${d}
+                        </span>
+                        ${profitHtml}
+                    </div>
+                    <div class="calendar-cell-content">
+                        ${eventLabels}
+                    </div>
                 `;
                 grid.appendChild(cell);
             }
@@ -728,6 +758,20 @@
                     el.className = 'group relative bg-white/5 rounded-xl p-3 border border-white/5 hover:border-amber-500/30 transition animate-enter cursor-pointer';
                     el.onclick = () => window.editEvent(e.id);
                     
+                    // Construct Full Info Block
+                    let clientBlock = '';
+                    if (e.clientName || e.clientPhone) {
+                        clientBlock = `<div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">`;
+                        if(e.clientName) clientBlock += `<div class="flex items-center gap-2 text-xs text-slate-300"><i data-lucide="user" class="w-3 h-3 text-slate-500"></i> ${e.clientName}</div>`;
+                        if(e.clientPhone) clientBlock += `<a href="tel:${e.clientPhone}" onclick="event.stopPropagation()" class="flex items-center gap-2 text-xs text-amber-400 hover:text-amber-300"><i data-lucide="phone" class="w-3 h-3"></i> ${e.clientPhone}</a>`;
+                        clientBlock += `</div>`;
+                    }
+
+                    let notesBlock = '';
+                    if (e.notes) {
+                        notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
+                    }
+
                     el.innerHTML = `
                         <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r ${t.color}"></div>
                         <div class="pl-3">
@@ -739,9 +783,12 @@
                                 </div>
                             </div>
                             <h4 class="text-white font-display font-semibold text-base leading-tight mb-1">${e.title}</h4>
-                            ${e.location ? `<div class="text-xs text-slate-400 flex items-center gap-1 mb-2"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>` : ''}
-                            ${e.clientName || e.clientPhone ? `<div class="flex items-center gap-3 mb-2 pt-2 border-t border-white/5">${e.clientName ? `<div class="flex items-center gap-1 text-xs text-slate-300"><i data-lucide="user" class="w-3 h-3 text-slate-500"></i> ${e.clientName}</div>` : ''}${e.clientPhone ? `<a href="tel:${e.clientPhone}" onclick="event.stopPropagation()" class="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20"><i data-lucide="phone" class="w-3 h-3"></i> Позвонить</a>` : ''}</div>` : ''}
-                            <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-1">
+                            ${e.location ? `<div class="text-xs text-slate-400 flex items-center gap-1 mb-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>` : ''}
+                            
+                            ${clientBlock}
+                            ${notesBlock}
+
+                            <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
                                 ${profit}
                                 <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
