@@ -86,18 +86,19 @@
             gap: 2px;
         }
         .event-label {
-            font-size: 9px;
+            font-size: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-radius: 3px;
-            padding: 2px 4px;
+            border-radius: 2px;
+            padding: 2px 3px;
             text-align: center;
             cursor: pointer;
             transition: opacity 0.2s;
             color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
         }
         .event-label:hover {
             opacity: 0.8;
@@ -263,15 +264,23 @@
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
                 <div id="tab-info" class="space-y-5 max-w-xs mx-auto">
                     
-                    <!-- Color Picker -->
-                    <div class="flex justify-center gap-3">
-                        <div class="flex gap-2 p-1 bg-black/30 rounded-full border border-white/5">
-                            <button onclick="window.setColor('amber-500')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition ring-2 ring-transparent focus:ring-white color-btn" data-color="amber-500"></button>
-                            <button onclick="window.setColor('purple-500')" class="w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition ring-2 ring-transparent focus:ring-white color-btn" data-color="purple-500"></button>
-                            <button onclick="window.setColor('emerald-500')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition ring-2 ring-transparent focus:ring-white color-btn" data-color="emerald-500"></button>
-                            <button onclick="window.setColor('blue-500')" class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition ring-2 ring-transparent focus:ring-white color-btn" data-color="blue-500"></button>
-                            <button onclick="window.setColor('rose-500')" class="w-6 h-6 rounded-full bg-rose-500 hover:scale-110 transition ring-2 ring-transparent focus:ring-white color-btn" data-color="rose-500"></button>
-                        </div>
+                    <!-- Event Types (Restored & Elegant) -->
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 justify-center">
+                        <button onclick="window.setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1 justify-center w-full transition-all">
+                            <i data-lucide="zap" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Сцена</span>
+                        </button>
+                        <button onclick="window.setType('closeup')" id="type-closeup" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Микро</span>
+                        </button>
+                        <button onclick="window.setType('kids')" id="type-kids" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all">
+                            <i data-lucide="wand-2" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Дети</span>
+                        </button>
+                        <button onclick="window.setType('concert')" id="type-concert" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all">
+                            <i data-lucide="mic-2" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Концерт</span>
+                        </button>
+                        <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all">
+                            <i data-lucide="clock" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Реп</span>
+                        </button>
                     </div>
 
                     <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors text-center font-bold">
@@ -327,7 +336,7 @@
                 </div>
             </div>
 
-            <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-8 md:pb-5 shrink-0 flex flex-col gap-2 items-center">
+            <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-8 md:pb-5 shrink-0 flex flex-col gap-3 items-center">
                 <button onclick="window.saveEvent()" class="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg text-lg hover:scale-[1.02] transition">
                     Сохранить
                 </button>
@@ -374,12 +383,12 @@
 
     <script>
         const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-        const COLORS = {
-            'amber-500': 'bg-amber-500',
-            'purple-500': 'bg-purple-500',
-            'emerald-500': 'bg-emerald-500',
-            'blue-500': 'bg-blue-500',
-            'rose-500': 'bg-rose-500'
+        const TYPES = {
+            'stage': { label: 'Сцена', color: 'bg-gradient-to-r from-amber-400 to-orange-600', text: 'text-amber-100', icon: 'zap', border: 'border-amber-500' },
+            'closeup': { label: 'Микромагия', color: 'bg-gradient-to-r from-purple-400 to-indigo-600', text: 'text-purple-100', icon: 'sparkles', border: 'border-purple-500' },
+            'kids': { label: 'Детское шоу', color: 'bg-gradient-to-r from-emerald-400 to-teal-600', text: 'text-emerald-100', icon: 'wand-2', border: 'border-emerald-500' },
+            'concert': { label: 'Концерт', color: 'bg-gradient-to-r from-blue-400 to-cyan-600', text: 'text-blue-100', icon: 'mic-2', border: 'border-blue-500' },
+            'rehearsal': { label: 'Репетиция', color: 'bg-gradient-to-r from-slate-400 to-slate-600', text: 'text-slate-200', icon: 'clock', border: 'border-slate-500' }
         };
 
         let currentDate = new Date();
@@ -387,7 +396,7 @@
         let events = [];
         let monthlyGoal = 200000;
         
-        let currentColor = 'amber-500';
+        let currentType = 'stage';
         let currentSetlist = [];
         let editingId = null;
 
@@ -500,7 +509,7 @@
                 document.getElementById('inp-expense').value = '';
                 document.getElementById('inp-notes').value = '';
                 currentSetlist = [];
-                currentColor = 'amber-500';
+                currentType = 'stage';
                 
                 const y = selectedDate.getFullYear();
                 const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -512,7 +521,7 @@
             
             renderSetlist();
             window.switchTab('info');
-            window.updateColorSelection();
+            window.setType(currentType || 'stage'); // Reset UI selection
         };
 
         window.closeModal = () => {
@@ -528,20 +537,29 @@
             document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition";
         };
 
-        window.setColor = (color) => {
-            currentColor = color;
-            window.updateColorSelection();
-        };
-
-        window.updateColorSelection = () => {
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                btn.classList.remove('ring-white');
-                btn.classList.add('ring-transparent');
-                if (btn.dataset.color === currentColor) {
-                    btn.classList.remove('ring-transparent');
-                    btn.classList.add('ring-white');
-                }
+        window.setType = (type) => {
+            currentType = type;
+            const t = TYPES[type];
+            document.querySelectorAll('.type-btn').forEach(b => {
+                // Reset to default style
+                b.className = 'type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all hover:bg-white/10';
             });
+            const activeBtn = document.getElementById(`type-${type}`);
+            if(activeBtn) {
+                // Apply active style from TYPE config
+                // We use inline style or specific classes. Let's use specific logic
+                // Construct class string based on type
+                // Actually, let's just use the classes from TYPES config if possible, or manual mapping
+                // Manual mapping for simplicity here based on previous code logic but updated
+                let activeClass = '';
+                if(type === 'stage') activeClass = 'border-amber-500 bg-amber-500/10 text-amber-400';
+                else if(type === 'closeup') activeClass = 'border-purple-500 bg-purple-500/10 text-purple-400';
+                else if(type === 'kids') activeClass = 'border-emerald-500 bg-emerald-500/10 text-emerald-400';
+                else if(type === 'concert') activeClass = 'border-blue-500 bg-blue-500/10 text-blue-400';
+                else if(type === 'rehearsal') activeClass = 'border-slate-500 bg-slate-500/10 text-slate-300';
+                
+                activeBtn.className = `type-btn p-2 rounded-xl border flex flex-col items-center gap-1 justify-center w-full transition-all ${activeClass}`;
+            }
         };
 
         window.addTrick = () => {
@@ -568,7 +586,7 @@
             document.getElementById('inp-expense').value = ev.expense || '';
             document.getElementById('inp-notes').value = ev.notes || '';
             currentSetlist = ev.setlist || [];
-            currentColor = ev.color || 'amber-500';
+            currentType = ev.type || 'stage';
             
             const dateInput = document.getElementById('inp-date');
             if (ev.date) {
@@ -600,7 +618,7 @@
                 location: document.getElementById('inp-location').value,
                 clientName: document.getElementById('inp-client-name').value,
                 clientPhone: document.getElementById('inp-client-phone').value,
-                color: currentColor,
+                type: currentType,
                 income: document.getElementById('inp-income').value,
                 expense: document.getElementById('inp-expense').value,
                 notes: document.getElementById('inp-notes').value,
@@ -693,8 +711,9 @@
 
                 let eventLabels = '';
                 dayEvents.slice(0, 3).forEach(e => {
-                    const bgColor = COLORS[e.color] || 'bg-amber-500';
-                    eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${bgColor}">${e.title}</div>`;
+                    // Use type config for color
+                    const typeConfig = TYPES[e.type] || TYPES['stage'];
+                    eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${typeConfig.color} ${typeConfig.text} border-b ${typeConfig.border}/20 shadow-sm">${typeConfig.label}</div>`;
                 });
                 
                 let profitHtml = dayProfit > 0 
@@ -741,11 +760,7 @@
                 list.innerHTML = `<div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-50"><i data-lucide="wand-2" class="w-10 h-10"></i><p class="text-sm">Нет шоу</p></div>`;
             } else {
                 dayEvents.forEach(e => {
-                    const bgColor = COLORS[e.color] || 'bg-amber-500';
-                    const textColor = e.color === 'amber-500' ? 'text-amber-400' : 
-                                      e.color === 'purple-500' ? 'text-purple-400' :
-                                      e.color === 'emerald-500' ? 'text-emerald-400' :
-                                      e.color === 'blue-500' ? 'text-blue-400' : 'text-rose-400';
+                    const t = TYPES[e.type] || TYPES['stage'];
                     const profit = Number(e.income) > 0 ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${Number(e.income).toLocaleString()}</div>` : '';
                     
                     const el = document.createElement('div');
@@ -765,11 +780,18 @@
                         notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
                     }
 
+                    // For the sidebar strip color, we use a single color from the gradient to keep it clean, or the first color of the gradient
+                    // Let's use a mapping for simple solid colors for the strip
+                    const stripColor = e.type === 'stage' ? 'bg-amber-500' : 
+                                       e.type === 'closeup' ? 'bg-purple-500' : 
+                                       e.type === 'kids' ? 'bg-emerald-500' : 
+                                       e.type === 'concert' ? 'bg-blue-500' : 'bg-slate-500';
+
                     el.innerHTML = `
-                        <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r ${bgColor}"></div>
+                        <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r ${stripColor}"></div>
                         <div class="pl-3">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] font-bold uppercase tracking-wider ${textColor} flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Событие</span>
+                                <span class="text-[9px] font-bold uppercase tracking-wider ${t.text} flex items-center gap-1"><i data-lucide="${t.icon}" class="w-3 h-3"></i> ${t.label}</span>
                                 <div class="flex items-center gap-2">
                                     ${e.duration ? `<span class="text-[10px] text-amber-500/70 border border-amber-500/20 px-1 rounded">${e.duration}</span>` : ''}
                                     <span class="text-xs font-mono text-slate-500">${e.time}</span>
