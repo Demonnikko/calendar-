@@ -145,6 +145,7 @@
 
             <!-- Header Actions -->
             <div class="flex items-center gap-2 flex-shrink-0">
+                
                 <!-- Month Nav (Compact & Adaptive) -->
                 <div class="flex items-center glass-panel p-0.5 rounded-lg h-8 md:h-10">
                     <button onclick="window.changeMonth(-1)" class="w-8 md:w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
@@ -155,6 +156,11 @@
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
                 </div>
+
+                <!-- Today Button -->
+                <button onclick="window.goToToday()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0" title="Сегодня">
+                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                </button>
 
                 <!-- Settings Button -->
                 <button onclick="window.openSettings()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0">
@@ -281,7 +287,7 @@
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
                 <div id="tab-info" class="space-y-5 max-w-xs mx-auto">
                     
-                    <!-- Event Types (Restored & Elegant) -->
+                    <!-- Event Types -->
                     <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 justify-center">
                         <button onclick="window.setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1 justify-center w-full transition-all">
                             <i data-lucide="zap" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Сцена</span>
@@ -437,12 +443,13 @@
         window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden');
 
         window.exportData = () => {
+            const dateStr = new Date().toISOString().split('T')[0];
             const data = { events: events, goal: monthlyGoal, version: '1.0' };
             const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Chronos_Backup_${new Date().toLocaleDateString()}.json`;
+            a.download = `Chronos_Backup_${dateStr}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -515,6 +522,9 @@
             const dateInput = document.getElementById('inp-date');
             
             if(!isEdit) {
+                // Если вызвано для новой даты (выбрана через календарь)
+                // selectedDate уже обновлен в renderCalendar при клике
+                
                 editingId = null;
                 document.getElementById('btn-delete').classList.add('hidden');
                 document.getElementById('inp-title').value = '';
@@ -631,8 +641,8 @@
                 clientName: document.getElementById('inp-client-name').value,
                 clientPhone: document.getElementById('inp-client-phone').value,
                 type: currentType,
-                income: document.getElementById('inp-income').value,
-                expense: document.getElementById('inp-expense').value,
+                income: Number(document.getElementById('inp-income').value) || 0,
+                expense: Number(document.getElementById('inp-expense').value) || 0,
                 notes: document.getElementById('inp-notes').value,
                 setlist: currentSetlist,
                 date: eventDateStr 
@@ -763,6 +773,8 @@
                     selectedDate = new Date(year, month, d);
                     renderCalendar();
                     renderSidebar();
+                    // Open modal immediately on tap, using current logic for new event
+                    window.openModal(false);
                 };
                 cell.innerHTML = `
                     <div class="w-full flex justify-center relative">
@@ -836,7 +848,7 @@
 
                             <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
                                 ${profit}
-                                <button onclick="event.stopPropagation(); window.deleteEvent(${e.id})" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     `;
