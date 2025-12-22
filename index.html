@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illusionist OS: Chronos</title>
+    
+    <!-- Подключаем Tailwind CSS для стилей -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Подключаем иконки Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold-primary: #f59e0b;
+            --dark-bg: #050507;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
+            overflow: hidden; /* Чтобы не было лишних скроллов */
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Текстура шума */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Эффект стекла */
+        .glass-panel {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.6) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.5); }
+
+        /* Анимации */
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-enter { animation: fade-in 0.3s ease-out forwards; }
+        
+        .tab-active {
+            background-color: rgba(51, 65, 85, 0.5);
+            color: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Канвас для частиц */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Фоны -->
+    <div class="noise-overlay"></div>
+    <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Основной Контент -->
+    <div class="relative z-10 max-w-7xl mx-auto w-full h-full p-4 md:p-6 flex flex-col">
+        
+        <!-- HEADER -->
+        <header class="flex justify-between items-center mb-6 shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="relative w-12 h-12 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    <i data-lucide="sparkles" class="text-amber-400 w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600">CHRONOS</h1>
+                    <p class="text-[10px] text-amber-500/80 font-bold tracking-[0.2em] uppercase">Illusionist OS</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 glass-panel p-1 rounded-xl">
+                <button onclick="changeMonth(-1)" class="p-2 hover:bg-white/10 rounded-lg transition text-slate-400 hover:text-white">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                <span id="current-month-display" class="w-32 text-center font-display font-semibold text-lg"></span>
+                <button onclick="changeMonth(1)" class="p-2 hover:bg-white/10 rounded-lg transition text-slate-400 hover:text-white">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <button onclick="goToToday()" class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/50 border border-white/10 hover:bg-slate-700 hover:text-amber-400 transition">
+                <i data-lucide="calendar" class="w-4 h-4"></i> Сегодня
+            </button>
+        </header>
+
+        <!-- MAIN GRID -->
+        <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden pb-4">
+            
+            <!-- CALENDAR -->
+            <div class="lg:col-span-8 glass-panel rounded-2xl p-6 flex flex-col relative overflow-hidden">
+                <!-- Дни недели -->
+                <div class="grid grid-cols-7 mb-2">
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Пн</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Вт</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Ср</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Чт</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Пт</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Сб</div>
+                    <div class="text-center text-slate-500 text-xs font-bold uppercase py-2">Вс</div>
+                </div>
+                <!-- Сетка календаря -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2 flex-1 auto-rows-fr overflow-y-auto custom-scrollbar pr-1">
+                    <!-- JS сгенерирует ячейки здесь -->
+                </div>
+            </div>
+
+            <!-- SIDEBAR -->
+            <div class="lg:col-span-4 flex flex-col gap-6 h-full overflow-hidden">
+                
+                <!-- STATS CARD -->
+                <div class="glass-panel rounded-2xl p-5 relative overflow-hidden shrink-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Финансы
+                        </h3>
+                        <span class="text-[10px] text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded bg-emerald-500/10">LIVE</span>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <span id="stat-profit" class="text-4xl font-display font-bold text-white tracking-tight">0</span>
+                        <span class="text-xl text-slate-500 font-display ml-1">₽</span>
+                    </div>
+
+                    <!-- Goal Bar -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-1 text-slate-400">
+                            <span>Цель</span>
+                            <span id="goal-amount" class="cursor-pointer hover:text-white border-b border-dashed border-slate-600" onclick="editGoal()">200,000 ₽</span>
+                        </div>
+                        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden relative">
+                            <div id="goal-progress" class="h-full bg-gradient-to-r from-amber-700 to-yellow-400 transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-1 text-[10px]">
+                            <span class="text-slate-500">0%</span>
+                            <span id="goal-percent" class="text-amber-400 font-bold">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-center">
+                        <div class="bg-white/5 p-2 rounded-lg">
+                            <p class="text-[9px] text-slate-500 uppercase">Доход</p>
+                            <p id="stat-income" class="text-sm font-bold text-emerald-400">0</p>
+                        </div>
+                        <div class="bg-white/5 p-2 rounded-lg">
+                            <p class="text-[9px] text-slate-500 uppercase">Расход</p>
+                            <p id="stat-expense" class="text-sm font-bold text-red-400">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVENTS LIST -->
+                <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-0 relative overflow-hidden">
+                    <div class="p-5 border-b border-white/5 bg-slate-900/30 shrink-0 flex justify-between items-center">
+                        <div>
+                            <h2 id="selected-date-big" class="text-3xl font-display font-bold text-white"></h2>
+                            <p id="selected-weekday" class="text-amber-500 text-xs uppercase font-bold tracking-widest mt-1"></p>
+                        </div>
+                        <button onclick="openModal()" class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg hover:scale-105 transition flex items-center justify-center">
+                            <i data-lucide="plus" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+
+                    <div id="events-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                        <!-- JS сгенерирует список событий здесь -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="event-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <h3 class="text-xl font-display font-bold text-white">Новое Событие</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg">
+                <button onclick="switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-xs font-bold uppercase rounded transition">Инфо</button>
+                <button onclick="switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-xs font-bold uppercase text-slate-500 hover:text-white rounded transition">Шоу</button>
+                <button onclick="switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-xs font-bold uppercase text-slate-500 hover:text-white rounded transition">Касса</button>
+                <button onclick="switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-xs font-bold uppercase text-slate-500 hover:text-white rounded transition">Заметки</button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                
+                <!-- TAB: INFO -->
+                <div id="tab-info" class="space-y-4">
+                    <div class="grid grid-cols-4 gap-2">
+                        <!-- Types Generated via JS or hardcoded -->
+                        <button onclick="setType('stage')" id="type-stage" class="type-btn p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-1 transition">
+                            <i data-lucide="zap" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Сцена</span>
+                        </button>
+                        <button onclick="setType('closeup')" id="type-closeup" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-1 transition">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Микро</span>
+                        </button>
+                        <button onclick="setType('kids')" id="type-kids" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-1 transition">
+                            <i data-lucide="wand-2" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Дети</span>
+                        </button>
+                        <button onclick="setType('rehearsal')" id="type-rehearsal" class="type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-1 transition">
+                            <i data-lucide="clock" class="w-4 h-4"></i> <span class="text-[9px] font-bold uppercase">Реп</span>
+                        </button>
+                    </div>
+
+                    <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-amber-500/50 outline-none">
+                    
+                    <div class="flex gap-3">
+                        <input type="time" id="inp-time" value="19:00" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
+                        <input type="text" id="inp-location" placeholder="Локация" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- TAB: SETLIST -->
+                <div id="tab-setlist" class="hidden space-y-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="inp-trick" placeholder="Трюк (напр. Карты)" class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
+                        <button onclick="addTrick()" class="bg-amber-600 px-4 rounded-xl text-white"><i data-lucide="plus"></i></button>
+                    </div>
+                    <ul id="setlist-container" class="space-y-2 text-sm text-slate-300">
+                        <!-- Tricks go here -->
+                        <li class="text-center text-slate-600 text-xs italic py-4">Список пуст</li>
+                    </ul>
+                </div>
+
+                <!-- TAB: FINANCE -->
+                <div id="tab-finance" class="hidden space-y-4">
+                    <div class="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                        <label class="text-xs text-emerald-400 font-bold uppercase block mb-1">Гонорар</label>
+                        <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none">
+                    </div>
+                    <div class="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                        <label class="text-xs text-red-400 font-bold uppercase block mb-1">Расход</label>
+                        <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- TAB: NOTES -->
+                <div id="tab-notes" class="hidden">
+                    <textarea id="inp-notes" placeholder="Заметки, райдер, контакт менеджера..." class="w-full h-32 bg-black/30 border border-white/10 rounded-xl p-3 text-white resize-none outline-none text-sm"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-5 border-t border-white/5 bg-slate-900/80">
+                <button onclick="saveEvent()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-amber-500/20 transition">
+                    Создать Событие
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-8 right-1/2 translate-x-1/2 z-[100] transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4">
+        <div class="bg-slate-900 border border-amber-500/30 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+            <span id="toast-msg" class="text-sm font-semibold">Уведомление</span>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+        const TYPES = {
+            'stage': { label: 'Сцена', color: 'bg-amber-500', text: 'text-amber-400', icon: 'zap' },
+            'closeup': { label: 'Микро', color: 'bg-purple-500', text: 'text-purple-400', icon: 'sparkles' },
+            'kids': { label: 'Дети', color: 'bg-emerald-500', text: 'text-emerald-400', icon: 'wand-2' },
+            'rehearsal': { label: 'Реп', color: 'bg-slate-500', text: 'text-slate-400', icon: 'clock' }
+        };
+
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let events = JSON.parse(localStorage.getItem('illusionist_events') || '[]');
+        let monthlyGoal = JSON.parse(localStorage.getItem('illusionist_goal') || '200000');
+        
+        // Temp form state
+        let currentType = 'stage';
+        let currentSetlist = [];
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+            initParticles();
+            lucide.createIcons();
+        });
+
+        function renderApp() {
+            renderCalendar();
+            renderSidebar();
+            renderStats();
+            lucide.createIcons();
+        }
+
+        // --- CALENDAR LOGIC ---
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+            renderStats(); // Update stats for new month view
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            selectedDate = new Date();
+            renderApp();
+        }
+
+        function selectDate(day) {
+            selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            renderCalendar(); // Re-render to show selection highlight
+            renderSidebar();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('current-month-display').innerText = `${MONTHS[month]} ${year}`;
+            
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
+            const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Mon=0
+
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            // Empty slots
+            for(let i=0; i<adjustedFirstDay; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+
+            // Days
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = new Date(year, month, d).toDateString();
+                const isSelected = dateStr === selectedDate.toDateString();
+                const isToday = dateStr === new Date().toDateString();
+                
+                // Find events for this day
+                const dayEvents = events.filter(e => e.date === dateStr);
+                const dayProfit = dayEvents.reduce((acc, curr) => acc + (Number(curr.income)||0), 0);
+
+                // Dots HTML
+                let dotsHtml = `<div class="flex gap-1 mt-1 justify-center flex-wrap px-1">`;
+                dayEvents.slice(0, 4).forEach(e => {
+                    const colorClass = TYPES[e.type]?.text || 'text-white';
+                    dotsHtml += `<div class="w-1.5 h-1.5 rounded-full ${colorClass} bg-current shadow-[0_0_4px_currentColor]"></div>`;
+                });
+                dotsHtml += `</div>`;
+
+                // Profit HTML
+                let profitHtml = dayProfit > 0 
+                    ? `<span class="hidden md:block absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>` 
+                    : '';
+
+                const cell = document.createElement('div');
+                cell.className = `relative rounded-xl p-2 min-h-[80px] cursor-pointer border transition-all duration-300 flex flex-col items-center md:items-start justify-between
+                    ${isSelected 
+                        ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/30' 
+                        : 'border-transparent hover:bg-white/5 hover:border-white/10'}`;
+                
+                cell.onclick = () => selectDate(d);
+                cell.innerHTML = `
+                    <span class="w-7 h-7 flex items-center justify-center rounded-lg text-sm font-semibold transition ${isToday ? 'bg-amber-500 text-black shadow-lg font-bold' : 'text-slate-400'}">
+                        ${d}
+                    </span>
+                    ${profitHtml}
+                    ${dotsHtml}
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- SIDEBAR LOGIC ---
+        function renderSidebar() {
+            const dateStr = selectedDate.toDateString();
+            document.getElementById('selected-date-big').innerText = selectedDate.getDate();
+            document.getElementById('selected-weekday').innerText = selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', month: 'long' });
+
+            const list = document.getElementById('events-list');
+            list.innerHTML = '';
+
+            const dayEvents = events.filter(e => e.date === dateStr).sort((a,b) => a.time.localeCompare(b.time));
+
+            if (dayEvents.length === 0) {
+                list.innerHTML = `
+                    <div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-50">
+                        <i data-lucide="wand-2" class="w-10 h-10"></i>
+                        <p class="text-sm">День свободен</p>
+                    </div>`;
+            } else {
+                dayEvents.forEach(e => {
+                    const t = TYPES[e.type];
+                    const profit = Number(e.income) > 0 ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${Number(e.income).toLocaleString()}</div>` : '';
+                    
+                    const el = document.createElement('div');
+                    el.className = 'group relative bg-white/5 rounded-xl p-4 border border-white/5 hover:border-amber-500/30 transition animate-enter';
+                    el.innerHTML = `
+                        <div class="absolute left-0 top-4 bottom-4 w-1 rounded-r ${t.color}"></div>
+                        <div class="pl-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold uppercase tracking-wider ${t.text} flex items-center gap-1">
+                                    <i data-lucide="${t.icon}" class="w-3 h-3"></i> ${t.label}
+                                </span>
+                                <span class="text-xs font-mono text-slate-500">${e.time}</span>
+                            </div>
+                            <h4 class="text-white font-display font-semibold text-lg leading-tight mb-2">${e.title}</h4>
+                            ${e.location ? `<div class="text-xs text-slate-400 flex items-center gap-1 mb-2"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>` : ''}
+                            <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
+                                ${profit}
+                                <button onclick="deleteEvent(${e.id})" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(el);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function renderStats() {
+            // Stats for current displayed month
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            const monthEvents = events.filter(e => {
+                const d = new Date(e.date);
+                return d.getFullYear() === year && d.getMonth() === month;
+            });
+
+            const income = monthEvents.reduce((acc, c) => acc + (Number(c.income)||0), 0);
+            const expense = monthEvents.reduce((acc, c) => acc + (Number(c.expense)||0), 0);
+            const profit = income - expense;
+
+            document.getElementById('stat-profit').innerText = profit.toLocaleString();
+            document.getElementById('stat-income').innerText = `+${income.toLocaleString()}`;
+            document.getElementById('stat-expense').innerText = `-${expense.toLocaleString()}`;
+
+            // Goal
+            document.getElementById('goal-amount').innerText = `${monthlyGoal.toLocaleString()} ₽`;
+            const pct = Math.min(100, Math.round((profit / monthlyGoal) * 100));
+            document.getElementById('goal-progress').style.width = `${pct}%`;
+            document.getElementById('goal-percent').innerText = `${pct}%`;
+        }
+
+        // --- ACTIONS ---
+        function openModal() {
+            document.getElementById('event-modal').classList.remove('hidden');
+            // Reset fields
+            document.getElementById('inp-title').value = '';
+            document.getElementById('inp-time').value = '19:00';
+            document.getElementById('inp-location').value = '';
+            document.getElementById('inp-income').value = '';
+            document.getElementById('inp-expense').value = '';
+            document.getElementById('inp-notes').value = '';
+            currentSetlist = [];
+            currentType = 'stage';
+            renderSetlist();
+            switchTab('info');
+            
+            // Visual reset types
+            document.querySelectorAll('.type-btn').forEach(b => {
+                b.className = b.className.replace('border-amber-500 bg-amber-500/10 text-amber-400', 'border-white/5 bg-white/5 text-slate-500 hover:bg-white/10');
+            });
+            const activeBtn = document.getElementById('type-stage');
+            activeBtn.className = activeBtn.className.replace('border-white/5 bg-white/5 text-slate-500 hover:bg-white/10', 'border-amber-500 bg-amber-500/10 text-amber-400');
+        }
+
+        function closeModal() {
+            document.getElementById('event-modal').classList.add('hidden');
+        }
+
+        function switchTab(tab) {
+            ['info', 'setlist', 'finance', 'notes'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-xs font-bold uppercase text-slate-500 hover:text-white rounded transition";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-xs font-bold uppercase rounded transition";
+        }
+
+        function setType(type) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(b => {
+                b.className = b.className.replace('border-amber-500 bg-amber-500/10 text-amber-400', 'border-white/5 bg-white/5 text-slate-500 hover:bg-white/10');
+            });
+            const activeBtn = document.getElementById(`type-${type}`);
+            activeBtn.className = activeBtn.className.replace('border-white/5 bg-white/5 text-slate-500 hover:bg-white/10', 'border-amber-500 bg-amber-500/10 text-amber-400');
+        }
+
+        function addTrick() {
+            const val = document.getElementById('inp-trick').value;
+            if(val) {
+                currentSetlist.push(val);
+                document.getElementById('inp-trick').value = '';
+                renderSetlist();
+            }
+        }
+
+        function renderSetlist() {
+            const ul = document.getElementById('setlist-container');
+            if(currentSetlist.length === 0) {
+                ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Список пуст</li>';
+                return;
+            }
+            ul.innerHTML = '';
+            currentSetlist.forEach((t, i) => {
+                ul.innerHTML += `<li class="flex justify-between bg-white/5 p-2 rounded border border-white/5">
+                    <span><span class="text-amber-500 mr-2">${i+1}.</span>${t}</span>
+                    <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-400 hover:text-white"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </li>`;
+            });
+            lucide.createIcons();
+        }
+
+        function saveEvent() {
+            const title = document.getElementById('inp-title').value;
+            if(!title) { showToast('Введите название!'); return; }
+
+            const newEv = {
+                id: Date.now(),
+                date: selectedDate.toDateString(),
+                title: title,
+                time: document.getElementById('inp-time').value,
+                location: document.getElementById('inp-location').value,
+                type: currentType,
+                income: document.getElementById('inp-income').value,
+                expense: document.getElementById('inp-expense').value,
+                notes: document.getElementById('inp-notes').value,
+                setlist: currentSetlist
+            };
+
+            events.push(newEv);
+            localStorage.setItem('illusionist_events', JSON.stringify(events));
+            
+            closeModal();
+            renderCalendar();
+            renderSidebar();
+            renderStats();
+            showToast('Магия создана!');
+        }
+
+        function deleteEvent(id) {
+            if(confirm('Удалить событие?')) {
+                events = events.filter(e => e.id !== id);
+                localStorage.setItem('illusionist_events', JSON.stringify(events));
+                renderCalendar();
+                renderSidebar();
+                renderStats();
+                showToast('Событие удалено');
+            }
+        }
+
+        function editGoal() {
+            const n = prompt("Новая цель:", monthlyGoal);
+            if(n && !isNaN(n)) {
+                monthlyGoal = Number(n);
+                localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
+                renderStats();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-4');
+            setTimeout(() => {
+                t.classList.add('opacity-0', 'translate-y-4');
+            }, 3000);
+        }
+
+        // --- PARTICLES ---
+        function initParticles() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let particles = [];
+            for(let i=0; i<60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speedX: Math.random() * 0.5 - 0.25,
+                    speedY: Math.random() * 0.5 - 0.25,
+                    color: Math.random() > 0.5 ? '245, 158, 11' : '139, 92, 246',
+                    opacity: Math.random() * 0.5
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.speedX; p.y += p.speedY;
+                    if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                    if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color === '245, 158, 11' ? '245, 158, 11' : '139, 92, 246'}, ${p.opacity})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
