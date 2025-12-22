@@ -20,6 +20,7 @@
             background-color: var(--dark-bg);
             color: #e2e8f0;
             overflow: hidden;
+            overscroll-behavior: none; /* Блокировка пружинивания на iOS */
         }
 
         h1, h2, h3, .font-display {
@@ -71,20 +72,26 @@
             cursor: pointer;
         }
         
+        /* Убираем горизонтальный скролл везде */
+        .no-hor-scroll {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
         @media (max-width: 1024px) {
             .mobile-hidden { display: none !important; }
             button { min-height: 44px; }
         }
     </style>
 </head>
-<body class="h-screen flex flex-col text-sm md:text-base">
+<body class="h-screen flex flex-col text-sm md:text-base no-hor-scroll">
 
     <div class="noise-overlay"></div>
     <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
     <canvas id="bg-canvas"></canvas>
 
     <!-- App Container -->
-    <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-20 lg:p-6 lg:pb-6">
+    <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-20 lg:p-6 lg:pb-6 no-hor-scroll">
         
         <!-- HEADER -->
         <header class="flex justify-between items-center mb-4 shrink-0">
@@ -221,8 +228,9 @@
     </div>
 
     <!-- MODAL -->
-    <div id="event-modal" class="fixed inset-0 z-[100] hidden">
+    <div id="event-modal" class="fixed inset-0 z-[100] hidden no-hor-scroll">
         <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="closeModal()"></div>
+        <!-- Modal body: Added max-w-full and overflow-x-hidden -->
         <div class="absolute bottom-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[500px] h-[90vh] md:h-auto md:max-h-[85vh] bg-[#0f172a] md:border border-amber-500/20 md:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter">
             
             <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
@@ -234,7 +242,7 @@
                 <button onclick="switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
                 <button onclick="switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Шоу</button>
                 <button onclick="switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
-                <button onclick="switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Инфо</button>
+                <button onclick="switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
             </div>
 
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
@@ -261,19 +269,19 @@
                     <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors">
                     
                     <!-- Time & Duration Grid - More compact & separated -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1">
+                    <div class="grid grid-cols-2 gap-6"> <!-- Increased gap from 4 to 6 for separation -->
+                        <div class="flex flex-col gap-1.5">
                             <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Начало</label>
                             <div class="relative">
-                                <!-- Reduced height h-12 -> h-10 and text size -->
-                                <input type="time" id="inp-time" value="19:00" class="w-full h-10 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
+                                <!-- Reduced height h-12 -> h-10, centered text, mono font -->
+                                <input type="time" id="inp-time" value="19:00" class="w-full h-10 bg-black/30 border border-white/10 rounded-lg px-2 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
                         </div>
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-1.5">
                             <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Длительность</label>
                             <div class="relative">
-                                <!-- Reduced height h-12 -> h-10 and text size -->
-                                <input type="time" id="inp-duration" value="00:30" class="w-full h-10 bg-black/30 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
+                                <!-- Reduced height h-12 -> h-10, centered text, mono font -->
+                                <input type="time" id="inp-duration" value="00:30" class="w-full h-10 bg-black/30 border border-white/10 rounded-lg px-2 text-white outline-none focus:border-amber-500/50 transition-colors text-center font-mono text-sm">
                             </div>
                         </div>
                     </div>
