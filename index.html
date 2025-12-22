@@ -65,7 +65,8 @@
             z-index: -1;
         }
         
-        input[type="time"]::-webkit-calendar-picker-indicator {
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             opacity: 0.5;
             cursor: pointer;
@@ -255,6 +256,11 @@
 
                     <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors">
                     
+                    <div>
+                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1">Дата</label>
+                        <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50">
+                    </div>
+
                     <div class="grid grid-cols-2 gap-6">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[10px] text-slate-500 uppercase font-bold pl-1">Начало</label>
@@ -475,6 +481,8 @@
             document.getElementById('event-modal').classList.remove('hidden');
             document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
             
+            const dateInput = document.getElementById('inp-date');
+            
             if(!isEdit) {
                 editingId = null;
                 document.getElementById('inp-title').value = '';
@@ -488,6 +496,13 @@
                 document.getElementById('inp-notes').value = '';
                 currentSetlist = [];
                 currentType = 'stage';
+                
+                // Initialize date input with current selectedDate
+                // Format YYYY-MM-DD manually to avoid timezone issues
+                const y = selectedDate.getFullYear();
+                const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const d = String(selectedDate.getDate()).padStart(2, '0');
+                dateInput.value = `${y}-${m}-${d}`;
             }
             
             renderSetlist();
@@ -545,12 +560,30 @@
             currentSetlist = ev.setlist || [];
             currentType = ev.type || 'stage';
             
+            // Set date input from event date
+            const dateInput = document.getElementById('inp-date');
+            if (ev.date) {
+                const dateObj = new Date(ev.date);
+                const y = dateObj.getFullYear();
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                dateInput.value = `${y}-${m}-${d}`;
+            }
+            
             window.openModal(true);
         };
 
         window.saveEvent = async () => {
             const title = document.getElementById('inp-title').value;
+            const dateVal = document.getElementById('inp-date').value;
+            
             if(!title) { window.showToast('Введите название!'); return; }
+            if(!dateVal) { window.showToast('Выберите дату!'); return; }
+
+            // Parse date from input
+            const [y, m, d] = dateVal.split('-').map(Number);
+            const eventDateObj = new Date(y, m - 1, d);
+            const eventDateStr = eventDateObj.toDateString();
 
             const eventData = {
                 title: title,
@@ -564,7 +597,7 @@
                 expense: document.getElementById('inp-expense').value,
                 notes: document.getElementById('inp-notes').value,
                 setlist: currentSetlist,
-                date: selectedDate.toDateString() 
+                date: eventDateStr 
             };
 
             if (editingId) {
@@ -576,6 +609,10 @@
             }
 
             localStorage.setItem('illusionist_events', JSON.stringify(events));
+            
+            // Update app state to reflect the new/edited event's date
+            selectedDate = eventDateObj;
+            currentDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1); // Ensure month view matches
             
             window.closeModal();
             renderApp();
