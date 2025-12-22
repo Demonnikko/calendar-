@@ -77,7 +77,6 @@
             max-width: 100vw;
         }
         
-        /* Стили для ячейки календаря */
         .calendar-cell-content {
             display: flex;
             flex-direction: column;
@@ -103,6 +102,19 @@
         .event-label:hover {
             opacity: 0.8;
         }
+
+        /* Confetti Styles */
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #f59e0b;
+            animation: fall linear forwards;
+            z-index: 9999;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
         
         @media (max-width: 1024px) {
             .mobile-hidden { display: none !important; }
@@ -115,6 +127,7 @@
     <div class="noise-overlay"></div>
     <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
     <canvas id="bg-canvas"></canvas>
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[200]"></div>
 
     <!-- App Container -->
     <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-20 lg:p-6 lg:pb-6 no-hor-scroll">
@@ -180,9 +193,13 @@
                                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Финансы
                             </h3>
                         </div>
-                        <div class="text-center mb-3">
+                        <div class="text-center mb-3 relative">
                             <span id="stat-profit" class="text-3xl font-display font-bold text-white tracking-tight">0</span>
                             <span class="text-lg text-slate-500 font-display ml-1">₽</span>
+                            <!-- Goal Achievement Badge -->
+                            <div id="goal-badge" class="hidden absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">
+                                ЦЕЛЬ!
+                            </div>
                         </div>
                         <div class="mb-3">
                             <div class="flex justify-between text-xs mb-1 text-slate-400">
@@ -395,6 +412,7 @@
         let selectedDate = new Date();
         let events = [];
         let monthlyGoal = 200000;
+        let goalCelebrated = false;
         
         let currentType = 'stage';
         let currentSetlist = [];
@@ -521,7 +539,7 @@
             
             renderSetlist();
             window.switchTab('info');
-            window.setType(currentType || 'stage'); // Reset UI selection
+            window.setType(currentType || 'stage'); 
         };
 
         window.closeModal = () => {
@@ -541,16 +559,10 @@
             currentType = type;
             const t = TYPES[type];
             document.querySelectorAll('.type-btn').forEach(b => {
-                // Reset to default style
                 b.className = 'type-btn p-2 rounded-xl border border-white/5 bg-white/5 text-slate-500 flex flex-col items-center gap-1 justify-center w-full transition-all hover:bg-white/10';
             });
             const activeBtn = document.getElementById(`type-${type}`);
             if(activeBtn) {
-                // Apply active style from TYPE config
-                // We use inline style or specific classes. Let's use specific logic
-                // Construct class string based on type
-                // Actually, let's just use the classes from TYPES config if possible, or manual mapping
-                // Manual mapping for simplicity here based on previous code logic but updated
                 let activeClass = '';
                 if(type === 'stage') activeClass = 'border-amber-500 bg-amber-500/10 text-amber-400';
                 else if(type === 'closeup') activeClass = 'border-purple-500 bg-purple-500/10 text-purple-400';
@@ -644,8 +656,10 @@
         };
 
         window.deleteEvent = (id) => {
+            // Safe conversion to number, just in case
+            const numId = Number(id);
             if(!confirm('Удалить событие?')) return;
-            events = events.filter(e => e.id !== id);
+            events = events.filter(e => e.id !== numId);
             localStorage.setItem('illusionist_events', JSON.stringify(events));
             renderApp();
             window.showToast('Удалено');
@@ -682,6 +696,26 @@
             }, 3000);
         };
 
+        window.celebrateGoal = () => {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#f43f5e'];
+            
+            for(let i=0; i<50; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.top = -10 + 'px';
+                el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                el.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                el.style.opacity = Math.random();
+                container.appendChild(el);
+                
+                setTimeout(() => { el.remove(); }, 5000);
+            }
+            
+            window.showToast('🎉 Цель достигнута! Так держать!');
+        }
+
         function renderApp() {
             renderCalendar();
             renderSidebar();
@@ -711,7 +745,6 @@
 
                 let eventLabels = '';
                 dayEvents.slice(0, 3).forEach(e => {
-                    // Use type config for color
                     const typeConfig = TYPES[e.type] || TYPES['stage'];
                     eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${typeConfig.color} ${typeConfig.text} border-b ${typeConfig.border}/20 shadow-sm">${typeConfig.label}</div>`;
                 });
@@ -780,8 +813,6 @@
                         notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
                     }
 
-                    // For the sidebar strip color, we use a single color from the gradient to keep it clean, or the first color of the gradient
-                    // Let's use a mapping for simple solid colors for the strip
                     const stripColor = e.type === 'stage' ? 'bg-amber-500' : 
                                        e.type === 'closeup' ? 'bg-purple-500' : 
                                        e.type === 'kids' ? 'bg-emerald-500' : 
@@ -805,7 +836,7 @@
 
                             <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
                                 ${profit}
-                                <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); window.deleteEvent(${e.id})" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     `;
@@ -843,8 +874,29 @@
             document.getElementById('stat-income').innerText = `+${income.toLocaleString()}`;
             document.getElementById('stat-expense').innerText = `-${expense.toLocaleString()}`;
             document.getElementById('goal-amount').innerText = `${(monthlyGoal/1000).toFixed(0)}k ₽`;
+            
             const pct = Math.min(100, Math.round((profit / monthlyGoal) * 100));
-            document.getElementById('goal-progress').style.width = `${pct}%`;
+            const goalBar = document.getElementById('goal-progress');
+            
+            // Goal Celebration Logic
+            if (pct >= 100) {
+                // Success Gradient
+                goalBar.className = "h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-1000 animate-pulse";
+                document.getElementById('goal-badge').classList.remove('hidden');
+                
+                // Only trigger if not yet celebrated this session for this view
+                if (!goalCelebrated) {
+                    window.celebrateGoal();
+                    goalCelebrated = true; 
+                }
+            } else {
+                // Standard Gradient
+                goalBar.className = "h-full bg-gradient-to-r from-amber-700 to-yellow-400 transition-all duration-1000";
+                document.getElementById('goal-badge').classList.add('hidden');
+                goalCelebrated = false; // Reset if user changes goal or deletes events
+            }
+            
+            goalBar.style.width = `${pct}%`;
         }
 
         function initParticles() {
