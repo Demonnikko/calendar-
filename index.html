@@ -115,6 +115,13 @@
         .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
         
         @media (max-width: 1024px) { .mobile-hidden { display: none !important; } button { min-height: 44px; } }
+
+        /* ✅ FIX: чтобы “Популярность” не пряталась за нижним меню на мобильных */
+        @media (max-width: 1024px) {
+            #popularity-panel {
+                margin-bottom: calc(env(safe-area-inset-bottom, 20px) + 104px);
+            }
+        }
         
         .type-btn { position: relative; overflow: hidden; }
         .type-btn.selected { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
@@ -241,7 +248,7 @@
                         </div>
                     </div>
 
-                    <!-- Event List (ПЕРЕНЕСЕНО СЮДА) -->
+                    <!-- Event List -->
                     <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-0 relative overflow-hidden">
                         <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0 flex justify-between items-center">
                             <div>
@@ -252,8 +259,8 @@
                         <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-16"></div>
                     </div>
 
-                    <!-- Popularity Analytics (ОПУЩЕНО ВНИЗ) -->
-                    <div class="glass-panel rounded-2xl p-4 shrink-0">
+                    <!-- Popularity Analytics -->
+                    <div id="popularity-panel" class="glass-panel rounded-2xl p-4 shrink-0">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
                                 <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Популярность
@@ -373,34 +380,28 @@
                 </div>
 
                 <div id="tab-finance" class="hidden space-y-4 max-w-xs mx-auto">
-                    <!-- Income -->
                     <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
                         <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая стоимость</label>
                         <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
                     </div>
 
-                    <!-- Prepay & Balance -->
                     <div class="grid grid-cols-2 gap-3">
-                         <!-- Prepay Amount -->
                          <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center relative group">
                             <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Предоплата</label>
                             <input type="number" id="inp-prepay" placeholder="0" class="w-full bg-transparent text-lg font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
                          </div>
 
-                         <!-- Prepay Percent -->
                          <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
                             <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">%</label>
                             <input type="number" id="inp-prepay-percent" placeholder="0" class="w-full bg-transparent text-lg font-mono text-amber-400 outline-none text-center" oninput="window.calcBalanceFromPercent()">
                          </div>
                     </div>
                     
-                    <!-- Balance Display -->
                     <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center flex flex-col justify-center">
                         <label class="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Остаток</label>
                         <span id="txt-balance" class="text-lg font-mono text-slate-500 font-bold">0</span>
                     </div>
 
-                    <!-- Expense -->
                     <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
                         <label class="text-[10px] text-red-400 font-bold uppercase block mb-1">Расход</label>
                         <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-xl font-mono text-white outline-none text-center">
@@ -742,7 +743,6 @@
             });
         }
 
-        // --- SCHEDULE LOGIC (оставлено как было у тебя) ---
         window.renderSchedule = () => {
             const list = document.getElementById('schedule-list');
             list.innerHTML = '';
@@ -780,7 +780,6 @@
             currentSchedule[index].duration = isNaN(n) ? 0 : Math.max(0, Math.round(n));
         };
 
-        // --- MONTH PICKER LOGIC ---
         window.openMonthPicker = () => {
             pickerYear = currentDate.getFullYear();
             document.getElementById('picker-year-display').innerText = pickerYear;
@@ -803,7 +802,6 @@
             });
         };
 
-        // --- STORAGE / MIGRATION ---
         function migrateEventsToISO(list) {
             let changed = false;
             const out = (Array.isArray(list) ? list : []).map(ev => {
@@ -847,7 +845,6 @@
             renderApp();
         }
 
-        // --- GLOBAL WINDOW EXPORTS ---
         window.openSettings = () => document.getElementById('settings-modal').classList.remove('hidden');
         window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden');
 
@@ -1003,9 +1000,8 @@
             if(val) { currentSetlist.push(val); document.getElementById('inp-trick').value = ''; window.renderSetlist(); }
         };
 
-        window.editEvent = (id) => { /* твоя логика тут (оставляю без изменений в твоём проекте) */ };
-
-        window.saveEvent = async () => { /* твоя логика тут (оставляю без изменений в твоём проекте) */ };
+        window.editEvent = (id) => { /* твоя логика тут */ };
+        window.saveEvent = async () => { /* твоя логика тут */ };
 
         window.showToast = (msg) => {
             const t = document.getElementById('toast');
