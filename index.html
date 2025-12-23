@@ -22,15 +22,11 @@
       --card-surface:rgba(255,255,255,0.03);
       --card-border:rgba(255,255,255,0.06);
 
-      /* safe areas */
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      /* bottom nav metrics (JS will update --bottom-nav-h dynamically) */
       --bottom-nav-h: 64px;
       --bottom-nav-gap: 12px;
-
-      /* total space we must reserve under content so it doesn't hide behind bottom nav */
       --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap) + var(--safe-bottom));
     }
 
@@ -47,7 +43,7 @@
       color:#e2e8f0;
       position:fixed;
       inset:0;
-      overflow:hidden;  /* internal scroll only */
+      overflow:hidden;
     }
 
     h1,h2,h3,.font-display{ font-family:'Cinzel',serif; }
@@ -181,7 +177,6 @@
     .pb-safe{ padding-bottom: var(--safe-bottom); }
     .pt-safe{ padding-top: var(--safe-top); }
 
-    /* ✅ reserve space under the bottom nav so content scroll reaches the end */
     .pb-under-nav{ padding-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
     .mb-under-nav{ margin-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
 
@@ -199,7 +194,6 @@
     .type-btn#type-concert.selected{ border-color:#3b82f6; background-color:rgba(59,130,246,.1); }
     .type-btn#type-rehearsal.selected{ border-color:#94a3b8; background-color:rgba(148,163,184,.1); }
 
-    /* schedule row: type | time | duration | delete */
     .act-row{
       display:grid;
       grid-template-columns: 40px 1fr 84px 30px;
@@ -212,7 +206,6 @@
       margin-bottom:8px;
     }
 
-    /* ✅ bottom nav: stick to safe area */
     #mobile-bottom-nav{
       position:fixed;
       left:16px;
@@ -222,7 +215,6 @@
       z-index:40;
     }
 
-    /* toast safe area */
     #toast{
       position:fixed;
       left:16px;
@@ -239,6 +231,22 @@
       opacity:1;
     }
 
+    /* small highlight for jumper */
+    .flash-highlight{
+      outline: 2px solid rgba(245,158,11,.35);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.08);
+      transition: all .2s ease;
+    }
+
+    select{
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.9);
+      outline: none;
+    }
+    select:focus{
+      border-color: rgba(245,158,11,.35);
+    }
   </style>
 </head>
 
@@ -249,7 +257,6 @@
   <canvas id="bg-canvas"></canvas>
   <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[200]"></div>
 
-  <!-- ✅ TOAST (was missing, caused bugs + notch cut) -->
   <div id="toast" class="glass-panel rounded-2xl px-4 py-3 flex items-center gap-3">
     <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
       <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
@@ -260,10 +267,8 @@
     </div>
   </div>
 
-  <!-- App Container -->
   <div id="app-shell" class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 lg:p-6 no-hor-scroll pb-under-nav">
 
-    <!-- HEADER -->
     <header class="flex justify-between items-center mb-4 shrink-0 gap-2">
       <div class="flex items-center gap-2 md:gap-3 overflow-hidden">
         <div class="relative w-9 h-9 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#0f0f13] border border-amber-500/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
@@ -298,10 +303,8 @@
       </div>
     </header>
 
-    <!-- MAIN CONTENT AREA -->
     <div class="flex-1 overflow-hidden relative">
 
-      <!-- VIEW: CALENDAR -->
       <div id="view-calendar" class="h-full w-full absolute inset-0 flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 transition-opacity duration-300">
         <div class="lg:col-span-8 glass-panel rounded-2xl p-2 md:p-4 flex flex-col h-full relative overflow-hidden">
           <div class="grid grid-cols-7 mb-1 border-b border-white/5 pb-1">
@@ -318,11 +321,9 @@
         <div class="hidden lg:flex lg:col-span-4 flex-col gap-6 h-full overflow-hidden"></div>
       </div>
 
-      <!-- VIEW: DASHBOARD (mobile = scrollable page) -->
       <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav mobile-hidden lg:static lg:overflow-hidden lg:h-full lg:w-[32%] lg:ml-auto">
         <div class="flex flex-col gap-4 lg:gap-6 h-full px-0 lg:px-0">
 
-          <!-- Finance (+ popularity inside) -->
           <div class="glass-panel rounded-2xl p-4 shrink-0">
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
@@ -348,6 +349,12 @@
               </div>
             </div>
 
+            <!-- ✅ added: remaining + pace -->
+            <div class="flex justify-between text-xs text-slate-400 mb-3">
+              <span id="goal-remaining">Осталось: 0 ₽</span>
+              <span id="goal-pace">Темп: 0 ₽/д</span>
+            </div>
+
             <div class="grid grid-cols-2 gap-2 text-center mb-4">
               <div class="bg-white/5 p-2 rounded-lg">
                 <p class="text-[9px] text-slate-500 uppercase">Доход</p>
@@ -359,7 +366,6 @@
               </div>
             </div>
 
-            <!-- ✅ Popularity moved inside finance -->
             <div class="pt-3 border-t border-white/5">
               <div class="flex justify-between items-center mb-3">
                 <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
@@ -370,16 +376,22 @@
             </div>
           </div>
 
-          <!-- Event List -->
           <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[420px] relative overflow-hidden">
             <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0 flex justify-between items-center">
-              <div>
+              <div class="w-full">
                 <h2 id="selected-date-big" class="text-2xl font-display font-bold text-white"></h2>
                 <p id="selected-weekday" class="text-amber-500 text-[10px] uppercase font-bold tracking-widest"></p>
+
+                <!-- ✅ easy event switcher -->
+                <div id="jumper-wrap" class="mt-3 hidden">
+                  <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Быстрый переход</label>
+                  <select id="event-jumper" class="w-full rounded-xl px-3 py-2 text-sm">
+                    <option value="">—</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <!-- ✅ allow full scroll + reserve space under bottom nav -->
             <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-under-nav"></div>
           </div>
 
@@ -389,12 +401,10 @@
     </div>
   </div>
 
-  <!-- MAIN ADD BUTTON (desktop) -->
   <button onclick="window.openModal()" class="hidden lg:flex fixed bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-2xl shadow-orange-500/40 items-center justify-center z-50 transform hover:scale-110 transition duration-300">
     <i data-lucide="plus" class="w-8 h-8"></i>
   </button>
 
-  <!-- MOBILE BOTTOM NAV (✅ safe area & stable positioning) -->
   <div id="mobile-bottom-nav" class="lg:hidden bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between px-6">
     <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center justify-center gap-1 text-amber-400 w-16 transition-all duration-300">
       <i data-lucide="calendar" class="w-5 h-5"></i>
@@ -426,7 +436,8 @@
 
       <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0 justify-center">
         <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
-        <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Шоу</button>
+        <!-- ✅ renamed -->
+        <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Доп</button>
         <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
         <button onclick="window.switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
       </div>
@@ -468,7 +479,6 @@
             <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
 
-          <!-- Schedule/Timing List -->
           <div class="bg-white/5 rounded-xl border border-white/10 p-3">
             <label class="text-[10px] text-amber-500 uppercase font-bold mb-2 block text-center">Тайминг Выступлений</label>
             <div id="schedule-list" class="space-y-2 mb-3"></div>
@@ -488,9 +498,13 @@
           </div>
         </div>
 
+        <!-- ✅ same tab id, but now "Доп" -->
         <div id="tab-setlist" class="hidden space-y-3 max-w-xs mx-auto">
+          <div class="text-center text-slate-400 text-xs">
+            Добавь пункты “доп” (условия, реквизит, договор, дедлайны) — они будут видны на карточке события.
+          </div>
           <div class="flex gap-2">
-            <input type="text" id="inp-trick" placeholder="Трюк..." class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
+            <input type="text" id="inp-trick" placeholder="Пункт доп..." class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
             <button onclick="window.addTrick()" class="bg-amber-600 px-4 rounded-xl text-white"><i data-lucide="plus"></i></button>
           </div>
           <ul id="setlist-container" class="space-y-2 text-sm text-slate-300 pb-4"></ul>
@@ -543,7 +557,7 @@
     </div>
   </div>
 
-  <!-- MONTH PICKER MODAL -->
+  <!-- MONTH PICKER -->
   <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
@@ -577,7 +591,7 @@
     </div>
   </div>
 
-  <!-- ✅ SETTINGS MODAL (clean) -->
+  <!-- SETTINGS MODAL -->
   <div id="settings-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
 
@@ -644,7 +658,7 @@
     </div>
   </div>
 
-  <!-- ✅ GOAL MODAL -->
+  <!-- GOAL MODAL -->
   <div id="goal-modal" class="fixed inset-0 z-[150] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeGoalModal()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-5">
@@ -669,7 +683,6 @@
   </div>
 
   <script>
-    // --- CONSTANTS ---
     const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     const TYPES = {
       stage:   { label:'Сцена',       color:'event-stage',    text:'text-amber-100',  icon:'star',      border:'border-amber-500',  bar:'bg-amber-500',  defDur: 60 },
@@ -682,14 +695,12 @@
     const pad2 = (n)=>String(n).padStart(2,'0');
     const toISODateLocal = (d)=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
-    // ✅ robust parse for RU commas etc.
     const parseNum = (v) => {
       const s = String(v ?? '').replace(/\s/g,'').replace(',','.');
       const n = Number(s);
       return Number.isFinite(n) ? n : 0;
     };
 
-    // --- STATE ---
     let currentDate = new Date();
     let selectedDate = new Date();
     let pickerYear = new Date().getFullYear();
@@ -698,11 +709,10 @@
     let goalCelebrated = false;
 
     let currentType = 'stage';
-    let currentSetlist = [];
+    let currentSetlist = []; // now used as "Доп"
     let currentSchedule = [];
     let editingId = null;
 
-    // --- RENDER ---
     function renderApp(){
       renderCalendar();
       renderSidebar();
@@ -774,6 +784,12 @@
       }
     }
 
+    function flashCard(el){
+      if(!el) return;
+      el.classList.add('flash-highlight');
+      setTimeout(()=> el.classList.remove('flash-highlight'), 950);
+    }
+
     function renderSidebar(){
       const dateISO = toISODateLocal(selectedDate);
       document.getElementById('selected-date-big').innerText = selectedDate.getDate();
@@ -785,6 +801,35 @@
       const dayEvents = events
         .filter(e => e.dateISO === dateISO)
         .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+
+      // ✅ jumper
+      const jumperWrap = document.getElementById('jumper-wrap');
+      const jumper = document.getElementById('event-jumper');
+      if(jumperWrap && jumper){
+        if(dayEvents.length >= 2){
+          jumperWrap.classList.remove('hidden');
+          jumper.innerHTML = '';
+          dayEvents.forEach(e=>{
+            const opt = document.createElement('option');
+            opt.value = String(e.id);
+            const t = (e.time || (e.schedule?.[0]?.time) || '—');
+            opt.textContent = `${t} • ${e.title || 'Событие'}`;
+            jumper.appendChild(opt);
+          });
+          jumper.onchange = () => {
+            const id = jumper.value;
+            const target = document.getElementById(`event-card-${id}`);
+            if(target){
+              target.scrollIntoView({behavior:'smooth', block:'start'});
+              flashCard(target);
+            }
+          };
+        } else {
+          jumperWrap.classList.add('hidden');
+          jumper.innerHTML = '<option value="">—</option>';
+          jumper.onchange = null;
+        }
+      }
 
       if(dayEvents.length === 0){
         list.innerHTML = `
@@ -798,7 +843,6 @@
 
           const income = parseNum(e.income);
           const prepay = parseNum(e.prepay);
-          const expense = parseNum(e.expense);
 
           const profitHtml = income > 0
             ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${income.toLocaleString()}</div>`
@@ -835,6 +879,18 @@
             notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
           }
 
+          // ✅ reflect "Доп" on card
+          let extraBlock = '';
+          if(Array.isArray(e.setlist) && e.setlist.length){
+            const joined = e.setlist.slice(0,6).join(' • ');
+            extraBlock = `
+              <div class="mt-2 text-xs text-slate-300 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Доп</div>
+                <div class="leading-snug">${joined}${e.setlist.length>6 ? ' …' : ''}</div>
+              </div>
+            `;
+          }
+
           let balanceBlock = '';
           if(income > 0){
             const bal = income - prepay;
@@ -850,6 +906,7 @@
             'bg-slate-500';
 
           const el = document.createElement('div');
+          el.id = `event-card-${e.id}`;
           el.className = 'group relative bg-white/5 rounded-xl p-3 border border-white/5 hover:border-amber-500/30 transition animate-enter cursor-pointer';
           el.onclick = () => window.editEvent(e.id);
 
@@ -860,6 +917,7 @@
               <h4 class="text-white font-display font-semibold text-base leading-tight mb-1">${e.title}</h4>
               ${e.location ? `<div class="text-xs text-slate-400 flex items-center gap-1 mb-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>` : ''}
               ${clientBlock}
+              ${extraBlock}
               ${notesBlock}
               <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
                 <div>
@@ -882,7 +940,7 @@
     function renderSetlist(){
       const ul = document.getElementById('setlist-container');
       if(currentSetlist.length === 0){
-        ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Список пуст</li>';
+        ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Пока пусто</li>';
         return;
       }
       ul.innerHTML = '';
@@ -898,15 +956,19 @@
       lucide.createIcons();
     }
 
-    function renderStats(){
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-
-      const monthEvents = events.filter(e => {
+    function getMonthEvents(year, month1){
+      return events.filter(e => {
         if(!e.dateISO) return false;
         const [y,m] = e.dateISO.split('-').map(Number);
-        return y === year && m === month;
+        return y === year && m === month1;
       });
+    }
+
+    function renderStats(){
+      const year = currentDate.getFullYear();
+      const month1 = currentDate.getMonth() + 1;
+
+      const monthEvents = getMonthEvents(year, month1);
 
       const income = monthEvents.reduce((acc,c)=>acc + parseNum(c.income), 0);
       const expense = monthEvents.reduce((acc,c)=>acc + parseNum(c.expense), 0);
@@ -932,8 +994,32 @@
         document.getElementById('goal-badge').classList.add('hidden');
         goalCelebrated = false;
       }
-
       goalBar.style.width = `${pct}%`;
+
+      // ✅ remaining + pace
+      const remaining = Math.max(0, Math.round(monthlyGoal - profit));
+      const remEl = document.getElementById('goal-remaining');
+      const paceEl = document.getElementById('goal-pace');
+      if(remEl) remEl.textContent = `Осталось: ${remaining.toLocaleString()} ₽`;
+
+      const daysInMonth = new Date(year, currentDate.getMonth()+1, 0).getDate();
+      const today = new Date();
+      let daysLeft = daysInMonth;
+
+      const isCurrentMonth = (today.getFullYear() === year && (today.getMonth()+1) === month1);
+      const isPastMonth = (new Date(year, currentDate.getMonth(), 1) < new Date(today.getFullYear(), today.getMonth(), 1));
+
+      if(isPastMonth){
+        daysLeft = 0;
+      } else if(isCurrentMonth){
+        daysLeft = Math.max(0, daysInMonth - today.getDate());
+      } else {
+        // future month: pace across whole month
+        daysLeft = daysInMonth;
+      }
+
+      const pace = (daysLeft > 0 && remaining > 0) ? Math.ceil(remaining / daysLeft) : 0;
+      if(paceEl) paceEl.textContent = `Темп: ${pace.toLocaleString()} ₽/д`;
     }
 
     function renderAnalytics(){
@@ -941,13 +1027,9 @@
       if(!container) return;
 
       const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
+      const month1 = currentDate.getMonth() + 1;
 
-      const monthEvents = events.filter(e => {
-        if(!e.dateISO) return false;
-        const [y,m] = e.dateISO.split('-').map(Number);
-        return y === year && m === month;
-      });
+      const monthEvents = getMonthEvents(year, month1);
 
       const stats = {};
       Object.keys(TYPES).forEach(k => stats[k] = { count:0, income:0, ...TYPES[k] });
@@ -1005,7 +1087,6 @@
       lucide.createIcons();
     }
 
-    // --- SCHEDULE ---
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
@@ -1064,7 +1145,6 @@
       currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur)));
     };
 
-    // --- MONTH PICKER ---
     window.openMonthPicker = () => {
       pickerYear = currentDate.getFullYear();
       document.getElementById('picker-year-display').innerText = pickerYear;
@@ -1096,7 +1176,6 @@
       });
     };
 
-    // --- MIGRATION / LOCAL ---
     function migrateEventsToISO(list){
       let changed = false;
       const out = (Array.isArray(list) ? list : []).map(ev => {
@@ -1156,7 +1235,6 @@
       renderApp();
     }
 
-    // --- SETTINGS ---
     window.openSettings = () => {
       document.getElementById('settings-modal').classList.remove('hidden');
       lucide.createIcons();
@@ -1175,7 +1253,7 @@
 
     window.exportData = () => {
       const dateStr = new Date().toISOString().split('T')[0];
-      const data = { events, goal: monthlyGoal, version: '1.5' };
+      const data = { events, goal: monthlyGoal, version: '1.6' };
       const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1213,7 +1291,6 @@
       reader.readAsText(file);
     };
 
-    // --- GOAL MODAL (✅ no iOS prompt) ---
     window.editGoal = () => {
       document.getElementById('goal-input').value = monthlyGoal;
       document.getElementById('goal-modal').classList.remove('hidden');
@@ -1234,7 +1311,6 @@
       window.showToast('Цель обновлена');
     };
 
-    // --- NAV / MONTH ---
     window.changeMonth = (delta) => {
       const y = currentDate.getFullYear();
       const m = currentDate.getMonth();
@@ -1275,7 +1351,6 @@
       updateBottomNavMetrics();
     };
 
-    // --- MODAL / TABS / TYPE ---
     window.openModal = (isEdit=false) => {
       document.getElementById('event-modal').classList.remove('hidden');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
@@ -1350,8 +1425,9 @@
       }
     };
 
+    // now used to add "Доп"
     window.addTrick = () => {
-      const val = document.getElementById('inp-trick').value;
+      const val = document.getElementById('inp-trick').value.trim();
       if(val){
         currentSetlist.push(val);
         document.getElementById('inp-trick').value = '';
@@ -1374,7 +1450,7 @@
       document.getElementById('inp-expense').value = parseNum(ev.expense) || '';
       document.getElementById('inp-notes').value = ev.notes || '';
 
-      currentSetlist = ev.setlist || [];
+      currentSetlist = Array.isArray(ev.setlist) ? ev.setlist : [];
       currentSchedule = (ev.schedule && ev.schedule.length) ? ev.schedule : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: TYPES[ev.type || 'stage']?.defDur || 60 }];
       currentType = currentSchedule[0].type || 'stage';
 
@@ -1384,7 +1460,6 @@
       window.openModal(true);
     };
 
-    // --- SAVE / DELETE ---
     window.saveEvent = async () => {
       const title = document.getElementById('inp-title').value.trim();
       const dateISO = document.getElementById('inp-date').value;
@@ -1413,7 +1488,7 @@
         prepay: Math.round(parseNum(document.getElementById('inp-prepay').value)),
         expense: Math.round(parseNum(document.getElementById('inp-expense').value)),
         notes: document.getElementById('inp-notes').value,
-        setlist: currentSetlist,
+        setlist: currentSetlist, // "Доп"
         dateISO
       };
 
@@ -1454,7 +1529,6 @@
       }
     };
 
-    // --- TOAST ---
     window.showToast = (msg) => {
       const t = document.getElementById('toast');
       const m = document.getElementById('toast-msg');
@@ -1483,7 +1557,6 @@
       window.showToast('🎉 Цель достигнута! Так держать!');
     };
 
-    // --- BALANCE ---
     window.calcBalanceFromAmount = () => {
       const total = parseNum(document.getElementById('inp-income').value);
       const prepay = parseNum(document.getElementById('inp-prepay').value);
@@ -1520,7 +1593,6 @@
       }
     };
 
-    // --- PARTICLES ---
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1591,7 +1663,6 @@
       start();
     }
 
-    // ✅ dynamic bottom nav height -> perfect scroll to end
     function updateBottomNavMetrics(){
       const nav = document.getElementById('mobile-bottom-nav');
       if(!nav) return;
