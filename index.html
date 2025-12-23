@@ -231,7 +231,6 @@
       opacity:1;
     }
 
-    /* small highlight for jumper */
     .flash-highlight{
       outline: 2px solid rgba(245,158,11,.35);
       box-shadow: 0 0 0 3px rgba(245,158,11,.08);
@@ -246,6 +245,37 @@
     }
     select:focus{
       border-color: rgba(245,158,11,.35);
+    }
+
+    /* ✅ month navigator UI */
+    .mn-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+      transition: all .15s ease;
+    }
+    .mn-row:hover{
+      border-color: rgba(245,158,11,.28);
+      background: rgba(245,158,11,.06);
+      transform: translateY(-1px);
+    }
+    .mn-chip{
+      font-size:9px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:800;
+      padding:3px 8px;
+      border-radius:999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: rgba(226,232,240,.9);
+      white-space:nowrap;
     }
   </style>
 </head>
@@ -349,7 +379,6 @@
               </div>
             </div>
 
-            <!-- ✅ added: remaining + pace -->
             <div class="flex justify-between text-xs text-slate-400 mb-3">
               <span id="goal-remaining">Осталось: 0 ₽</span>
               <span id="goal-pace">Темп: 0 ₽/д</span>
@@ -377,17 +406,48 @@
           </div>
 
           <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[420px] relative overflow-hidden">
-            <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0 flex justify-between items-center">
-              <div class="w-full">
-                <h2 id="selected-date-big" class="text-2xl font-display font-bold text-white"></h2>
-                <p id="selected-weekday" class="text-amber-500 text-[10px] uppercase font-bold tracking-widest"></p>
+            <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0">
+              <div class="flex justify-between items-start gap-3">
+                <div class="w-full min-w-0">
+                  <h2 id="selected-date-big" class="text-2xl font-display font-bold text-white"></h2>
+                  <p id="selected-weekday" class="text-amber-500 text-[10px] uppercase font-bold tracking-widest"></p>
 
-                <!-- ✅ easy event switcher -->
-                <div id="jumper-wrap" class="mt-3 hidden">
-                  <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Быстрый переход</label>
-                  <select id="event-jumper" class="w-full rounded-xl px-3 py-2 text-sm">
-                    <option value="">—</option>
-                  </select>
+                  <div id="jumper-wrap" class="mt-3 hidden">
+                    <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Быстрый переход (день)</label>
+                    <select id="event-jumper" class="w-full rounded-xl px-3 py-2 text-sm">
+                      <option value="">—</option>
+                    </select>
+                  </div>
+
+                  <!-- ✅ NEW: month navigator (search + filter) -->
+                  <div id="month-nav-wrap" class="mt-4">
+                    <div class="flex items-center justify-between">
+                      <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Навигатор месяца</label>
+                      <div class="text-[9px] text-slate-500 font-mono" id="month-nav-count">0</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="col-span-2">
+                        <div class="relative">
+                          <input id="month-search" type="text" placeholder="Поиск: название, локация, клиент, доп..."
+                            class="w-full bg-black/25 border border-white/10 rounded-xl pl-10 pr-3 py-2 text-sm text-white outline-none focus:border-amber-500/40">
+                          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                      </div>
+
+                      <select id="month-filter" class="col-span-2 rounded-xl px-3 py-2 text-sm">
+                        <option value="all">Все типы</option>
+                        <option value="stage">Сцена</option>
+                        <option value="closeup">Микро</option>
+                        <option value="kids">Дети</option>
+                        <option value="concert">Концерт</option>
+                        <option value="rehearsal">Репетиция</option>
+                      </select>
+                    </div>
+
+                    <div id="month-results" class="mt-2 space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1"></div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -436,7 +496,6 @@
 
       <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0 justify-center">
         <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
-        <!-- ✅ renamed -->
         <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Доп</button>
         <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
         <button onclick="window.switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
@@ -498,7 +557,6 @@
           </div>
         </div>
 
-        <!-- ✅ same tab id, but now "Доп" -->
         <div id="tab-setlist" class="hidden space-y-3 max-w-xs mx-auto">
           <div class="text-center text-slate-400 text-xs">
             Добавь пункты “доп” (условия, реквизит, договор, дедлайны) — они будут видны на карточке события.
@@ -709,7 +767,7 @@
     let goalCelebrated = false;
 
     let currentType = 'stage';
-    let currentSetlist = []; // now used as "Доп"
+    let currentSetlist = []; // "Доп"
     let currentSchedule = [];
     let editingId = null;
 
@@ -718,6 +776,7 @@
       renderSidebar();
       renderStats();
       renderAnalytics();
+      renderMonthNavigator();
       lucide.createIcons();
     }
 
@@ -771,6 +830,7 @@
           selectedDate = new Date(year, month, d);
           renderCalendar();
           renderSidebar();
+          renderMonthNavigator();
           window.openModal(false);
         };
 
@@ -802,7 +862,7 @@
         .filter(e => e.dateISO === dateISO)
         .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
 
-      // ✅ jumper
+      // jumper (day)
       const jumperWrap = document.getElementById('jumper-wrap');
       const jumper = document.getElementById('event-jumper');
       if(jumperWrap && jumper){
@@ -879,7 +939,6 @@
             notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
           }
 
-          // ✅ reflect "Доп" on card
           let extraBlock = '';
           if(Array.isArray(e.setlist) && e.setlist.length){
             const joined = e.setlist.slice(0,6).join(' • ');
@@ -996,7 +1055,6 @@
       }
       goalBar.style.width = `${pct}%`;
 
-      // ✅ remaining + pace
       const remaining = Math.max(0, Math.round(monthlyGoal - profit));
       const remEl = document.getElementById('goal-remaining');
       const paceEl = document.getElementById('goal-pace');
@@ -1014,7 +1072,6 @@
       } else if(isCurrentMonth){
         daysLeft = Math.max(0, daysInMonth - today.getDate());
       } else {
-        // future month: pace across whole month
         daysLeft = daysInMonth;
       }
 
@@ -1087,6 +1144,148 @@
       lucide.createIcons();
     }
 
+    // ✅ NEW: Month navigator (search + filter + jump)
+    function normalizeText(s){
+      return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+    }
+
+    function primaryTypeOfEvent(e){
+      return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
+    }
+
+    function eventSearchBlob(e){
+      const parts = [
+        e.title, e.location, e.clientName, e.clientPhone, e.notes,
+        Array.isArray(e.setlist) ? e.setlist.join(' ') : ''
+      ];
+      return normalizeText(parts.join(' '));
+    }
+
+    function formatDateShort(iso){
+      // iso yyyy-mm-dd
+      const [y,m,d] = iso.split('-').map(Number);
+      const dt = new Date(y, m-1, d);
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      return `${dd}.${mm}`;
+    }
+
+    function safeTime(e){
+      return (e.time || (e.schedule?.[0]?.time) || '—');
+    }
+
+    function buildMonthIndex(){
+      const year = currentDate.getFullYear();
+      const month1 = currentDate.getMonth() + 1;
+      return getMonthEvents(year, month1)
+        .slice()
+        .sort((a,b)=>{
+          const da = a.dateISO.localeCompare(b.dateISO);
+          if(da !== 0) return da;
+          return safeTime(a).localeCompare(safeTime(b));
+        })
+        .map(e => ({
+          id: e.id,
+          dateISO: e.dateISO,
+          dateShort: formatDateShort(e.dateISO),
+          time: safeTime(e),
+          title: e.title || 'Событие',
+          type: primaryTypeOfEvent(e),
+          typeLabel: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).label,
+          typeIcon: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).icon,
+          typeColor: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).color,
+          search: eventSearchBlob(e),
+        }));
+    }
+
+    function renderMonthNavigator(){
+      const wrap = document.getElementById('month-nav-wrap');
+      const results = document.getElementById('month-results');
+      const countEl = document.getElementById('month-nav-count');
+      const inp = document.getElementById('month-search');
+      const sel = document.getElementById('month-filter');
+      if(!wrap || !results || !inp || !sel) return;
+
+      const q = normalizeText(inp.value);
+      const filter = sel.value || 'all';
+
+      const idx = buildMonthIndex();
+      let filtered = idx;
+
+      if(filter !== 'all'){
+        filtered = filtered.filter(x => x.type === filter);
+      }
+      if(q){
+        filtered = filtered.filter(x => x.search.includes(q));
+      }
+
+      if(countEl) countEl.textContent = `${filtered.length}`;
+
+      results.innerHTML = '';
+      if(idx.length === 0){
+        results.innerHTML = `<div class="text-center text-slate-500 text-xs py-2">В этом месяце событий нет</div>`;
+        return;
+      }
+      if(filtered.length === 0){
+        results.innerHTML = `<div class="text-center text-slate-500 text-xs py-2">Ничего не найдено</div>`;
+        return;
+      }
+
+      // show top 12 results (enough, but not spammy)
+      filtered.slice(0, 12).forEach(x=>{
+        const row = document.createElement('div');
+        row.className = 'mn-row';
+        row.onclick = () => window.jumpToEvent(x.id);
+
+        const chip = `
+          <span class="mn-chip">${x.dateShort} • ${x.time}</span>
+        `;
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+              <i data-lucide="${x.typeIcon}" class="w-4 h-4"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-white font-semibold truncate">${x.title}</div>
+              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-widest truncate">${x.typeLabel}</div>
+            </div>
+          </div>
+          <div class="shrink-0">${chip}</div>
+        `;
+        results.appendChild(row);
+      });
+
+      lucide.createIcons();
+    }
+
+    window.jumpToEvent = (id) => {
+      const ev = events.find(e => e.id === Number(id));
+      if(!ev || !ev.dateISO) return;
+
+      const [y,m,d] = ev.dateISO.split('-').map(Number);
+      selectedDate = new Date(y, m-1, d);
+      currentDate = new Date(y, m-1, 1);
+
+      // if mobile and calendar visible -> switch to dashboard
+      const dashIsHidden = document.getElementById('view-dashboard')?.classList.contains('mobile-hidden');
+      if(dashIsHidden){
+        window.switchMobileTab('dashboard');
+      }
+
+      renderCalendar();
+      renderSidebar();
+      renderMonthNavigator();
+
+      setTimeout(() => {
+        const target = document.getElementById(`event-card-${id}`);
+        if(target){
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+          flashCard(target);
+        }
+      }, 120);
+    };
+
+    // schedule controls
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
@@ -1145,6 +1344,7 @@
       currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur)));
     };
 
+    // month picker
     window.openMonthPicker = () => {
       pickerYear = currentDate.getFullYear();
       document.getElementById('picker-year-display').innerText = pickerYear;
@@ -1235,6 +1435,7 @@
       renderApp();
     }
 
+    // settings
     window.openSettings = () => {
       document.getElementById('settings-modal').classList.remove('hidden');
       lucide.createIcons();
@@ -1253,7 +1454,7 @@
 
     window.exportData = () => {
       const dateStr = new Date().toISOString().split('T')[0];
-      const data = { events, goal: monthlyGoal, version: '1.6' };
+      const data = { events, goal: monthlyGoal, version: '1.7' };
       const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1307,6 +1508,7 @@
       localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
       renderStats();
       renderAnalytics();
+      renderMonthNavigator();
       window.closeGoalModal();
       window.showToast('Цель обновлена');
     };
@@ -1351,6 +1553,7 @@
       updateBottomNavMetrics();
     };
 
+    // event modal
     window.openModal = (isEdit=false) => {
       document.getElementById('event-modal').classList.remove('hidden');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
@@ -1425,7 +1628,6 @@
       }
     };
 
-    // now used to add "Доп"
     window.addTrick = () => {
       const val = document.getElementById('inp-trick').value.trim();
       if(val){
@@ -1488,7 +1690,7 @@
         prepay: Math.round(parseNum(document.getElementById('inp-prepay').value)),
         expense: Math.round(parseNum(document.getElementById('inp-expense').value)),
         notes: document.getElementById('inp-notes').value,
-        setlist: currentSetlist, // "Доп"
+        setlist: currentSetlist,
         dateISO
       };
 
@@ -1593,6 +1795,7 @@
       }
     };
 
+    // background particles
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1674,10 +1877,24 @@
     window.addEventListener('resize', updateBottomNavMetrics);
     window.addEventListener('orientationchange', () => setTimeout(updateBottomNavMetrics, 120));
 
+    function bindMonthNavigatorInputs(){
+      const inp = document.getElementById('month-search');
+      const sel = document.getElementById('month-filter');
+      if(inp && !inp.__bound){
+        inp.__bound = true;
+        inp.addEventListener('input', () => renderMonthNavigator());
+      }
+      if(sel && !sel.__bound){
+        sel.__bound = true;
+        sel.addEventListener('change', () => renderMonthNavigator());
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       loadLocalData();
       initParticles();
       updateBottomNavMetrics();
+      bindMonthNavigatorInputs();
       lucide.createIcons();
     });
   </script>
