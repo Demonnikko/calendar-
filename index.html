@@ -1,197 +1,198 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Illusionist OS</title>
 
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Illusionist OS" />
-  <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="icon" type="image/png" href="icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Illusionist OS">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --gold-primary:#f59e0b;
-      --dark-bg:#050507;
-      --card-surface:rgba(255,255,255,.03);
-      --card-border:rgba(255,255,255,.06);
+    :root {
+      --gold-primary: #f59e0b;
+      --dark-bg: #050507;
+      --card-surface: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.06);
 
-      /* Навигация снизу на мобиле */
+      /* mobile bottom nav */
       --bottom-nav-h: 72px;
-      --bottom-nav-gap: 14px; /* визуальный отступ от края */
     }
 
-    body{
-      font-family:'Inter',sans-serif;
-      background-color:var(--dark-bg);
-      color:#e2e8f0;
-      overflow:hidden;
-      overscroll-behavior:none;
-      min-height:100dvh;
-      position:fixed;
-      width:100%;
-      height:100%;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark-bg);
+      color: #e2e8f0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      min-height: 100dvh;
+      position: fixed;
+      width: 100%;
+      height: 100%;
     }
 
-    h1,h2,h3,.font-display{font-family:'Cinzel',serif;}
+    h1, h2, h3, .font-display { font-family: 'Cinzel', serif; }
 
-    .noise-overlay{
-      position:fixed;top:0;left:0;width:100%;height:100%;
-      pointer-events:none;z-index:0;opacity:.03;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    .noise-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0; opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 
-    .glass-panel{
-      background:linear-gradient(180deg,rgba(30,41,59,.7) 0%,rgba(15,23,42,.6) 100%);
-      backdrop-filter:blur(24px);
-      -webkit-backdrop-filter:blur(24px);
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 4px 30px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
+    .glass-panel {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.6) 100%);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
-    ::-webkit-scrollbar{width:4px}
-    ::-webkit-scrollbar-track{background:transparent}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px}
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
-    .tab-active{
-      background-color:rgba(51,65,85,.5);
-      color:white;
-      box-shadow:0 0 10px rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.1);
+    .tab-active {
+      background-color: rgba(51, 65, 85, 0.5); color: white;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
     }
 
-    #bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
     input[type="time"]::-webkit-calendar-picker-indicator,
-    input[type="date"]::-webkit-calendar-picker-indicator{
-      filter:invert(1);opacity:.5;cursor:pointer;
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); opacity: 0.5; cursor: pointer;
     }
 
-    .no-hor-scroll{overflow-x:hidden;max-width:100vw}
+    .no-hor-scroll { overflow-x: hidden; max-width: 100vw; }
 
-    .calendar-cell{
-      position:relative;background:var(--card-surface);
-      border:1px solid var(--card-border);
-      border-radius:12px;
-      overflow:hidden;
-      transition:all .2s ease;
-      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      padding-top:6px;gap:4px;
+    .calendar-cell {
+      position: relative; background: var(--card-surface);
+      border: 1px solid var(--card-border); border-radius: 12px;
+      overflow: hidden; transition: all 0.2s ease;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      padding-top: 6px; gap: 4px;
     }
-    .calendar-cell:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05);transform:translateY(-1px)}
-    .calendar-cell.selected{border-color:rgba(245,158,11,.4);box-shadow:0 0 15px rgba(245,158,11,.1);background:rgba(245,158,11,.05)}
-    .calendar-cell.today .date-number{background:linear-gradient(135deg,#fbbf24,#d97706);color:#000;font-weight:700;box-shadow:0 2px 5px rgba(245,158,11,.3)}
+    .calendar-cell:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); transform: translateY(-1px); }
+    .calendar-cell.selected { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.1); background: rgba(245, 158, 11, 0.05); }
+    .calendar-cell.today .date-number { background: linear-gradient(135deg, #fbbf24, #d97706); color: #000; font-weight: 700; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3); }
 
-    .date-number{
-      font-size:11px;font-weight:500;color:rgba(255,255,255,.6);
-      width:20px;height:20px;display:flex;align-items:center;justify-content:center;
-      border-radius:6px;transition:all .2s;
+    .date-number {
+      font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.6);
+      width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; transition: all 0.2s;
     }
 
-    .calendar-cell-content{width:100%;display:flex;flex-direction:column;gap:2px;padding:0 3px;align-items:center}
-    .event-label{
-      font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-      border-radius:3px;padding:2px 4px;text-align:center;cursor:pointer;
-      transition:all .2s;color:rgba(255,255,255,.9);font-weight:600;
-      letter-spacing:.03em;text-transform:uppercase;width:90%;
-      border:1px solid transparent;
+    .calendar-cell-content { width: 100%; display: flex; flex-direction: column; gap: 2px; padding: 0 3px; align-items: center; }
+    .event-label {
+      font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-radius: 3px; padding: 2px 4px; text-align: center; cursor: pointer;
+      transition: all 0.2s; color: rgba(255,255,255,0.9); font-weight: 600;
+      letter-spacing: 0.03em; text-transform: uppercase; width: 90%; border: 1px solid transparent;
     }
-    .event-label:hover{transform:scale(1.02);filter:brightness(1.1);z-index:10}
+    .event-label:hover { transform: scale(1.02); filter: brightness(1.1); z-index: 10; }
 
-    .event-stage{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:#fbbf24}
-    .event-closeup{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.3);color:#c084fc}
-    .event-kids{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);color:#34d399}
-    .event-concert{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3);color:#60a5fa}
-    .event-rehearsal{background:rgba(148,163,184,.15);border-color:rgba(148,163,184,.3);color:#cbd5e1}
+    .event-stage { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+    .event-closeup { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3); color: #c084fc; }
+    .event-kids { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+    .event-concert { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+    .event-rehearsal { background: rgba(148, 163, 184, 0.15); border-color: rgba(148, 163, 184, 0.3); color: #cbd5e1; }
 
-    .month-summary{
-      margin-top:auto;margin-bottom:4px;
-      background:linear-gradient(90deg,transparent,rgba(245,158,11,.1),transparent);
-      border-top:1px solid rgba(245,158,11,.2);
-      border-bottom:1px solid rgba(245,158,11,.2);
-      padding:2px 0;font-size:7px;width:80%;text-align:center;
-      text-transform:uppercase;font-weight:700;color:#fbbf24;letter-spacing:1.5px;
+    .month-summary {
+      margin-top: auto; margin-bottom: 4px;
+      background: linear-gradient(90deg, transparent, rgba(245,158,11,0.1), transparent);
+      border-top: 1px solid rgba(245,158,11,0.2); border-bottom: 1px solid rgba(245,158,11,0.2);
+      padding: 2px 0; font-size: 7px; width: 80%; text-align: center;
+      text-transform: uppercase; font-weight: 700; color: #fbbf24; letter-spacing: 1.5px;
     }
 
-    .confetti{position:absolute;width:8px;height:8px;background-color:#f59e0b;animation:fall linear forwards;z-index:9999}
-    @keyframes fall{to{transform:translateY(100vh) rotate(720deg);opacity:0}}
+    .confetti { position: absolute; width: 8px; height: 8px; background-color: #f59e0b; animation: fall linear forwards; z-index: 9999; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
-    .pb-safe{padding-bottom:env(safe-area-inset-bottom,20px)}
-    .pt-safe{padding-top:env(safe-area-inset-top,20px)}
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
 
-    @media (max-width:1024px){
-      .mobile-hidden{display:none!important}
-      button{min-height:44px}
+    @media (max-width: 1024px) { .mobile-hidden { display: none !important; } button { min-height: 44px; } }
+
+    .type-btn { position: relative; overflow: hidden; }
+    .type-btn.selected { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+    .type-btn.selected i { transform: scale(1.1); }
+    .type-btn#type-stage.selected { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
+    .type-btn#type-closeup.selected { border-color: #a855f7; background-color: rgba(168, 85, 247, 0.1); }
+    .type-btn#type-kids.selected { border-color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+    .type-btn#type-concert.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+    .type-btn#type-rehearsal.selected { border-color: #94a3b8; background-color: rgba(148, 163, 184, 0.1); }
+
+    /* Тайминг: добавили длительность */
+    .act-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 78px 30px;
+      gap: 8px;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 6px;
+      margin-bottom: 6px;
+    }
+    .act-dur {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      height: 32px;
+      padding: 0 8px;
+    }
+    .act-dur input {
+      width: 44px;
+      background: transparent;
+      color: #fff;
+      outline: none;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+    .act-dur span {
+      font-size: 10px;
+      color: rgba(245,158,11,0.9);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .type-btn{position:relative;overflow:hidden}
-    .type-btn.selected{background-color:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3)}
-    .type-btn.selected i{transform:scale(1.1)}
-    .type-btn#type-stage.selected{border-color:#f59e0b;background-color:rgba(245,158,11,.1)}
-    .type-btn#type-closeup.selected{border-color:#a855f7;background-color:rgba(168,85,247,.1)}
-    .type-btn#type-kids.selected{border-color:#10b981;background-color:rgba(16,185,129,.1)}
-    .type-btn#type-concert.selected{border-color:#3b82f6;background-color:rgba(59,130,246,.1)}
-    .type-btn#type-rehearsal.selected{border-color:#94a3b8;background-color:rgba(148,163,184,.1)}
-
-    /* Список таймингов: добавили длительность */
-    .act-row{
-      display:grid;
-      grid-template-columns:40px 1fr 76px 30px;
-      gap:8px;
-      align-items:center;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:8px;
-      padding:6px;
-      margin-bottom:6px;
-    }
-    .act-dur{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:8px;
-      padding:6px 8px;
-      height:32px;
-    }
-    .act-dur input{
-      width:44px;
-      background:transparent;
-      color:#fff;
-      outline:none;
-      text-align:center;
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:12px;
-    }
-    .act-dur span{
-      font-size:10px;
-      color:rgba(245,158,11,.9);
-      font-weight:700;
-      letter-spacing:.08em;
-      text-transform:uppercase;
+    /* ✅ FIX: Toast ниже "чёлки" */
+    .toast-safe {
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
     }
 
-    /* Нижняя навигация: учитывать safe-area */
+    /* ✅ FIX: Нижняя навигация реально у низа + safe-area внутри */
     .bottom-nav-safe{
-      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-gap));
-      height: var(--bottom-nav-h);
+      bottom: 0;
+      height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
+      box-sizing: border-box;
     }
 
-    /* Чтобы контент дашборда не прятался за нижним меню */
+    /* ✅ Контент отступает ровно под нижнее меню */
+    .app-safe-pad{
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-h) + 18px);
+    }
+    @media (min-width: 1024px){
+      .app-safe-pad{ padding-bottom: 24px; }
+    }
+
     .dash-safe-pad{
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-h) + 28px);
     }
 
-    /* Плавающая кнопка на десктопе — пусть не лезет в safe-area */
     .fab-safe{
       bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
     }
@@ -199,13 +200,14 @@
 </head>
 
 <body class="h-screen flex flex-col text-sm md:text-base no-hor-scroll pt-safe">
+
   <div class="noise-overlay"></div>
   <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
   <canvas id="bg-canvas"></canvas>
   <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[200]"></div>
 
-  <!-- Toast (чтобы showToast не ломал приложение) -->
-  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[300] opacity-0 -translate-y-4 transition-all duration-300 pointer-events-none">
+  <!-- ✅ Toast -->
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 z-[300] opacity-0 -translate-y-4 transition-all duration-300 pointer-events-none toast-safe">
     <div class="glass-panel rounded-2xl px-4 py-3 border border-amber-500/20 shadow-2xl">
       <div class="flex items-center gap-2">
         <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
@@ -215,7 +217,8 @@
   </div>
 
   <!-- App Container -->
-  <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 pb-24 lg:p-6 lg:pb-6 no-hor-scroll">
+  <div class="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto p-4 lg:p-6 no-hor-scroll app-safe-pad">
+
     <!-- HEADER -->
     <header class="flex justify-between items-center mb-4 shrink-0 gap-2">
       <div class="flex items-center gap-2 md:gap-3 overflow-hidden">
@@ -253,6 +256,7 @@
 
     <!-- MAIN CONTENT AREA -->
     <div class="flex-1 overflow-hidden relative">
+
       <!-- VIEW: CALENDAR -->
       <div id="view-calendar" class="h-full flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 w-full absolute inset-0 transition-opacity duration-300">
         <div class="lg:col-span-8 glass-panel rounded-2xl p-2 md:p-4 flex flex-col h-full relative overflow-hidden">
@@ -267,13 +271,13 @@
           </div>
           <div id="calendar-grid" class="grid grid-cols-7 gap-1 lg:gap-2 flex-1 auto-rows-fr overflow-y-auto custom-scrollbar pb-4"></div>
         </div>
-
         <div class="hidden lg:flex lg:col-span-4 flex-col gap-6 h-full overflow-hidden"></div>
       </div>
 
       <!-- VIEW: DASHBOARD -->
       <div id="view-dashboard" class="h-full flex flex-col lg:absolute lg:top-0 lg:right-0 lg:w-[32%] lg:h-full mobile-hidden">
         <div class="flex flex-col gap-4 h-full dash-safe-pad">
+
           <!-- Stats -->
           <div class="glass-panel rounded-2xl p-4 shrink-0">
             <div class="flex justify-between items-center mb-3">
@@ -281,7 +285,6 @@
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Финансы
               </h3>
             </div>
-
             <div class="text-center mb-3 relative">
               <span id="stat-profit" class="text-3xl font-display font-bold text-white tracking-tight">0</span>
               <span class="text-lg text-slate-500 font-display ml-1">₽</span>
@@ -293,10 +296,15 @@
             <div class="mb-3">
               <div class="flex justify-between text-xs mb-1 text-slate-400">
                 <span>Цель</span>
-                <span id="goal-amount" class="relative z-[2] pointer-events-auto cursor-pointer hover:text-white border-b border-dashed border-slate-600" onclick="window.editGoal()">200k ₽</span>
+                <!-- ✅ FIX: кликабельность -->
+                <span id="goal-amount"
+                      class="relative z-[5] pointer-events-auto cursor-pointer hover:text-white border-b border-dashed border-slate-600"
+                      onclick="window.editGoal()">
+                  200k ₽
+                </span>
               </div>
               <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden relative">
-                <div id="goal-progress" class="h-full bg-gradient-to-r from-amber-700 to-yellow-400 transition-all duration-1000" style="width:0%"></div>
+                <div id="goal-progress" class="h-full bg-gradient-to-r from-amber-700 to-yellow-400 transition-all duration-1000" style="width: 0%"></div>
               </div>
             </div>
 
@@ -312,7 +320,7 @@
             </div>
           </div>
 
-          <!-- Event List (ПЕРЕМЕЩЕНО ВМЕСТО "ПОПУЛЯРНОСТИ") -->
+          <!-- ✅ События вместо популярности (как ты просил) -->
           <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-0 relative overflow-hidden">
             <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0 flex justify-between items-center">
               <div>
@@ -323,7 +331,7 @@
             <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-16"></div>
           </div>
 
-          <!-- Popularity Analytics (ОПУЩЕНО ВНИЗ) -->
+          <!-- Популярность ниже -->
           <div class="glass-panel rounded-2xl p-4 shrink-0">
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
@@ -332,8 +340,10 @@
             </div>
             <div id="analytics-list" class="space-y-3"></div>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 
@@ -362,8 +372,8 @@
   <!-- EVENT MODAL -->
   <div id="event-modal" class="fixed inset-0 z-[100] hidden no-hor-scroll">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeModal()"></div>
-
     <div class="absolute bottom-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[420px] h-[90vh] md:h-auto md:max-h-[85vh] bg-[#0f172a] md:border border-amber-500/20 md:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter">
+
       <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
         <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="modal-title">Новое Событие</h3>
         <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
@@ -380,6 +390,7 @@
 
       <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
         <div id="tab-info" class="space-y-4 max-w-xs mx-auto">
+
           <!-- Event Types -->
           <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
             <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all selected">
@@ -415,7 +426,7 @@
             <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
 
-          <!-- Schedule/Timing List -->
+          <!-- ✅ Schedule/Timing List with duration -->
           <div class="bg-white/5 rounded-xl border border-white/10 p-3">
             <label class="text-[10px] text-amber-500 uppercase font-bold mb-2 block text-center">Тайминг Выступлений</label>
             <div id="schedule-list" class="space-y-2 mb-3"></div>
@@ -438,42 +449,34 @@
         <div id="tab-setlist" class="hidden space-y-3 max-w-xs mx-auto">
           <div class="flex gap-2">
             <input type="text" id="inp-trick" placeholder="Трюк..." class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
-            <button onclick="window.addTrick()" class="bg-amber-600 px-4 rounded-xl text-white">
-              <i data-lucide="plus"></i>
-            </button>
+            <button onclick="window.addTrick()" class="bg-amber-600 px-4 rounded-xl text-white"><i data-lucide="plus"></i></button>
           </div>
           <ul id="setlist-container" class="space-y-2 text-sm text-slate-300 pb-4"></ul>
         </div>
 
         <div id="tab-finance" class="hidden space-y-4 max-w-xs mx-auto">
-          <!-- Income -->
           <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
             <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая стоимость</label>
             <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
           </div>
 
-          <!-- Prepay & Balance -->
           <div class="grid grid-cols-2 gap-3">
-            <!-- Prepay Amount -->
             <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center relative group">
               <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Предоплата</label>
               <input type="number" id="inp-prepay" placeholder="0" class="w-full bg-transparent text-lg font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
             </div>
 
-            <!-- Prepay Percent -->
             <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">%</label>
               <input type="number" id="inp-prepay-percent" placeholder="0" class="w-full bg-transparent text-lg font-mono text-amber-400 outline-none text-center" oninput="window.calcBalanceFromPercent()">
             </div>
           </div>
 
-          <!-- Balance Display -->
           <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center flex flex-col justify-center">
             <label class="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Остаток</label>
             <span id="txt-balance" class="text-lg font-mono text-slate-500 font-bold">0</span>
           </div>
 
-          <!-- Expense -->
           <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
             <label class="text-[10px] text-red-400 font-bold uppercase block mb-1">Расход</label>
             <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-xl font-mono text-white outline-none text-center">
@@ -496,46 +499,11 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL (чтобы кнопка шестерёнки не ломала всё) -->
-  <div id="settings-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
-    <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-          <i data-lucide="settings" class="w-4 h-4"></i> Настройки
-        </h3>
-        <button onclick="window.closeSettings()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
-          <i data-lucide="x" class="w-4 h-4 text-slate-400"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <button onclick="window.editGoal()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition font-bold">
-          Изменить цель
-        </button>
-
-        <button onclick="window.exportData()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition font-bold">
-          Экспорт данных
-        </button>
-
-        <label class="block w-full">
-          <input type="file" accept="application/json" class="hidden" id="import-file" onchange="window.importData(this)" />
-          <div class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition font-bold text-center cursor-pointer">
-            Импорт данных
-          </div>
-        </label>
-
-        <p class="text-[11px] text-slate-500 leading-snug">
-          Экспорт/импорт — чтобы не потерять магию, если Safari решит «а давай всё забудем».
-        </p>
-      </div>
-    </div>
-  </div>
-
   <!-- MONTH PICKER MODAL -->
   <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
+
       <div class="flex items-center justify-between w-full mb-6">
         <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-left" class="w-6 h-6"></i>
@@ -565,18 +533,63 @@
     </div>
   </div>
 
+  <!-- SETTINGS MODAL (в твоём HTML его не было — из-за этого кнопка ⚙️ ломала всё) -->
+  <div id="settings-modal" class="fixed inset-0 z-[120] hidden no-hor-scroll">
+    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
+    <div class="absolute bottom-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[420px] h-[70vh] md:h-auto md:max-h-[85vh] bg-[#0f172a] md:border border-amber-500/20 md:rounded-2xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
+        <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8">Настройки</h3>
+        <button onclick="window.closeSettings()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto overflow-x-hidden flex-1 space-y-4">
+        <div class="glass-panel rounded-2xl p-4">
+          <h4 class="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i> Резервная копия
+          </h4>
+          <button onclick="window.exportData()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-slate-200 font-bold">
+            Экспорт (JSON)
+          </button>
+
+          <div class="mt-3">
+            <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Импорт</label>
+            <input id="import-file" type="file" accept="application/json" class="w-full text-xs text-slate-300"
+                   onchange="window.importData(this)">
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4">
+          <h4 class="text-xs font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4"></i> Цель
+          </h4>
+          <button onclick="window.editGoal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg hover:scale-[1.01] transition">
+            Изменить цель
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5 border-t border-white/5 bg-slate-900/80 shrink-0">
+        <button onclick="window.closeSettings()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-slate-200 font-bold">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- CONSTANTS ---
-    const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+    const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
     const TYPES = {
-      'stage':    { label:'Сцена',      color:'event-stage',    text:'text-amber-100',  icon:'star',      border:'border-amber-500',   bar:'bg-amber-500' },
-      'closeup':  { label:'Микромагия', color:'event-closeup',  text:'text-purple-100', icon:'sparkles',  border:'border-purple-500',  bar:'bg-purple-500' },
-      'kids':     { label:'Детское шоу',color:'event-kids',     text:'text-emerald-100',icon:'rabbit',    border:'border-emerald-500', bar:'bg-emerald-500' },
-      'concert':  { label:'Концерт',    color:'event-concert',  text:'text-blue-100',   icon:'mic-2',     border:'border-blue-500',    bar:'bg-blue-500' },
-      'rehearsal':{ label:'Репетиция',  color:'event-rehearsal',text:'text-slate-200',  icon:'hourglass', border:'border-slate-500',   bar:'bg-slate-500' }
+      'stage': { label: 'Сцена', color: 'event-stage', text: 'text-amber-100', icon: 'star', border: 'border-amber-500', bar: 'bg-amber-500' },
+      'closeup': { label: 'Микромагия', color: 'event-closeup', text: 'text-purple-100', icon: 'sparkles', border: 'border-purple-500', bar: 'bg-purple-500' },
+      'kids': { label: 'Детское шоу', color: 'event-kids', text: 'text-emerald-100', icon: 'rabbit', border: 'border-emerald-500', bar: 'bg-emerald-500' },
+      'concert': { label: 'Концерт', color: 'event-concert', text: 'text-blue-100', icon: 'mic-2', border: 'border-blue-500', bar: 'bg-blue-500' },
+      'rehearsal': { label: 'Репетиция', color: 'event-rehearsal', text: 'text-slate-200', icon: 'hourglass', border: 'border-slate-500', bar: 'bg-slate-500' }
     };
-    const pad2 = (n)=>String(n).padStart(2,'0');
-    const toISODateLocal = (d)=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    const pad2 = (n) => String(n).padStart(2,'0');
+    const toISODateLocal = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
     // --- STATE ---
     let currentDate = new Date();
@@ -592,7 +605,7 @@
     let editingId = null;
 
     // --- RENDER FUNCTIONS ---
-    function renderApp(){
+    function renderApp() {
       renderCalendar();
       renderSidebar();
       renderStats();
@@ -600,24 +613,24 @@
       lucide.createIcons();
     }
 
-    function renderCalendar(){
+    function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       document.getElementById('current-month-display').innerText = `${MONTHS[month]} ${year}`;
 
-      const daysInMonth = new Date(year, month+1, 0).getDate();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
       const firstDayIndex = new Date(year, month, 1).getDay();
       const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
 
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
 
-      for(let i=0;i<adjustedFirstDay;i++) grid.innerHTML += `<div></div>`;
+      for(let i=0; i<adjustedFirstDay; i++) grid.innerHTML += `<div></div>`;
 
       const selectedISO = toISODateLocal(selectedDate);
       const todayISO = toISODateLocal(new Date());
 
-      for(let d=1; d<=daysInMonth; d++){
+      for(let d=1; d<=daysInMonth; d++) {
         const dateISO = `${year}-${pad2(month+1)}-${pad2(d)}`;
         const isSelected = dateISO === selectedISO;
         const isToday = dateISO === todayISO;
@@ -628,7 +641,7 @@
 
         let eventLabels = '';
         const sliceCount = isLastDay ? 2 : 3;
-        dayEvents.slice(0, sliceCount).forEach(e=>{
+        dayEvents.slice(0, sliceCount).forEach(e => {
           const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
           const typeConfig = TYPES[primaryType] || TYPES.stage;
           eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${typeConfig.color} ${typeConfig.text} border-b ${typeConfig.border}/20 shadow-sm">${typeConfig.label}</div>`;
@@ -639,13 +652,15 @@
           : '';
 
         let summaryHtml = '';
-        if (isLastDay){
+        if (isLastDay) {
           summaryHtml = `<div class="month-summary">ИТОГ</div>`;
         }
 
         const cell = document.createElement('div');
-        cell.className = `calendar-cell relative cursor-pointer aspect-[4/5] md:aspect-[3/4] min-h-[70px] ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`;
-        cell.onclick = ()=>{
+        cell.className = `calendar-cell relative cursor-pointer aspect-[4/5] md:aspect-[3/4] min-h-[70px]
+          ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`;
+
+        cell.onclick = () => {
           selectedDate = new Date(year, month, d);
           renderCalendar();
           renderSidebar();
@@ -662,45 +677,45 @@
       }
     }
 
-    function renderSidebar(){
+    function renderSidebar() {
       const dateISO = toISODateLocal(selectedDate);
       document.getElementById('selected-date-big').innerText = selectedDate.getDate();
-      document.getElementById('selected-weekday').innerText = selectedDate.toLocaleDateString('ru-RU',{weekday:'long',month:'long'});
+      document.getElementById('selected-weekday').innerText = selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', month: 'long' });
 
       const list = document.getElementById('events-list');
       list.innerHTML = '';
 
       const dayEvents = events
         .filter(e => e.dateISO === dateISO)
-        .sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+        .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
 
-      if(dayEvents.length===0){
+      if (dayEvents.length === 0) {
         list.innerHTML = `<div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-50">
           <i data-lucide="wand-2" class="w-10 h-10"></i><p class="text-sm">Нет шоу</p>
         </div>`;
       } else {
-        dayEvents.forEach(e=>{
+        dayEvents.forEach(e => {
           const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
           const profit = Number(e.income) > 0
-            ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${Number(e.income).toLocaleString('ru-RU')}</div>`
+            ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${Number(e.income).toLocaleString()}</div>`
             : '';
 
           const el = document.createElement('div');
           el.className = 'group relative bg-white/5 rounded-xl p-3 border border-white/5 hover:border-amber-500/30 transition animate-enter cursor-pointer';
-          el.onclick = ()=>window.editEvent(e.id);
+          el.onclick = () => window.editEvent(e.id);
 
-          // Schedule List (с длительностью)
           let scheduleBlock = '<div class="flex flex-col gap-1 mb-2">';
-          if (e.schedule && e.schedule.length > 0){
-            e.schedule.forEach(act=>{
+          if (e.schedule && e.schedule.length > 0) {
+            e.schedule.forEach(act => {
               const actConfig = TYPES[act.type] || TYPES.stage;
-              const dur = Number(act.duration)||0;
+              const dur = Number(act.durationMin) || 0;
               scheduleBlock += `
                 <div class="flex justify-between items-center text-xs">
                   <span class="flex items-center gap-1 text-slate-300">
                     <i data-lucide="${actConfig.icon}" class="w-3 h-3 text-slate-500"></i> ${actConfig.label}
+                    ${dur > 0 ? `<span class="ml-2 text-[10px] text-slate-500 font-mono">• ${dur}м</span>` : ``}
                   </span>
-                  <span class="font-mono text-amber-500">${act.time}${dur>0 ? ` • ${dur}м` : ''}</span>
+                  <span class="font-mono text-amber-500">${act.time}</span>
                 </div>
               `;
             });
@@ -708,7 +723,7 @@
           scheduleBlock += '</div>';
 
           let clientBlock = '';
-          if(e.clientName || e.clientPhone){
+          if (e.clientName || e.clientPhone) {
             clientBlock = `<div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">`;
             if(e.clientName) clientBlock += `<div class="flex items-center gap-2 text-xs text-slate-300"><i data-lucide="user" class="w-3 h-3 text-slate-500"></i> ${e.clientName}</div>`;
             if(e.clientPhone) clientBlock += `<a href="tel:${e.clientPhone}" onclick="event.stopPropagation()" class="flex items-center gap-2 text-xs text-amber-400 hover:text-amber-300"><i data-lucide="phone" class="w-3 h-3"></i> ${e.clientPhone}</a>`;
@@ -716,24 +731,24 @@
           }
 
           let notesBlock = '';
-          if(e.notes){
+          if (e.notes) {
             notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
           }
 
           let balanceBlock = '';
           const income = Number(e.income) || 0;
           const prepay = Number(e.prepay) || 0;
-          if(income>0){
+          if(income > 0) {
             const bal = income - prepay;
-            if(bal>0) balanceBlock = `<div class="text-[9px] text-amber-500/80 font-mono mt-1 text-right">Остаток: ${bal.toLocaleString('ru-RU')}</div>`;
-            else if(prepay>0) balanceBlock = `<div class="text-[9px] text-slate-500/80 font-mono mt-1 text-right">Оплачено</div>`;
+            if(bal > 0) balanceBlock = `<div class="text-[9px] text-amber-500/80 font-mono mt-1 text-right">Остаток: ${bal.toLocaleString()}</div>`;
+            else if (prepay > 0) balanceBlock = `<div class="text-[9px] text-slate-500/80 font-mono mt-1 text-right">Оплачено</div>`;
           }
 
-          const stripColor =
-            primaryType==='stage' ? 'bg-amber-500' :
-            primaryType==='closeup' ? 'bg-purple-500' :
-            primaryType==='kids' ? 'bg-emerald-500' :
-            primaryType==='concert' ? 'bg-blue-500' : 'bg-slate-500';
+          const stripColor = primaryType === 'stage' ? 'bg-amber-500'
+            : primaryType === 'closeup' ? 'bg-purple-500'
+            : primaryType === 'kids' ? 'bg-emerald-500'
+            : primaryType === 'concert' ? 'bg-blue-500'
+            : 'bg-slate-500';
 
           el.innerHTML = `
             <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r ${stripColor}"></div>
@@ -760,14 +775,14 @@
       lucide.createIcons();
     }
 
-    function renderSetlist(){
+    function renderSetlist() {
       const ul = document.getElementById('setlist-container');
-      if(currentSetlist.length===0){
+      if(currentSetlist.length === 0) {
         ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Список пуст</li>';
         return;
       }
       ul.innerHTML = '';
-      currentSetlist.forEach((t,i)=>{
+      currentSetlist.forEach((t, i) => {
         ul.innerHTML += `<li class="flex justify-between bg-white/5 p-2 rounded border border-white/5">
           <span><span class="text-amber-500 mr-2">${i+1}.</span>${t}</span>
           <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-400 hover:text-white"><i data-lucide="x" class="w-3 h-3"></i></button>
@@ -776,32 +791,32 @@
       lucide.createIcons();
     }
 
-    function renderStats(){
+    function renderStats() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      const monthEvents = events.filter(e=>{
-        if(!e.dateISO) return false;
-        const [y,m] = e.dateISO.split('-').map(Number);
-        return y===year && m===month;
+      const monthEvents = events.filter(e => {
+        if (!e.dateISO) return false;
+        const [y, m] = e.dateISO.split('-').map(Number);
+        return y === year && m === month;
       });
 
-      const income = monthEvents.reduce((acc,c)=>acc+(Number(c.income)||0),0);
-      const expense = monthEvents.reduce((acc,c)=>acc+(Number(c.expense)||0),0);
+      const income = monthEvents.reduce((acc, c) => acc + (Number(c.income)||0), 0);
+      const expense = monthEvents.reduce((acc, c) => acc + (Number(c.expense)||0), 0);
       const profit = income - expense;
 
-      document.getElementById('stat-profit').innerText = profit.toLocaleString('ru-RU');
-      document.getElementById('stat-income').innerText = `+${income.toLocaleString('ru-RU')}`;
-      document.getElementById('stat-expense').innerText = `-${expense.toLocaleString('ru-RU')}`;
+      document.getElementById('stat-profit').innerText = profit.toLocaleString();
+      document.getElementById('stat-income').innerText = `+${income.toLocaleString()}`;
+      document.getElementById('stat-expense').innerText = `-${expense.toLocaleString()}`;
       document.getElementById('goal-amount').innerText = `${(monthlyGoal/1000).toFixed(0)}k ₽`;
 
-      const pct = monthlyGoal>0 ? Math.min(100, Math.round((profit/monthlyGoal)*100)) : 0;
+      const pct = monthlyGoal > 0 ? Math.min(100, Math.round((profit / monthlyGoal) * 100)) : 0;
       const goalBar = document.getElementById('goal-progress');
 
-      if(pct>=100){
+      if (pct >= 100) {
         goalBar.className = "h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-1000 animate-pulse";
         document.getElementById('goal-badge').classList.remove('hidden');
-        if(!goalCelebrated){
+        if (!goalCelebrated) {
           window.celebrateGoal();
           goalCelebrated = true;
         }
@@ -810,72 +825,74 @@
         document.getElementById('goal-badge').classList.add('hidden');
         goalCelebrated = false;
       }
+
       goalBar.style.width = `${pct}%`;
     }
 
-    function renderAnalytics(){
+    function renderAnalytics() {
       const container = document.getElementById('analytics-list');
-      if(!container) return;
-
+      if (!container) return;
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-
-      const monthEvents = events.filter(e=>{
-        if(!e.dateISO) return false;
-        const [y,m] = e.dateISO.split('-').map(Number);
-        return y===year && m===month;
+      const monthEvents = events.filter(e => {
+        if (!e.dateISO) return false;
+        const [y, m] = e.dateISO.split('-').map(Number);
+        return y === year && m === month;
       });
 
       const stats = {};
-      Object.keys(TYPES).forEach(k=>stats[k] = { count:0, income:0, ...TYPES[k] });
+      Object.keys(TYPES).forEach(k => stats[k] = { count: 0, income: 0, ...TYPES[k] });
       let totalCount = 0;
 
-      monthEvents.forEach(e=>{
-        const inc = Number(e.income)||0;
-        if(e.schedule && e.schedule.length>0){
+      monthEvents.forEach(e => {
+        const income = Number(e.income) || 0;
+        if (e.schedule && e.schedule.length > 0) {
           const prim = e.schedule[0].type;
-          if(stats[prim]) stats[prim].income += inc;
-          e.schedule.forEach(act=>{
-            if(stats[act.type]){ stats[act.type].count++; totalCount++; }
+          if(stats[prim]) stats[prim].income += income;
+          e.schedule.forEach(act => {
+            if(stats[act.type]) { stats[act.type].count++; totalCount++; }
           });
         }
       });
 
       container.innerHTML = '';
-      if(totalCount===0){
+      if (totalCount === 0) {
         container.innerHTML = '<div class="text-center text-slate-500 text-xs py-2">Нет данных за этот месяц</div>';
         return;
       }
 
-      const sorted = Object.entries(stats).map(([k,v])=>({key:k,...v})).sort((a,b)=>b.count-a.count);
-      sorted.forEach(item=>{
-        if(item.count===0) return;
-        const pct = Math.round((item.count/totalCount)*100);
+      const sorted = Object.entries(stats)
+        .map(([k, v]) => ({ key: k, ...v }))
+        .sort((a, b) => b.count - a.count);
+
+      sorted.forEach(item => {
+        if (item.count === 0) return;
+        const pct = Math.round((item.count / totalCount) * 100);
         container.innerHTML += `
           <div class="flex flex-col gap-1">
             <div class="flex justify-between text-[10px] text-slate-300">
-              <span class="flex items-center gap-1"><i data-lucide="${item.icon}" class="w-3 h-3 text-slate-400"></i> ${item.label}</span>
+              <span class="flex items-center gap-1">
+                <i data-lucide="${item.icon}" class="w-3 h-3 text-slate-400"></i> ${item.label}
+              </span>
               <span class="font-mono opacity-80">${item.count} (${pct}%)</span>
             </div>
             <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div class="h-full ${item.bar || 'bg-slate-500'}" style="width:${pct}%"></div>
+              <div class="h-full ${item.bar || 'bg-slate-500'}" style="width: ${pct}%"></div>
             </div>
             <div class="text-[8px] text-slate-500 text-right">
-              ${item.income>0 ? '+' + item.income.toLocaleString('ru-RU') + ' ₽' : ''}
+              ${item.income > 0 ? '+' + item.income.toLocaleString() + ' ₽' : ''}
             </div>
           </div>
         `;
       });
-
       lucide.createIcons();
     }
 
-    // --- SCHEDULE LOGIC (добавили duration) ---
+    // --- SCHEDULE LOGIC ---
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
-
-      currentSchedule.forEach((item,index)=>{
+      currentSchedule.forEach((item, index) => {
         const row = document.createElement('div');
         row.className = 'act-row';
 
@@ -884,7 +901,8 @@
         const nextType = typeKeys[(currentTypeIdx + 1) % typeKeys.length];
         const tConfig = TYPES[item.type] || TYPES.stage;
 
-        const dur = Number(item.duration)||60;
+        const dur = Number(item.durationMin);
+        const safeDur = Number.isFinite(dur) ? dur : 60;
 
         row.innerHTML = `
           <button onclick="window.updateActType(${index}, '${nextType}')" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition" title="${tConfig.label}">
@@ -894,7 +912,7 @@
           <input type="time" value="${item.time}" onchange="window.updateActTime(${index}, this.value)" class="bg-transparent text-white text-sm font-mono text-center outline-none w-full">
 
           <div class="act-dur" title="Длительность (мин)">
-            <input type="number" min="1" max="600" value="${dur}" onchange="window.updateActDuration(${index}, this.value)" />
+            <input type="number" min="0" step="5" value="${safeDur}" onchange="window.updateActDuration(${index}, this.value)" />
             <span>мин</span>
           </div>
 
@@ -904,22 +922,22 @@
         `;
         list.appendChild(row);
       });
-
       lucide.createIcons();
     };
 
     window.addAct = () => {
-      currentSchedule.push({ type: 'stage', time: '19:00', duration: 60 });
+      currentSchedule.push({ type: currentType || 'stage', time: '19:00', durationMin: 60 });
       window.renderSchedule();
     };
 
     window.removeAct = (index) => {
-      currentSchedule.splice(index,1);
+      currentSchedule.splice(index, 1);
       window.renderSchedule();
     };
 
     window.updateActType = (index, newType) => {
       currentSchedule[index].type = newType;
+      currentType = newType;
       window.renderSchedule();
     };
 
@@ -927,9 +945,9 @@
       currentSchedule[index].time = newTime;
     };
 
-    window.updateActDuration = (index, newDuration) => {
-      const n = Number(newDuration);
-      currentSchedule[index].duration = (Number.isFinite(n) && n > 0) ? Math.round(n) : 60;
+    window.updateActDuration = (index, newDur) => {
+      const n = Math.max(0, Number(newDur) || 0);
+      currentSchedule[index].durationMin = n;
     };
 
     // --- MONTH PICKER LOGIC ---
@@ -961,52 +979,46 @@
       const btns = document.querySelectorAll('.month-btn');
       btns.forEach((btn, idx) => {
         if (pickerYear === currentDate.getFullYear() && idx === currentDate.getMonth()) {
-          btn.classList.add('bg-amber-500','text-black','border-amber-500');
-          btn.classList.remove('bg-white/5','text-slate-300','border-white/5');
+          btn.classList.add('bg-amber-500', 'text-black', 'border-amber-500');
+          btn.classList.remove('bg-white/5', 'text-slate-300', 'border-white/5');
         } else {
-          btn.classList.remove('bg-amber-500','text-black','border-amber-500');
-          btn.classList.add('bg-white/5','text-slate-300','border-white/5');
+          btn.classList.remove('bg-amber-500', 'text-black', 'border-amber-500');
+          btn.classList.add('bg-white/5', 'text-slate-300', 'border-white/5');
         }
       });
     };
 
-    // --- HELPERS ---
-    function migrateEventsToISO(list){
+    // --- MIGRATION / STORAGE ---
+    function migrateEventsToISO(list) {
       let changed = false;
-      const out = (Array.isArray(list) ? list : []).map(ev=>{
+      const out = (Array.isArray(list) ? list : []).map(ev => {
         const e = { ...ev };
-
         e.income = Number(e.income) || 0;
         e.expense = Number(e.expense) || 0;
         e.prepay = Number(e.prepay) || 0;
 
-        // schedule обязателен, теперь ещё и duration
-        if(!e.schedule){
-          e.schedule = [{
-            type: e.type || 'stage',
-            time: e.time || '19:00',
-            duration: (Number(e.duration)||60)
-          }];
+        if (!e.schedule) {
+          e.schedule = [{ type: e.type || 'stage', time: e.time || '19:00', durationMin: 60 }];
           changed = true;
         } else {
-          // добить duration, если старые события без него
-          e.schedule = e.schedule.map(a=>({
-            type: a.type || 'stage',
-            time: a.time || '19:00',
-            duration: Number(a.duration) || 60
+          // add duration default if missing
+          e.schedule = e.schedule.map(a => ({
+            type: a.type || e.type || 'stage',
+            time: a.time || e.time || '19:00',
+            durationMin: Number(a.durationMin) || 60
           }));
         }
 
-        if(e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
+        if (e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
 
-        if(typeof e.date === 'string'){
-          if(/^\d{4}-\d{2}-\d{2}$/.test(e.date)){
+        if (typeof e.date === 'string') {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(e.date)) {
             e.dateISO = e.date;
             changed = true;
             return e;
           }
           const parsed = new Date(e.date);
-          if(!isNaN(parsed)){
+          if (!isNaN(parsed)) {
             e.dateISO = toISODateLocal(parsed);
             changed = true;
             return e;
@@ -1020,27 +1032,31 @@
       return { out, changed };
     }
 
-    function loadLocalData(){
-      try{
+    function loadLocalData() {
+      try {
         const rawEvents = JSON.parse(localStorage.getItem('illusionist_events') || '[]');
         const mig = migrateEventsToISO(rawEvents);
         events = mig.out;
         monthlyGoal = Number(JSON.parse(localStorage.getItem('illusionist_goal') || '200000')) || 200000;
-        if(mig.changed) localStorage.setItem('illusionist_events', JSON.stringify(events));
-      } catch(e){
-        events = [];
-      }
+        if (mig.changed) localStorage.setItem('illusionist_events', JSON.stringify(events));
+      } catch(e) { events = []; }
       renderApp();
     }
 
     // --- SETTINGS ---
-    window.openSettings = () => document.getElementById('settings-modal').classList.remove('hidden');
-    window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden');
+    window.openSettings = () => {
+      const m = document.getElementById('settings-modal');
+      if (m) m.classList.remove('hidden');
+    };
+    window.closeSettings = () => {
+      const m = document.getElementById('settings-modal');
+      if (m) m.classList.add('hidden');
+    };
 
     window.exportData = () => {
       const dateStr = new Date().toISOString().split('T')[0];
       const data = { events, goal: monthlyGoal, version: '1.5' };
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1053,39 +1069,38 @@
 
     window.importData = (input) => {
       const file = input.files[0];
-      if(!file) return;
+      if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        try{
+        try {
           const data = JSON.parse(e.target.result);
-          if(data.events){
+          if (data.events) {
             const mig = migrateEventsToISO(data.events);
             events = mig.out;
             localStorage.setItem('illusionist_events', JSON.stringify(events));
           }
-          if(data.goal !== undefined){
+          if (data.goal !== undefined) {
             monthlyGoal = Number(data.goal) || monthlyGoal;
             localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
           }
           renderApp();
           window.closeSettings();
           window.showToast('Данные восстановлены!');
-        } catch(err){
+        } catch (err) {
           window.showToast('Ошибка файла');
         }
       };
       reader.readAsText(file);
     };
 
-    // --- NAV / MONTH ---
+    // --- CALENDAR NAV ---
     window.changeMonth = (delta) => {
       const y = currentDate.getFullYear();
       const m = currentDate.getMonth();
       currentDate = new Date(y, m + delta, 1);
-
-      // чтобы всё синхронно и на всех устройствах
-      selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      renderApp();
+      renderCalendar();
+      renderStats();
+      renderAnalytics();
     };
 
     window.goToToday = () => {
@@ -1101,7 +1116,7 @@
       const calNav = document.getElementById('nav-calendar');
       const dashNav = document.getElementById('nav-dashboard');
 
-      if(tab === 'calendar'){
+      if(tab === 'calendar') {
         calView.classList.remove('mobile-hidden');
         dashView.classList.add('mobile-hidden');
         calNav.classList.add('text-amber-400');
@@ -1119,12 +1134,12 @@
     };
 
     // --- MODAL ---
-    window.openModal = (isEdit=false) => {
+    window.openModal = (isEdit = false) => {
       document.getElementById('event-modal').classList.remove('hidden');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
       const dateInput = document.getElementById('inp-date');
 
-      if(!isEdit){
+      if(!isEdit) {
         editingId = null;
         document.getElementById('btn-delete').classList.add('hidden');
 
@@ -1140,8 +1155,7 @@
         document.getElementById('txt-balance').innerText = '0';
 
         currentSetlist = [];
-        currentSchedule = [{ type:'stage', time:'19:00', duration:60 }];
-        currentType = 'stage';
+        currentSchedule = [{ type: currentType || 'stage', time: '19:00', durationMin: 60 }];
         dateInput.value = toISODateLocal(selectedDate);
       } else {
         document.getElementById('btn-delete').classList.remove('hidden');
@@ -1151,12 +1165,13 @@
       window.renderSchedule();
       window.switchTab('info');
       window.setType(currentType || 'stage');
+      lucide.createIcons();
     };
 
     window.closeModal = () => document.getElementById('event-modal').classList.add('hidden');
 
     window.switchTab = (tab) => {
-      ['info','setlist','finance','notes'].forEach(t=>{
+      ['info','setlist','finance','notes'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition";
       });
@@ -1166,39 +1181,47 @@
 
     window.setType = (type) => {
       currentType = type;
-      document.querySelectorAll('.type-btn').forEach(b=>{
+      document.querySelectorAll('.type-btn').forEach(b => {
         b.classList.remove('selected');
-        b.classList.remove('border-amber-500','bg-amber-500/10','text-amber-400');
-        b.classList.remove('border-purple-500','bg-purple-500/10','text-purple-400');
-        b.classList.remove('border-emerald-500','bg-emerald-500/10','text-emerald-400');
-        b.classList.remove('border-blue-500','bg-blue-500/10','text-blue-400');
-        b.classList.remove('border-slate-500','bg-slate-500/10','text-slate-300');
-        b.classList.add('border-white/5','bg-white/5','text-slate-500');
+        b.classList.remove('border-amber-500', 'bg-amber-500/10', 'text-amber-400');
+        b.classList.remove('border-purple-500', 'bg-purple-500/10', 'text-purple-400');
+        b.classList.remove('border-emerald-500', 'bg-emerald-500/10', 'text-emerald-400');
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-400');
+        b.classList.remove('border-slate-500', 'bg-slate-500/10', 'text-slate-300');
+        b.classList.add('border-white/5', 'bg-white/5', 'text-slate-500');
       });
       const activeBtn = document.getElementById(`type-${type}`);
-      if(activeBtn){
+      if(activeBtn) {
         activeBtn.classList.add('selected');
-        activeBtn.classList.remove('border-white/5','bg-white/5','text-slate-500');
-        if(type==='stage') activeBtn.classList.add('border-amber-500','bg-amber-500/10','text-amber-400');
-        else if(type==='closeup') activeBtn.classList.add('border-purple-500','bg-purple-500/10','text-purple-400');
-        else if(type==='kids') activeBtn.classList.add('border-emerald-500','bg-emerald-500/10','text-emerald-400');
-        else if(type==='concert') activeBtn.classList.add('border-blue-500','bg-blue-500/10','text-blue-400');
-        else if(type==='rehearsal') activeBtn.classList.add('border-slate-500','bg-slate-500/10','text-slate-300');
+        activeBtn.classList.remove('border-white/5', 'bg-white/5', 'text-slate-500');
+        if(type === 'stage') activeBtn.classList.add('border-amber-500', 'bg-amber-500/10', 'text-amber-400');
+        else if(type === 'closeup') activeBtn.classList.add('border-purple-500', 'bg-purple-500/10', 'text-purple-400');
+        else if(type === 'kids') activeBtn.classList.add('border-emerald-500', 'bg-emerald-500/10', 'text-emerald-400');
+        else if(type === 'concert') activeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-400');
+        else if(type === 'rehearsal') activeBtn.classList.add('border-slate-500', 'bg-slate-500/10', 'text-slate-300');
+      }
+
+      // Если тайминг пуст — создаём первый выход с этим типом
+      if (!currentSchedule || currentSchedule.length === 0) {
+        currentSchedule = [{ type: currentType, time: '19:00', durationMin: 60 }];
+        window.renderSchedule();
+      } else {
+        // Если создаём событие и пользователь сменил тип — применим к первому выходу (логично)
+        if (!editingId) {
+          currentSchedule[0].type = currentType;
+          window.renderSchedule();
+        }
       }
     };
 
     window.addTrick = () => {
       const val = document.getElementById('inp-trick').value;
-      if(val){
-        currentSetlist.push(val);
-        document.getElementById('inp-trick').value = '';
-        window.renderSetlist();
-      }
+      if(val) { currentSetlist.push(val); document.getElementById('inp-trick').value = ''; window.renderSetlist(); }
     };
 
     window.editEvent = (id) => {
-      const ev = events.find(e=>e.id===id);
-      if(!ev) return;
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
 
       editingId = id;
       document.getElementById('inp-title').value = ev.title || '';
@@ -1209,41 +1232,41 @@
       document.getElementById('inp-prepay').value = ev.prepay || '';
       document.getElementById('inp-expense').value = ev.expense || '';
       document.getElementById('inp-notes').value = ev.notes || '';
-
       currentSetlist = ev.setlist || [];
       currentSchedule = (ev.schedule && ev.schedule.length)
-        ? ev.schedule.map(a=>({ type:a.type||'stage', time:a.time||'19:00', duration:Number(a.duration)||60 }))
-        : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: 60 }];
+        ? ev.schedule.map(a => ({ ...a, durationMin: Number(a.durationMin) || 60 }))
+        : [{ type: ev.type || 'stage', time: ev.time || '19:00', durationMin: 60 }];
+      currentType = currentSchedule[0].type || 'stage';
 
-      currentType = currentSchedule[0].type;
       document.getElementById('inp-date').value = ev.dateISO || toISODateLocal(new Date());
-
+      window.openModal(true);
       window.calcBalanceFromAmount();
       window.renderSchedule();
-      window.openModal(true);
     };
 
     window.saveEvent = async () => {
       const title = document.getElementById('inp-title').value.trim();
       const dateISO = document.getElementById('inp-date').value;
+      if(!title) { window.showToast('Введите название!'); return; }
+      if(!dateISO) { window.showToast('Выберите дату!'); return; }
+      if(!currentSchedule || currentSchedule.length === 0) { window.showToast('Добавьте хотя бы один выход!'); return; }
 
-      if(!title){ window.showToast('Введите название!'); return; }
-      if(!dateISO){ window.showToast('Выберите дату!'); return; }
-      if(currentSchedule.length===0){ window.showToast('Добавьте хотя бы один выход!'); return; }
+      // sanitize schedule
+      const scheduleSan = currentSchedule.map(a => ({
+        type: a.type || currentType || 'stage',
+        time: a.time || '19:00',
+        durationMin: Math.max(0, Number(a.durationMin) || 0) || 60
+      }));
 
-      const [y,m,d] = dateISO.split('-').map(Number);
-      const eventDateObj = new Date(y, m-1, d);
-      const primary = currentSchedule[0];
+      const [y, m, d] = dateISO.split('-').map(Number);
+      const eventDateObj = new Date(y, m - 1, d);
+      const primary = scheduleSan[0];
 
       const eventData = {
         title,
         time: primary.time,
         type: primary.type,
-        schedule: currentSchedule.map(a=>({
-          type: a.type || 'stage',
-          time: a.time || '19:00',
-          duration: Number(a.duration) || 60
-        })),
+        schedule: scheduleSan,
         location: document.getElementById('inp-location').value,
         clientName: document.getElementById('inp-client-name').value,
         clientPhone: document.getElementById('inp-client-phone').value,
@@ -1255,15 +1278,15 @@
         dateISO
       };
 
-      if(editingId){
-        events = events.map(e=>e.id===editingId ? { ...e, ...eventData } : e);
+      if (editingId) {
+        events = events.map(e => e.id === editingId ? { ...e, ...eventData } : e);
         window.showToast('Обновлено!');
       } else {
         events.push({ id: Date.now(), ...eventData });
         window.showToast('Магия создана!');
       }
-
       localStorage.setItem('illusionist_events', JSON.stringify(events));
+
       selectedDate = eventDateObj;
       currentDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
       window.closeModal();
@@ -1273,16 +1296,16 @@
     window.deleteEvent = (id) => {
       const numId = Number(id);
       if(!confirm('Удалить событие?')) return;
-      events = events.filter(e=>e.id!==numId);
+      events = events.filter(e => e.id !== numId);
       localStorage.setItem('illusionist_events', JSON.stringify(events));
       renderApp();
       window.showToast('Удалено');
     };
 
     window.deleteEventFromModal = () => {
-      if(editingId){
+      if(editingId) {
         if(!confirm('Удалить это событие?')) return;
-        events = events.filter(e=>e.id!==editingId);
+        events = events.filter(e => e.id !== editingId);
         localStorage.setItem('illusionist_events', JSON.stringify(events));
         renderApp();
         window.closeModal();
@@ -1290,122 +1313,114 @@
       }
     };
 
+    window.editGoal = () => {
+      const current = monthlyGoal;
+      const n = prompt("Новая цель:", String(current));
+      if(n === null) return;
+      const val = Number(String(n).replace(/\s/g,''));
+      if(!isNaN(val) && val > 0) {
+        monthlyGoal = val;
+        localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
+        renderStats();
+        window.showToast('Цель обновлена');
+      } else {
+        window.showToast('Некорректная цель');
+      }
+    };
+
     // --- TOAST ---
     window.showToast = (msg) => {
       const t = document.getElementById('toast');
       const m = document.getElementById('toast-msg');
-      if(!t || !m) return;
-
+      if (!t || !m) return;
       m.innerText = msg;
-      t.classList.remove('opacity-0','-translate-y-4');
-      t.classList.add('translate-y-0','opacity-100');
-
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(()=>{
-        t.classList.add('opacity-0','-translate-y-4');
-        t.classList.remove('translate-y-0','opacity-100');
-      }, 2800);
+      t.classList.remove('opacity-0', '-translate-y-4');
+      t.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        t.classList.add('opacity-0', '-translate-y-4');
+        t.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
     };
 
     window.celebrateGoal = () => {
       const container = document.getElementById('confetti-container');
-      const colors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e'];
-      for(let i=0;i<50;i++){
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#f43f5e'];
+      for(let i=0; i<50; i++) {
         const el = document.createElement('div');
         el.className = 'confetti';
-        el.style.left = (Math.random()*100)+'vw';
-        el.style.top = '-10px';
-        el.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-        el.style.animationDuration = (Math.random()*3 + 2) + 's';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = -10 + 'px';
+        el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDuration = (Math.random() * 3 + 2) + 's';
         el.style.opacity = Math.random();
         container.appendChild(el);
-        setTimeout(()=>el.remove(), 5000);
+        setTimeout(() => { el.remove(); }, 5000);
       }
       window.showToast('🎉 Цель достигнута! Так держать!');
-    };
-
-    // --- FIX: Goal editing + prepay% balance (на айфоне кликается и считается) ---
-    function _num(v){
-      if(v===null || v===undefined) return 0;
-      const s = String(v).replace(/\s/g,'').replace(',','.');
-      const n = Number(s);
-      return Number.isFinite(n) ? n : 0;
     }
-    function _clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
-    window.editGoal = () => {
-      const current = Number(monthlyGoal) || 0;
-      const input = prompt('Цель на месяц (₽). Можно: 200000 или 200k', current ? String(current) : '200000');
-      if(input===null) return;
-
-      const raw = String(input).trim().toLowerCase();
-      let value = 0;
-      if(raw.endsWith('k')) value = _num(raw.slice(0,-1)) * 1000;
-      else if(raw.endsWith('m')) value = _num(raw.slice(0,-1)) * 1000000;
-      else value = _num(raw);
-
-      value = Math.round(value);
-      if(!Number.isFinite(value) || value < 0) return;
-
-      monthlyGoal = value;
-      localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
-      goalCelebrated = false;
-      renderStats();
-      window.showToast('Цель обновлена');
-    };
-
-    window.updateBalanceDisplay = (total, prepay) => {
-      const balance = total - prepay;
-      const balEl = document.getElementById('txt-balance');
-      if(!balEl) return;
-
-      if(balance <= 0 && total > 0){
-        balEl.innerText = "Оплачено";
-        balEl.className = "text-lg font-mono text-slate-500 font-bold";
-      } else {
-        balEl.innerText = balance.toLocaleString('ru-RU') + ' ₽';
-        balEl.className = "text-lg font-mono text-amber-400 font-bold";
-      }
-    };
-
+    // --- FINANCE CALC (FIXED) ---
     window.calcBalanceFromAmount = () => {
-      const total = Math.max(0, Math.round(_num(document.getElementById('inp-income').value)));
-      const prepay = Math.max(0, Math.round(_num(document.getElementById('inp-prepay').value)));
+      const total = Number(document.getElementById('inp-income').value) || 0;
+      const prepay = Number(document.getElementById('inp-prepay').value) || 0;
 
-      const percentEl = document.getElementById('inp-prepay-percent');
-      if(total > 0){
-        const pct = _clamp((prepay / total) * 100, 0, 100);
-        percentEl.value = Math.round(pct * 10) / 10;
+      // update percent from amount
+      const percEl = document.getElementById('inp-prepay-percent');
+      if (total > 0) {
+        const percent = (prepay / total) * 100;
+        percEl.value = Math.round(percent * 10) / 10;
       } else {
-        percentEl.value = '';
+        percEl.value = 0;
       }
       window.updateBalanceDisplay(total, prepay);
     };
 
     window.calcBalanceFromPercent = () => {
-      const total = Math.max(0, Math.round(_num(document.getElementById('inp-income').value)));
-      const pct = _clamp(_num(document.getElementById('inp-prepay-percent').value), 0, 100);
+      const total = Number(document.getElementById('inp-income').value) || 0;
+      const percent = Number(document.getElementById('inp-prepay-percent').value) || 0;
 
-      const prepay = total > 0 ? Math.round(total * (pct/100)) : 0;
-      document.getElementById('inp-prepay').value = prepay ? String(prepay) : '';
+      const prepay = total > 0 ? Math.round(total * (percent / 100)) : 0;
 
+      document.getElementById('inp-prepay').value = prepay;
+
+      // ✅ FIX: всегда пересчитываем остаток
       window.updateBalanceDisplay(total, prepay);
+    };
+
+    window.updateBalanceDisplay = (total, prepay) => {
+      const balance = (Number(total) || 0) - (Number(prepay) || 0);
+      const balEl = document.getElementById('txt-balance');
+      if (!balEl) return;
+
+      if (total <= 0) {
+        balEl.innerText = "0";
+        balEl.className = "text-lg font-mono text-slate-500 font-bold";
+        return;
+      }
+
+      if (balance <= 0) {
+        balEl.innerText = "Оплачено";
+        balEl.className = "text-lg font-mono text-slate-500 font-bold";
+      } else {
+        balEl.innerText = balance.toLocaleString() + ' ₽';
+        balEl.className = "text-lg font-mono text-amber-400 font-bold";
+      }
     };
 
     // --- PARTICLES ---
     let particleRAF = null;
-    let particleState = { running:false, ctx:null, canvas:null, particles:[] };
+    let particleState = { running: false, ctx: null, canvas: null, particles: [] };
 
-    function initParticles(){
+    function initParticles() {
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(reduce) return;
+      if (reduce) return;
 
       const canvas = document.getElementById('bg-canvas');
       const ctx = canvas.getContext('2d');
       particleState.canvas = canvas;
       particleState.ctx = ctx;
 
-      function resize(){
+      function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       }
@@ -1413,29 +1428,29 @@
       resize();
 
       particleState.particles = [];
-      for(let i=0;i<60;i++){
+      for(let i=0; i<60; i++) {
         particleState.particles.push({
           x: Math.random()*canvas.width,
           y: Math.random()*canvas.height,
           size: Math.random()*2,
           speedX: Math.random()*0.5-0.25,
           speedY: Math.random()*0.5-0.25,
-          color: Math.random()>0.5 ? '245,158,11' : '139,92,246',
+          color: Math.random()>0.5 ? '245, 158, 11' : '139, 92, 246',
           opacity: Math.random()*0.5
         });
       }
 
-      function step(){
-        if(!particleState.running) return;
+      function step() {
+        if (!particleState.running) return;
         ctx.clearRect(0,0,canvas.width,canvas.height);
 
-        particleState.particles.forEach(p=>{
+        particleState.particles.forEach(p => {
           p.x += p.speedX; p.y += p.speedY;
-          if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-          if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
 
           ctx.beginPath();
-          ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
           ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
           ctx.fill();
         });
@@ -1443,32 +1458,37 @@
         particleRAF = requestAnimationFrame(step);
       }
 
-      function start(){
-        if(particleState.running) return;
+      function start() {
+        if (particleState.running) return;
         particleState.running = true;
         step();
       }
-      function stop(){
+
+      function stop() {
         particleState.running = false;
-        if(particleRAF) cancelAnimationFrame(particleRAF);
+        if (particleRAF) cancelAnimationFrame(particleRAF);
         particleRAF = null;
       }
 
-      document.addEventListener('visibilitychange', ()=>{
-        if(document.hidden) stop();
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop();
         else start();
       });
 
       start();
     }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
+    document.addEventListener('DOMContentLoaded', () => {
       loadLocalData();
       initParticles();
       lucide.createIcons();
 
-      // Десктоп: показываем дашборд справа
-      if(window.innerWidth >= 1024) document.getElementById('view-dashboard').classList.remove('mobile-hidden');
+      // initial tab state
+      if(window.innerWidth >= 1024) {
+        document.getElementById('view-dashboard').classList.remove('mobile-hidden');
+      } else {
+        window.switchMobileTab('calendar');
+      }
     });
   </script>
 </body>
