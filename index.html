@@ -20,6 +20,8 @@
         :root {
             --gold-primary: #f59e0b;
             --dark-bg: #050507;
+            --card-surface: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.06);
         }
 
         html, body {
@@ -31,9 +33,8 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg);
             color: #e2e8f0;
-            overflow: hidden; /* Блокируем скролл всей страницы, скроллим только контент */
+            overflow: hidden;
             overscroll-behavior: none;
-            /* Используем dvh для корректной высоты на мобильных */
             min-height: 100dvh; 
         }
 
@@ -91,48 +92,112 @@
             max-width: 100vw;
         }
         
-        .calendar-cell-content {
+        /* Стили для ячейки календаря */
+        .calendar-cell {
+            position: relative;
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 6px;
+            gap: 4px;
+        }
+
+        .calendar-cell:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-1px);
+        }
+
+        .calendar-cell.selected {
+            border-color: rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .calendar-cell.today {
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .date-number {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.6);
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .calendar-cell.today .date-number {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
+        }
+        
+        .calendar-cell-content {
             width: 100%;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             gap: 2px;
+            padding: 0 3px;
             align-items: center;
         }
+
         .event-label {
             font-size: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-radius: 4px;
+            border-radius: 3px;
             padding: 2px 4px;
             text-align: center;
             cursor: pointer;
-            transition: opacity 0.2s;
-            color: white;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.9);
             font-weight: 600;
-            letter-spacing: 0.02em;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
             width: 90%;
+            border: 1px solid transparent;
         }
+        
         .event-label:hover {
-            opacity: 0.8;
+            transform: scale(1.02);
+            filter: brightness(1.1);
+            z-index: 10;
         }
+
+        /* Более элегантные цвета для типов */
+        .event-stage { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+        .event-closeup { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3); color: #c084fc; }
+        .event-kids { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+        .event-concert { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+        .event-rehearsal { background: rgba(148, 163, 184, 0.15); border-color: rgba(148, 163, 184, 0.3); color: #cbd5e1; }
 
         .month-summary {
             margin-top: auto;
-            background: linear-gradient(180deg, rgba(245,158,11,0.05), rgba(245,158,11,0.15));
-            border: 1px solid rgba(245,158,11,0.2);
-            padding: 4px;
-            border-radius: 6px;
-            font-size: 8px;
-            width: 90%;
+            margin-bottom: 4px;
+            background: linear-gradient(90deg, transparent, rgba(245,158,11,0.1), transparent);
+            border-top: 1px solid rgba(245,158,11,0.2);
+            border-bottom: 1px solid rgba(245,158,11,0.2);
+            padding: 2px 0;
+            font-size: 7px;
+            width: 80%;
             text-align: center;
             text-transform: uppercase;
             font-weight: 700;
             color: #fbbf24;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
+            letter-spacing: 1.5px;
         }
 
         .confetti {
@@ -147,7 +212,6 @@
             to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
-        /* Safe area padding */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
         
@@ -194,7 +258,6 @@
                 </div>
                 
                 <div class="min-w-0 flex flex-col justify-center">
-                    <!-- Reduced text size further as requested -->
                     <h1 class="text-[8px] md:text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight tracking-widest font-display">ILLUSIONIST OS</h1>
                     <span class="text-[6px] md:text-[8px] text-slate-500 font-bold tracking-[0.2em] uppercase leading-none mt-0.5">Calendar</span>
                 </div>
@@ -236,7 +299,6 @@
                         <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Сб</div>
                         <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Вс</div>
                     </div>
-                    <!-- Added pb-4 for scroll clearance -->
                     <div id="calendar-grid" class="grid grid-cols-7 gap-1 lg:gap-2 flex-1 auto-rows-fr overflow-y-auto custom-scrollbar pb-4"></div>
                 </div>
                 <div class="hidden lg:flex lg:col-span-4 flex-col gap-6 h-full overflow-hidden"></div>
@@ -277,6 +339,18 @@
                                 <p class="text-[9px] text-slate-500 uppercase">Расход</p>
                                 <p id="stat-expense" class="text-xs font-bold text-red-400">0</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Popularity Analytics -->
+                    <div class="glass-panel rounded-2xl p-4 shrink-0">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Популярность
+                            </h3>
+                        </div>
+                        <div id="analytics-list" class="space-y-3">
+                            <!-- JS Generated content -->
                         </div>
                     </div>
 
@@ -335,9 +409,7 @@
             </div>
 
             <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
-                <div id="tab-info" class="space-y-5 max-w-xs mx-auto">
-                    
-                    <!-- Event Types -->
+                <div id="tab-info" class="space-y-4">
                     <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
                         <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all selected">
                             <i data-lucide="star" class="w-5 h-5"></i>
@@ -403,13 +475,33 @@
                 </div>
 
                 <div id="tab-finance" class="hidden space-y-4 max-w-xs mx-auto">
-                    <div class="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
-                        <label class="text-xs text-emerald-400 font-bold uppercase block mb-1">Гонорар</label>
-                        <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center">
+                    <!-- Income -->
+                    <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
+                        <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая стоимость</label>
+                        <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center" oninput="window.calcBalance()">
                     </div>
-                    <div class="p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
-                        <label class="text-xs text-red-400 font-bold uppercase block mb-1">Расход</label>
-                        <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center">
+
+                    <!-- Prepay & Balance -->
+                    <div class="grid grid-cols-2 gap-3">
+                         <!-- Prepay Input -->
+                         <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center relative group">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Предоплата</label>
+                            <input type="number" id="inp-prepay" placeholder="0" class="w-full bg-transparent text-lg font-mono text-white outline-none text-center" oninput="window.calcBalance()">
+                            <!-- 50% Button -->
+                            <button onclick="window.setPrepay50()" class="absolute top-1 right-1 text-[8px] bg-white/10 hover:bg-white/20 px-1.5 py-0.5 rounded text-slate-300 transition">50%</button>
+                         </div>
+
+                         <!-- Balance Display (Read only) -->
+                         <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center flex flex-col justify-center">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Остаток</label>
+                            <span id="txt-balance" class="text-lg font-mono text-amber-400 font-bold">0</span>
+                         </div>
+                    </div>
+
+                    <!-- Expense -->
+                    <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
+                        <label class="text-[10px] text-red-400 font-bold uppercase block mb-1">Расход</label>
+                        <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-xl font-mono text-white outline-none text-center">
                     </div>
                 </div>
 
@@ -466,11 +558,11 @@
     <script>
         const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
         const TYPES = {
-            'stage': { label: 'Сцена', color: 'bg-gradient-to-r from-amber-400 to-orange-600', text: 'text-amber-100', icon: 'star', border: 'border-amber-500' },
-            'closeup': { label: 'Микромагия', color: 'bg-gradient-to-r from-purple-400 to-indigo-600', text: 'text-purple-100', icon: 'sparkles', border: 'border-purple-500' },
-            'kids': { label: 'Детское шоу', color: 'bg-gradient-to-r from-emerald-400 to-teal-600', text: 'text-emerald-100', icon: 'rabbit', border: 'border-emerald-500' },
-            'concert': { label: 'Концерт', color: 'bg-gradient-to-r from-blue-400 to-cyan-600', text: 'text-blue-100', icon: 'mic-2', border: 'border-blue-500' },
-            'rehearsal': { label: 'Репетиция', color: 'bg-gradient-to-r from-slate-400 to-slate-600', text: 'text-slate-200', icon: 'hourglass', border: 'border-slate-500' }
+            'stage': { label: 'Сцена', color: 'event-stage', text: 'text-amber-100', icon: 'star', border: 'border-amber-500', bar: 'bg-amber-500' },
+            'closeup': { label: 'Микромагия', color: 'event-closeup', text: 'text-purple-100', icon: 'sparkles', border: 'border-purple-500', bar: 'bg-purple-500' },
+            'kids': { label: 'Детское шоу', color: 'event-kids', text: 'text-emerald-100', icon: 'rabbit', border: 'border-emerald-500', bar: 'bg-emerald-500' },
+            'concert': { label: 'Концерт', color: 'event-concert', text: 'text-blue-100', icon: 'mic-2', border: 'border-blue-500', bar: 'bg-blue-500' },
+            'rehearsal': { label: 'Репетиция', color: 'event-rehearsal', text: 'text-slate-200', icon: 'hourglass', border: 'border-slate-500', bar: 'bg-slate-500' }
         };
 
         let currentDate = new Date();
@@ -507,6 +599,7 @@
                 const e = { ...ev };
                 e.income = Number(e.income) || 0;
                 e.expense = Number(e.expense) || 0;
+                e.prepay = Number(e.prepay) || 0; 
                 if (e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
                 if (typeof e.date === 'string') {
                     if (/^\d{4}-\d{2}-\d{2}$/.test(e.date)) {
@@ -557,7 +650,7 @@
 
         window.exportData = () => {
             const dateStr = new Date().toISOString().split('T')[0];
-            const data = { events, goal: monthlyGoal, version: '1.1' };
+            const data = { events, goal: monthlyGoal, version: '1.2' };
             const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -649,8 +742,10 @@
                 document.getElementById('inp-client-name').value = '';
                 document.getElementById('inp-client-phone').value = '';
                 document.getElementById('inp-income').value = '';
+                document.getElementById('inp-prepay').value = ''; 
                 document.getElementById('inp-expense').value = '';
                 document.getElementById('inp-notes').value = '';
+                document.getElementById('txt-balance').innerText = '0'; 
                 
                 currentSetlist = [];
                 currentType = 'stage';
@@ -679,7 +774,6 @@
         window.setType = (type) => {
             currentType = type;
             document.querySelectorAll('.type-btn').forEach(b => {
-                // Reset styling logic handled by CSS classes now, just managing 'selected' class
                 b.classList.remove('selected');
                 b.classList.remove('border-amber-500');
                 b.classList.remove('bg-amber-500/10');
@@ -724,6 +818,31 @@
             }
         };
 
+        // --- NEW FINANCE LOGIC ---
+        window.calcBalance = () => {
+            const total = Number(document.getElementById('inp-income').value) || 0;
+            const prepay = Number(document.getElementById('inp-prepay').value) || 0;
+            const balance = total - prepay;
+            
+            const balEl = document.getElementById('txt-balance');
+            if (balance === 0 && total > 0) {
+                balEl.innerText = "Оплачено";
+                balEl.className = "text-lg font-mono text-slate-500 font-bold";
+            } else if (balance < 0) {
+                 balEl.innerText = "Переплата " + Math.abs(balance);
+                 balEl.className = "text-lg font-mono text-red-400 font-bold";
+            } else {
+                balEl.innerText = balance.toLocaleString();
+                balEl.className = "text-lg font-mono text-amber-400 font-bold";
+            }
+        };
+
+        window.setPrepay50 = () => {
+             const total = Number(document.getElementById('inp-income').value) || 0;
+             document.getElementById('inp-prepay').value = Math.round(total / 2);
+             window.calcBalance();
+        };
+
         window.editEvent = (id) => {
             const ev = events.find(e => e.id === id);
             if (!ev) return;
@@ -736,10 +855,13 @@
             document.getElementById('inp-client-name').value = ev.clientName || '';
             document.getElementById('inp-client-phone').value = ev.clientPhone || '';
             document.getElementById('inp-income').value = ev.income || '';
+            document.getElementById('inp-prepay').value = ev.prepay || ''; 
             document.getElementById('inp-expense').value = ev.expense || '';
             document.getElementById('inp-notes').value = ev.notes || '';
             currentSetlist = ev.setlist || [];
             currentType = ev.type || 'stage';
+            
+            window.calcBalance(); 
             
             document.getElementById('inp-date').value = ev.dateISO || toISODateLocal(new Date());
             window.openModal(true);
@@ -764,6 +886,7 @@
                 clientPhone: document.getElementById('inp-client-phone').value,
                 type: currentType,
                 income: Number(document.getElementById('inp-income').value) || 0,
+                prepay: Number(document.getElementById('inp-prepay').value) || 0, 
                 expense: Number(document.getElementById('inp-expense').value) || 0,
                 notes: document.getElementById('inp-notes').value,
                 setlist: currentSetlist,
@@ -845,10 +968,70 @@
             window.showToast('🎉 Цель достигнута! Так держать!');
         }
 
+        // --- RENDER ANALYTICS ---
+        function renderAnalytics() {
+            const container = document.getElementById('analytics-list');
+            if (!container) return;
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+
+            const monthEvents = events.filter(e => {
+                if (!e.dateISO) return false;
+                const [y, m] = e.dateISO.split('-').map(Number);
+                return y === year && m === month;
+            });
+
+            // Group by type
+            const stats = {};
+            Object.keys(TYPES).forEach(k => stats[k] = { count: 0, income: 0, ...TYPES[k] });
+            
+            let totalCount = 0;
+            monthEvents.forEach(e => {
+                const t = e.type || 'stage';
+                if (stats[t]) {
+                    stats[t].count++;
+                    stats[t].income += (Number(e.income) || 0);
+                    totalCount++;
+                }
+            });
+            
+            container.innerHTML = '';
+            
+            if (totalCount === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 text-xs py-2">Нет данных за этот месяц</div>';
+                return;
+            }
+            
+            const sorted = Object.entries(stats).map(([k, v]) => ({ key: k, ...v })).sort((a, b) => b.count - a.count);
+            
+            sorted.forEach(item => {
+                if (item.count === 0) return;
+                const pct = Math.round((item.count / totalCount) * 100);
+                
+                // Construct HTML
+                container.innerHTML += `
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[10px] text-slate-300">
+                            <span class="flex items-center gap-1"><i data-lucide="${item.icon}" class="w-3 h-3 text-slate-400"></i> ${item.label}</span>
+                            <span class="font-mono opacity-80">${item.count} (${pct}%)</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full ${item.bar || 'bg-slate-500'}" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="text-[8px] text-slate-500 text-right">
+                            ${item.income > 0 ? '+' + item.income.toLocaleString() + ' ₽' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
         function renderApp() {
             renderCalendar();
             renderSidebar();
             renderStats();
+            renderAnalytics();
             lucide.createIcons();
         }
 
@@ -901,10 +1084,8 @@
                 }
 
                 const cell = document.createElement('div');
-                cell.className = `relative rounded-xl p-1 min-h-[80px] cursor-pointer border transition-all duration-300 flex flex-col items-center justify-start gap-1
-                    ${isSelected 
-                        ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/30' 
-                        : 'border-transparent hover:bg-white/5 hover:border-white/10'}`;
+                cell.className = `calendar-cell relative cursor-pointer aspect-[4/5] md:aspect-[3/4] min-h-[70px]
+                    ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`;
                 
                 cell.onclick = () => {
                     selectedDate = new Date(year, month, d);
@@ -914,12 +1095,10 @@
                 };
                 
                 cell.innerHTML = `
-                    <div class="w-full flex justify-center relative">
-                        <span class="w-6 h-6 flex items-center justify-center rounded-lg text-xs font-semibold transition ${isToday ? 'bg-amber-500 text-black shadow-lg font-bold' : 'text-slate-400'}">
-                            ${d}
-                        </span>
-                        ${profitHtml}
+                    <div class="date-number">
+                        ${d}
                     </div>
+                    ${profitHtml}
                     <div class="calendar-cell-content">
                         ${eventLabels}
                     </div>
@@ -968,6 +1147,19 @@
                     if (e.notes) {
                         notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
                     }
+                    
+                    // Display Balance if there is a prepay
+                    let balanceBlock = '';
+                    const income = Number(e.income) || 0;
+                    const prepay = Number(e.prepay) || 0;
+                    if(income > 0) {
+                        const bal = income - prepay;
+                        if(bal > 0) {
+                           balanceBlock = `<div class="text-[9px] text-amber-500/80 font-mono mt-1 text-right">Остаток: ${bal.toLocaleString()}</div>`; 
+                        } else if (prepay > 0) {
+                           balanceBlock = `<div class="text-[9px] text-slate-500/80 font-mono mt-1 text-right">Оплачено</div>`;
+                        }
+                    }
 
                     const stripColor = e.type === 'stage' ? 'bg-amber-500' 
                         : e.type === 'closeup' ? 'bg-purple-500' 
@@ -990,7 +1182,10 @@
                             ${clientBlock}
                             ${notesBlock}
                             <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
-                                ${profit}
+                                <div>
+                                    ${profit}
+                                    ${balanceBlock}
+                                </div>
                                 <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
