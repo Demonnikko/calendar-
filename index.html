@@ -268,7 +268,8 @@
                     <button onclick="window.changeMonth(-1)" class="w-8 md:w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-                    <span id="current-month-display" class="px-2 md:px-4 text-center font-display font-bold text-xs md:text-sm whitespace-nowrap min-w-[70px]"></span>
+                    <!-- Added onclick to open month picker and cursor-pointer style -->
+                    <button onclick="window.openMonthPicker()" id="current-month-display" class="px-2 md:px-4 text-center font-display font-bold text-xs md:text-sm whitespace-nowrap min-w-[70px] cursor-pointer hover:text-amber-400 transition-colors"></button>
                     <button onclick="window.changeMonth(1)" class="w-8 md:w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
@@ -547,6 +548,43 @@
         </div>
     </div>
 
+    <!-- MONTH PICKER MODAL -->
+    <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
+        <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
+            
+            <!-- Year Navigation -->
+            <div class="flex items-center justify-between w-full mb-6">
+                <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <span id="picker-year-display" class="text-2xl font-display font-bold text-white tracking-widest">2024</span>
+                <button onclick="window.changePickerYear(1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Months Grid -->
+            <div class="grid grid-cols-3 gap-3 w-full">
+                <!-- Will be populated by JS -->
+                <button onclick="window.selectMonth(0)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ЯНВ</button>
+                <button onclick="window.selectMonth(1)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ФЕВ</button>
+                <button onclick="window.selectMonth(2)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАР</button>
+                <button onclick="window.selectMonth(3)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АПР</button>
+                <button onclick="window.selectMonth(4)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАЙ</button>
+                <button onclick="window.selectMonth(5)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮН</button>
+                <button onclick="window.selectMonth(6)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮЛ</button>
+                <button onclick="window.selectMonth(7)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АВГ</button>
+                <button onclick="window.selectMonth(8)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">СЕН</button>
+                <button onclick="window.selectMonth(9)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ОКТ</button>
+                <button onclick="window.selectMonth(10)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">НОЯ</button>
+                <button onclick="window.selectMonth(11)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ДЕК</button>
+            </div>
+
+            <button onclick="window.closeMonthPicker()" class="mt-8 text-slate-500 text-xs hover:text-white transition">Закрыть</button>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 z-[110] transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4 w-max max-w-[90%]">
         <div class="bg-slate-900 border border-amber-500/30 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
@@ -567,6 +605,8 @@
 
         let currentDate = new Date();
         let selectedDate = new Date();
+        // Added pickerYear variable
+        let pickerYear = new Date().getFullYear();
         let events = [];
         let monthlyGoal = 200000;
         let goalCelebrated = false;
@@ -647,6 +687,49 @@
 
         window.openSettings = () => document.getElementById('settings-modal').classList.remove('hidden');
         window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden');
+
+        // --- MONTH PICKER LOGIC ---
+        window.openMonthPicker = () => {
+            pickerYear = currentDate.getFullYear();
+            document.getElementById('picker-year-display').innerText = pickerYear;
+            document.getElementById('month-picker-modal').classList.remove('hidden');
+            window.highlightCurrentMonth();
+        };
+
+        window.closeMonthPicker = () => {
+            document.getElementById('month-picker-modal').classList.add('hidden');
+        };
+
+        window.changePickerYear = (delta) => {
+            pickerYear += delta;
+            document.getElementById('picker-year-display').innerText = pickerYear;
+            window.highlightCurrentMonth();
+        };
+
+        window.selectMonth = (monthIndex) => {
+            currentDate = new Date(pickerYear, monthIndex, 1);
+            // Optionally update selected date to 1st of that month too
+            selectedDate = new Date(pickerYear, monthIndex, 1);
+            
+            renderCalendar();
+            renderStats();
+            renderSidebar(); // Update sidebar to reflect new date
+            window.closeMonthPicker();
+        };
+
+        window.highlightCurrentMonth = () => {
+            // Optional: highlight the currently viewed month if it matches picker year
+            const btns = document.querySelectorAll('.month-btn');
+            btns.forEach((btn, idx) => {
+                if (pickerYear === currentDate.getFullYear() && idx === currentDate.getMonth()) {
+                    btn.classList.add('bg-amber-500', 'text-black', 'border-amber-500');
+                    btn.classList.remove('bg-white/5', 'text-slate-300', 'border-white/5');
+                } else {
+                    btn.classList.remove('bg-amber-500', 'text-black', 'border-amber-500');
+                    btn.classList.add('bg-white/5', 'text-slate-300', 'border-white/5');
+                }
+            });
+        };
 
         window.exportData = () => {
             const dateStr = new Date().toISOString().split('T')[0];
