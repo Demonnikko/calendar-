@@ -12,6 +12,26 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
 
+  <!-- IMPORTANT: lock stable app height for iOS (prevents jump on modal/keyboard) -->
+  <script>
+    (function () {
+      function setAppHeight() {
+        const vv = window.visualViewport;
+        const h = Math.round((vv && vv.height) ? vv.height : window.innerHeight);
+        document.documentElement.style.setProperty('--app-h', h + 'px');
+        document.documentElement.style.setProperty('--sheet-h', Math.round(h * 0.92) + 'px');
+      }
+      setAppHeight();
+      window.addEventListener('resize', () => setTimeout(setAppHeight, 60), { passive: true });
+      window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 180), { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => setTimeout(setAppHeight, 60), { passive: true });
+        window.visualViewport.addEventListener('scroll', () => setTimeout(setAppHeight, 60), { passive: true });
+      }
+      document.addEventListener('DOMContentLoaded', setAppHeight, { passive: true });
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -29,6 +49,10 @@
       --bottom-nav-h: 64px;
       --bottom-nav-gap: 12px;
       --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap) + var(--safe-bottom));
+
+      /* stable heights (set by JS) */
+      --app-h: 100vh;
+      --sheet-h: 92vh;
     }
 
     html, body{
@@ -250,6 +274,19 @@
       color: rgba(226,232,240,.92);
       white-space:nowrap;
     }
+
+    /* ---- FIX: prevent background jump/scroll on iOS when modal opens ---- */
+    body.modal-open #view-dashboard,
+    body.modal-open #calendar-grid{
+      overflow: hidden !important;
+      -webkit-overflow-scrolling: auto !important;
+      overscroll-behavior: none !important;
+    }
+
+    /* make sheet use stable height */
+    .bottom-sheet{
+      height: var(--sheet-h);
+    }
   </style>
 </head>
 
@@ -271,7 +308,9 @@
   </div>
 
   <!-- APP SHELL (mobile only layout) -->
-  <div id="app-shell" class="relative z-10 w-full h-[100dvh] flex flex-col px-4 pb-under-nav">
+  <div id="app-shell"
+       class="relative z-10 w-full flex flex-col px-4 pb-under-nav"
+       style="height: var(--app-h);">
 
     <!-- HEADER -->
     <header class="flex justify-between items-center mt-2 mb-3 shrink-0 gap-2">
@@ -332,7 +371,6 @@
       <!-- DASHBOARD VIEW -->
       <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto pb-under-nav is-hidden">
         <div class="flex flex-col gap-4">
-
           <!-- FINANCE CARD -->
           <div class="glass-panel rounded-2xl p-4">
             <div class="flex justify-between items-center mb-3">
@@ -432,10 +470,8 @@
 
             <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 pb-under-nav"></div>
           </div>
-
         </div>
       </div>
-
     </div>
   </div>
 
@@ -460,7 +496,8 @@
   <div id="event-modal" class="fixed inset-0 z-[100] hidden">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeModal()"></div>
 
-    <div class="absolute bottom-0 left-0 right-0 w-full h-[92dvh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden">
+    <!-- sheet -->
+    <div class="bottom-sheet absolute bottom-0 left-0 right-0 w-full bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden">
 
       <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
         <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="modal-title">Новое Событие</h3>
@@ -591,7 +628,6 @@
           <textarea id="inp-notes" placeholder="Заметки..."
                     class="w-full h-44 bg-black/30 border border-white/10 rounded-2xl p-3 text-white resize-none outline-none text-sm"></textarea>
         </div>
-
       </div>
 
       <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-[calc(16px+var(--safe-bottom))] shrink-0 flex flex-col gap-3 items-center">
@@ -602,7 +638,6 @@
           Удалить
         </button>
       </div>
-
     </div>
   </div>
 
@@ -610,7 +645,6 @@
   <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 flex flex-col items-center">
-
       <div class="flex items-center justify-between w-full mb-6">
         <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-xl text-slate-300 active:scale-[0.98] transition">
           <i data-lucide="chevron-left" class="w-6 h-6"></i>
@@ -620,7 +654,6 @@
           <i data-lucide="chevron-right" class="w-6 h-6"></i>
         </button>
       </div>
-
       <div class="grid grid-cols-3 gap-3 w-full">
         <button onclick="window.selectMonth(0)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ЯНВ</button>
         <button onclick="window.selectMonth(1)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ФЕВ</button>
@@ -635,7 +668,6 @@
         <button onclick="window.selectMonth(10)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">НОЯ</button>
         <button onclick="window.selectMonth(11)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ДЕК</button>
       </div>
-
       <button onclick="window.closeMonthPicker()" class="mt-8 text-slate-500 text-xs hover:text-white transition">Закрыть</button>
     </div>
   </div>
@@ -643,7 +675,6 @@
   <!-- SETTINGS MODAL -->
   <div id="settings-modal" class="fixed inset-0 z-[140] hidden flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
-
     <div class="relative w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -655,7 +686,7 @@
         </button>
       </div>
 
-      <div class="p-4 space-y-3 max-h-[70dvh] overflow-y-auto">
+      <div class="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
         <button onclick="window.editGoal()" class="w-full glass-panel rounded-2xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
           <div class="flex items-center gap-3">
             <i data-lucide="target" class="w-5 h-5 text-amber-400"></i>
@@ -764,6 +795,28 @@
     let currentSchedule = [];
     let editingId = null;
 
+    // ---- FIX: scroll lock state (prevents iOS jump when opening sheet) ----
+    let __scrollLock = { dashTop: 0, calTop: 0 };
+
+    function lockBackgroundScroll() {
+      const dash = document.getElementById('view-dashboard');
+      const cal = document.getElementById('calendar-grid');
+      __scrollLock.dashTop = dash ? dash.scrollTop : 0;
+      __scrollLock.calTop = cal ? cal.scrollTop : 0;
+
+      document.body.classList.add('modal-open');
+    }
+
+    function unlockBackgroundScroll() {
+      const dash = document.getElementById('view-dashboard');
+      const cal = document.getElementById('calendar-grid');
+
+      document.body.classList.remove('modal-open');
+
+      if (dash) dash.scrollTop = __scrollLock.dashTop;
+      if (cal) cal.scrollTop = __scrollLock.calTop;
+    }
+
     function renderApp(){
       renderCalendar();
       renderSidebar();
@@ -803,7 +856,6 @@
         const dayEvents = events.filter(e => e.dateISO === dateISO);
         const dayProfit = dayEvents.reduce((acc, curr) => acc + parseNum(curr.income), 0);
 
-        // No words on calendar: just colored markers (max 3)
         let markersHtml = `<div class="calendar-markers">`;
         const sliceCount = 3;
         dayEvents.slice(0, sliceCount).forEach(e => {
@@ -831,7 +883,6 @@
         const cell = document.createElement('div');
         cell.className = `calendar-cell relative cursor-pointer aspect-[3/4] min-h-[76px] ${isSelected?'selected':''} ${isToday?'today':''}`;
 
-        // IMPORTANT: tap day = select day + switch to dashboard (no modal)
         cell.onclick = () => {
           selectedDate = new Date(year, month, d);
           renderCalendar();
@@ -869,7 +920,6 @@
         .filter(e => e.dateISO === dateISO)
         .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
 
-      // jumper (day)
       const jumperWrap = document.getElementById('jumper-wrap');
       const jumper = document.getElementById('event-jumper');
       if(jumperWrap && jumper){
@@ -907,8 +957,6 @@
       } else {
         dayEvents.forEach(e => {
           const primaryType = primaryTypeOfEvent(e);
-          const t = TYPES[primaryType] || TYPES.stage;
-
           const income = parseNum(e.income);
           const prepay = parseNum(e.prepay);
 
@@ -1150,11 +1198,9 @@
       lucide.createIcons();
     }
 
-    // Month navigator
     function normalizeText(s){
       return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
     }
-
     function eventSearchBlob(e){
       const parts = [
         e.title, e.location, e.clientName, e.clientPhone, e.notes,
@@ -1162,7 +1208,6 @@
       ];
       return normalizeText(parts.join(' '));
     }
-
     function formatDateShort(iso){
       const [y,m,d] = iso.split('-').map(Number);
       const dt = new Date(y, m-1, d);
@@ -1170,11 +1215,9 @@
       const mm = String(dt.getMonth()+1).padStart(2,'0');
       return `${dd}.${mm}`;
     }
-
     function safeTime(e){
       return (e.time || (e.schedule?.[0]?.time) || '—');
     }
-
     function buildMonthIndex(){
       const year = currentDate.getFullYear();
       const month1 = currentDate.getMonth() + 1;
@@ -1508,7 +1551,6 @@
       const y = currentDate.getFullYear();
       const m = currentDate.getMonth();
       currentDate = new Date(y, m + delta, 1);
-      // keep selectedDate within month start (nice behavior)
       selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       renderApp();
     };
@@ -1549,6 +1591,10 @@
 
     // event modal
     window.openModal = (isEdit=false) => {
+      // FIX: prevent iOS jump
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      lockBackgroundScroll();
+
       document.getElementById('event-modal').classList.remove('hidden');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
 
@@ -1586,7 +1632,10 @@
       lucide.createIcons();
     };
 
-    window.closeModal = () => document.getElementById('event-modal').classList.add('hidden');
+    window.closeModal = () => {
+      document.getElementById('event-modal').classList.add('hidden');
+      unlockBackgroundScroll();
+    };
 
     window.switchTab = (tab) => {
       ['info','setlist','finance','notes'].forEach(t => {
@@ -1791,7 +1840,7 @@
       }
     };
 
-    // background particles
+    // background particles (unchanged)
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1892,7 +1941,6 @@
       updateBottomNavMetrics();
       bindMonthNavigatorInputs();
       lucide.createIcons();
-      // start on calendar
       window.switchMobileTab('calendar');
     });
   </script>
