@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Illusionist OS">
+  <meta name="theme-color" content="#050507">
+
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
 
@@ -22,15 +24,16 @@
       --card-surface:rgba(255,255,255,0.03);
       --card-border:rgba(255,255,255,0.06);
 
+      /* iOS safe areas */
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      /* ✅ real viewport height for iOS (no jumps) */
+      /* dynamic app height (visualViewport) */
       --app-h: 100vh;
 
-      /* ✅ bottom nav metrics (total includes safe-bottom) */
-      --bottom-nav-visible: 64px;
-      --bottom-nav-gap: 12px;
+      /* bottom nav sizing */
+      --bottom-nav-visible: 64px; /* visual height of nav (without safe area) */
+      --bottom-nav-gap: 12px;     /* breathing space above nav for content */
       --bottom-nav-h: calc(var(--bottom-nav-visible) + var(--safe-bottom));
       --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap));
     }
@@ -44,27 +47,31 @@
       overscroll-behavior:none;
       background:var(--dark-bg);
       -webkit-text-size-adjust: 100%;
+      touch-action: pan-y;
     }
 
     body{
       font-family:'Inter',sans-serif;
       color:#e2e8f0;
-      position:relative;
-      height: var(--app-h);
       background:var(--dark-bg);
-      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
     }
 
     h1,h2,h3,.font-display{ font-family:'Cinzel',serif; }
 
-    /* ✅ app is always pinned to viewport (prevents “jump up” on iOS) */
+    /* ✅ App shell is the only fixed layer.
+       Safe-area padding must live HERE (not on body), otherwise iOS can "forget" it when overlays open. */
     #app-shell{
-      position: fixed;
-      inset: 0;
-      height: var(--app-h);
-      width: 100%;
-      overflow: hidden;
-      z-index: 10;
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:var(--app-h);
+      overflow:hidden;
+      z-index:10;
+
+      /* Safe top padding (legacy constant + env) */
+      padding-top: calc(14px + constant(safe-area-inset-top));
+      padding-top: calc(14px + env(safe-area-inset-top, 0px));
     }
 
     .noise-overlay{
@@ -101,10 +108,11 @@
       cursor:pointer;
     }
 
+    /* hard stop for horizontal scroll */
     .no-hor-scroll{ overflow-x:hidden !important; max-width:100vw; }
     #view-dashboard, #calendar-grid, #events-list, #month-results, .custom-scrollbar{
       overflow-x:hidden !important;
-      overscroll-behavior-x: none;
+      overscroll-behavior-x:none;
       touch-action: pan-y;
     }
 
@@ -198,13 +206,10 @@
     .confetti{ position:absolute; width:8px; height:8px; background-color:#f59e0b; animation:fall linear forwards; z-index:9999; }
     @keyframes fall{ to{ transform:translateY(100vh) rotate(720deg); opacity:0; } }
 
-    .pb-safe{ padding-bottom: var(--safe-bottom); }
-    .pt-safe{ padding-top: var(--safe-top); }
+    .pb-under-nav{ padding-bottom: calc(var(--bottom-nav-total) + 18px) !important; }
+    .mb-under-nav{ margin-bottom: calc(var(--bottom-nav-total) + 18px) !important; }
 
-    .pb-under-nav{ padding-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
-    .mb-under-nav{ margin-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
-
-    button{ min-height:44px; -webkit-tap-highlight-color: transparent; }
+    button{ min-height:44px; }
 
     .type-btn{ position:relative; overflow:hidden; }
     .type-btn.selected{ background-color:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); }
@@ -227,20 +232,24 @@
       margin-bottom:8px;
     }
 
-    /* ✅ bottom nav: background reaches the very bottom */
+    /* ✅ Bottom nav anchored to REAL bottom.
+       Background extends into safe area, controls sit above it. */
     #mobile-bottom-nav{
       position:fixed;
       left:0;
       right:0;
       bottom:0;
       z-index:40;
-      padding: 0 16px;
-      padding-bottom: var(--safe-bottom);
+
+      padding-left:16px;
+      padding-right:16px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+      padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);
       pointer-events:auto;
     }
     #mobile-bottom-nav .nav-inner{
       height: var(--bottom-nav-visible);
-      background: rgba(15,23,42,.90);
+      background: rgba(15,23,42,.92);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       border: 1px solid rgba(255,255,255,.10);
@@ -256,17 +265,14 @@
       position:fixed;
       left:16px;
       right:16px;
-      top: calc(var(--safe-top) + 12px);
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
       z-index:300;
       transform: translateY(-12px);
       opacity:0;
       transition: all .25s ease;
       pointer-events:none;
     }
-    #toast.show{
-      transform: translateY(0);
-      opacity:1;
-    }
+    #toast.show{ transform: translateY(0); opacity:1; }
 
     .flash-highlight{
       outline: 2px solid rgba(245,158,11,.35);
@@ -280,9 +286,7 @@
       color: rgba(255,255,255,.9);
       outline: none;
     }
-    select:focus{
-      border-color: rgba(245,158,11,.35);
-    }
+    select:focus{ border-color: rgba(245,158,11,.35); }
 
     .mn-row{
       display:flex;
@@ -314,23 +318,18 @@
       white-space:nowrap;
     }
 
-    /* ✅ mobile tabs */
     .mobile-hidden{ display:none !important; }
 
-    /* ✅ modal open: no background drag */
-    body.modal-open{
-      touch-action: none;
-    }
-    body.modal-open #event-modal,
-    body.modal-open #settings-modal,
-    body.modal-open #goal-modal,
-    body.modal-open #month-picker-modal{
-      touch-action: pan-y;
-    }
+    /* prevent underlying view scroll-jumps when modal opens */
+    body.modal-open { overflow:hidden; }
+
+    /* modal entrance */
+    .animate-enter{ animation: enter .18s ease-out; }
+    @keyframes enter{ from{ transform: translateY(10px); opacity:.0 } to{ transform: translateY(0); opacity:1 } }
   </style>
 </head>
 
-<body class="no-hor-scroll pt-safe">
+<body class="no-hor-scroll">
 
   <div class="noise-overlay"></div>
   <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
@@ -347,7 +346,7 @@
     </div>
   </div>
 
-  <div id="app-shell" class="relative w-full flex flex-col p-4 no-hor-scroll pb-under-nav">
+  <div id="app-shell" class="relative z-10 w-full h-full flex flex-col no-hor-scroll px-4 pb-under-nav">
 
     <!-- HEADER -->
     <header class="flex justify-between items-center mb-4 shrink-0 gap-2">
@@ -368,7 +367,7 @@
           <button onclick="window.changeMonth(-1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
-          <button onclick="window.openMonthPicker()" id="current-month-display" class="px-4 text-center font-display font-bold text-sm whitespace-nowrap min-w-[120px] hover:text-amber-400 transition cursor-pointer"></button>
+          <button onclick="window.openMonthPicker()" id="current-month-display" class="px-3 text-center font-display font-bold text-sm whitespace-nowrap min-w-[120px] hover:text-amber-400 transition cursor-pointer"></button>
           <button onclick="window.changeMonth(1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
@@ -384,7 +383,6 @@
       </div>
     </header>
 
-    <!-- VIEWS WRAP -->
     <div class="flex-1 overflow-hidden relative">
 
       <!-- CALENDAR VIEW -->
@@ -458,7 +456,7 @@
             </div>
           </div>
 
-          <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[520px] relative overflow-hidden mb-under-nav">
+          <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[420px] relative overflow-hidden">
             <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0">
               <div class="flex justify-between items-start gap-3">
                 <div class="w-full min-w-0">
@@ -513,8 +511,8 @@
     </div>
   </div>
 
-  <!-- ✅ MOBILE BOTTOM NAV (background goes to very bottom) -->
-  <div id="mobile-bottom-nav" class="no-hor-scroll">
+  <!-- MOBILE BOTTOM NAV -->
+  <div id="mobile-bottom-nav">
     <div class="nav-inner">
       <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center justify-center gap-1 text-amber-400 w-16 transition-all duration-300">
         <i data-lucide="calendar" class="w-5 h-5"></i>
@@ -536,7 +534,9 @@
   <div id="event-modal" class="fixed inset-0 z-[100] hidden no-hor-scroll">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeModal()"></div>
 
-    <div class="absolute bottom-0 left-0 right-0 w-full h-[90vh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter">
+    <div class="absolute bottom-0 left-0 right-0 w-full h-[90vh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter"
+         style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);">
+
       <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
         <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="modal-title">Новое Событие</h3>
         <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
@@ -554,7 +554,7 @@
       <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
         <div id="tab-info" class="space-y-4 max-w-xs mx-auto">
 
-          <div class="grid grid-cols-5 gap-3">
+          <div class="grid grid-cols-3 gap-3">
             <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all selected">
               <i data-lucide="star" class="w-5 h-5"></i>
               <span class="text-[9px] font-bold uppercase tracking-wider">Сцена</span>
@@ -653,7 +653,7 @@
 
       </div>
 
-      <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-8 shrink-0 flex flex-col gap-3 items-center">
+      <div class="p-5 border-t border-white/5 bg-slate-900/80 shrink-0 flex flex-col gap-3 items-center">
         <button onclick="window.saveEvent()" class="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg text-lg hover:scale-[1.02] transition">
           Сохранить
         </button>
@@ -669,7 +669,6 @@
   <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
-
       <div class="flex items-center justify-between w-full mb-6">
         <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-left" class="w-6 h-6"></i>
@@ -703,7 +702,7 @@
   <div id="settings-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
 
-    <div class="relative w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden">
+    <div class="relative w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden animate-enter">
       <div class="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i data-lucide="settings" class="w-5 h-5 text-amber-400"></i>
@@ -769,7 +768,7 @@
   <!-- GOAL MODAL -->
   <div id="goal-modal" class="fixed inset-0 z-[150] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeGoalModal()"></div>
-    <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-5">
+    <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-5 animate-enter">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <i data-lucide="target" class="w-5 h-5 text-amber-400"></i>
@@ -804,7 +803,7 @@
     const toISODateLocal = (d)=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
     const parseNum = (v) => {
-      const s = String(v ?? '').replace(/\s/g,'').replace(',','.');
+      const s = String(v ?? '').replace(/\\s/g,'').replace(',','.');
       const n = Number(s);
       return Number.isFinite(n) ? n : 0;
     };
@@ -820,54 +819,6 @@
     let currentSetlist = []; // "Доп"
     let currentSchedule = [];
     let editingId = null;
-
-    /* ✅ iOS: stable viewport height (prevents “everything jumps up”) */
-    function setAppHeight(){
-      const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
-    }
-
-    /* ✅ modal scroll lock (prevents background moving) */
-    const __scrollLock = { dashTop:0, calTop:0 };
-    let __pageFreezeY = 0;
-
-    function freezePage(){
-      __pageFreezeY = window.scrollY || document.documentElement.scrollTop || 0;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${__pageFreezeY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.width = '100%';
-    }
-
-    function unfreezePage(){
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      window.scrollTo(0, __pageFreezeY);
-    }
-
-    function lockBackgroundScroll(){
-      const dash = document.getElementById('view-dashboard');
-      const cal = document.getElementById('calendar-grid');
-      __scrollLock.dashTop = dash ? dash.scrollTop : 0;
-      __scrollLock.calTop = cal ? cal.scrollTop : 0;
-
-      document.body.classList.add('modal-open');
-      freezePage();
-    }
-
-    function unlockBackgroundScroll(){
-      document.body.classList.remove('modal-open');
-      unfreezePage();
-
-      const dash = document.getElementById('view-dashboard');
-      const cal = document.getElementById('calendar-grid');
-      if(dash) dash.scrollTop = __scrollLock.dashTop;
-      if(cal) cal.scrollTop = __scrollLock.calTop;
-    }
 
     function renderApp(){
       renderCalendar();
@@ -913,7 +864,7 @@
         });
 
         let profitHtml = dayProfit > 0
-          ? `<span class="absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>`
+          ? `<span class="hidden md:block absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>`
           : '';
 
         let summaryHtml = '';
@@ -1093,7 +1044,7 @@
       lucide.createIcons();
     }
 
-    window.renderSetlist = () => {
+    function renderSetlist(){
       const ul = document.getElementById('setlist-container');
       if(currentSetlist.length === 0){
         ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Пока пусто</li>';
@@ -1242,13 +1193,11 @@
     }
 
     function normalizeText(s){
-      return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+      return String(s || '').toLowerCase().replace(/\\s+/g,' ').trim();
     }
-
     function primaryTypeOfEvent(e){
       return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
     }
-
     function eventSearchBlob(e){
       const parts = [
         e.title, e.location, e.clientName, e.clientPhone, e.notes,
@@ -1256,7 +1205,6 @@
       ];
       return normalizeText(parts.join(' '));
     }
-
     function formatDateShort(iso){
       const [y,m,d] = iso.split('-').map(Number);
       const dt = new Date(y, m-1, d);
@@ -1264,11 +1212,9 @@
       const mm = String(dt.getMonth()+1).padStart(2,'0');
       return `${dd}.${mm}`;
     }
-
     function safeTime(e){
       return (e.time || (e.schedule?.[0]?.time) || '—');
     }
-
     function buildMonthIndex(){
       const year = currentDate.getFullYear();
       const month1 = currentDate.getMonth() + 1;
@@ -1307,12 +1253,8 @@
       const idx = buildMonthIndex();
       let filtered = idx;
 
-      if(filter !== 'all'){
-        filtered = filtered.filter(x => x.type === filter);
-      }
-      if(q){
-        filtered = filtered.filter(x => x.search.includes(q));
-      }
+      if(filter !== 'all') filtered = filtered.filter(x => x.type === filter);
+      if(q) filtered = filtered.filter(x => x.search.includes(q));
 
       if(countEl) countEl.textContent = `${filtered.length}`;
 
@@ -1359,9 +1301,7 @@
       currentDate = new Date(y, m-1, 1);
 
       const dashIsHidden = document.getElementById('view-dashboard')?.classList.contains('mobile-hidden');
-      if(dashIsHidden){
-        window.switchMobileTab('dashboard');
-      }
+      if(dashIsHidden) window.switchMobileTab('dashboard');
 
       renderCalendar();
       renderSidebar();
@@ -1376,6 +1316,7 @@
       }, 120);
     };
 
+    // schedule controls
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
@@ -1426,25 +1367,20 @@
       window.renderSchedule();
     };
 
-    window.updateActTime = (index, newTime) => {
-      currentSchedule[index].time = newTime;
-    };
+    window.updateActTime = (index, newTime) => { currentSchedule[index].time = newTime; };
+    window.updateActDuration = (index, newDur) => { currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur))); };
 
-    window.updateActDuration = (index, newDur) => {
-      currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur)));
-    };
-
+    // month picker
     window.openMonthPicker = () => {
-      lockBackgroundScroll();
       pickerYear = currentDate.getFullYear();
       document.getElementById('picker-year-display').innerText = pickerYear;
       document.getElementById('month-picker-modal').classList.remove('hidden');
       window.highlightCurrentMonth();
-      lucide.createIcons();
+      document.body.classList.add('modal-open');
     };
     window.closeMonthPicker = () => {
       document.getElementById('month-picker-modal').classList.add('hidden');
-      unlockBackgroundScroll();
+      document.body.classList.remove('modal-open');
     };
     window.changePickerYear = (delta) => {
       pickerYear += delta;
@@ -1490,10 +1426,10 @@
           }));
         }
 
-        if(e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
+        if(e.dateISO && /^\\d{4}-\\d{2}-\\d{2}$/.test(e.dateISO)) return e;
 
         if(typeof e.date === 'string'){
-          if(/^\d{4}-\d{2}-\d{2}$/.test(e.date)){
+          if(/^\\d{4}-\\d{2}-\\d{2}$/.test(e.date)){
             e.dateISO = e.date;
             changed = true;
             return e;
@@ -1529,14 +1465,15 @@
       renderApp();
     }
 
+    // settings
     window.openSettings = () => {
-      lockBackgroundScroll();
       document.getElementById('settings-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
       lucide.createIcons();
     };
     window.closeSettings = () => {
       document.getElementById('settings-modal').classList.add('hidden');
-      unlockBackgroundScroll();
+      document.body.classList.remove('modal-open');
     };
 
     window.resetData = () => {
@@ -1547,12 +1484,11 @@
       localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
       renderApp();
       window.showToast('Данные сброшены');
-      window.closeSettings();
     };
 
     window.exportData = () => {
       const dateStr = new Date().toISOString().split('T')[0];
-      const data = { events, goal: monthlyGoal, version: '1.8-mobile' };
+      const data = { events, goal: monthlyGoal, version: '1.7-mobile' };
       const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1591,14 +1527,14 @@
     };
 
     window.editGoal = () => {
-      lockBackgroundScroll();
       document.getElementById('goal-input').value = monthlyGoal;
       document.getElementById('goal-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
       lucide.createIcons();
     };
     window.closeGoalModal = () => {
       document.getElementById('goal-modal').classList.add('hidden');
-      unlockBackgroundScroll();
+      document.body.classList.remove('modal-open');
     };
     window.saveGoalFromModal = () => {
       const v = parseNum(document.getElementById('goal-input').value);
@@ -1652,15 +1588,13 @@
         calNav.classList.remove('text-amber-400');
         calNav.classList.add('text-slate-500');
       }
+      updateBottomNavMetrics();
     };
 
+    // event modal
     window.openModal = (isEdit=false) => {
-      /* ✅ iOS: stop focus + force top without page jump */
-      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-      setTimeout(() => { window.scrollTo(0,0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }, 0);
-
-      lockBackgroundScroll();
       document.getElementById('event-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
 
       const dateInput = document.getElementById('inp-date');
@@ -1694,12 +1628,13 @@
       window.switchTab('info');
       window.setType(currentType || 'stage');
 
+      updateBottomNavMetrics();
       lucide.createIcons();
     };
 
     window.closeModal = () => {
       document.getElementById('event-modal').classList.add('hidden');
-      unlockBackgroundScroll();
+      document.body.classList.remove('modal-open');
     };
 
     window.switchTab = (tab) => {
@@ -1902,6 +1837,7 @@
       }
     };
 
+    // background particles
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1972,6 +1908,14 @@
       start();
     }
 
+    function updateBottomNavMetrics(){
+      const inner = document.querySelector('#mobile-bottom-nav .nav-inner');
+      if(!inner) return;
+      const rect = inner.getBoundingClientRect();
+      const h = rect.height || 64;
+      document.documentElement.style.setProperty('--bottom-nav-visible', `${Math.round(h)}px`);
+    }
+
     function bindMonthNavigatorInputs(){
       const inp = document.getElementById('month-search');
       const sel = document.getElementById('month-filter');
@@ -1985,17 +1929,29 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    // ✅ iOS: keep app height stable (prevents "jump up" when overlays open / Safari UI changes)
+    function setAppHeight(){
+      const vv = window.visualViewport;
+      const h = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
+    }
+
+    function bindAppHeight(){
       setAppHeight();
+      window.addEventListener('resize', setAppHeight);
+      window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 150));
       if(window.visualViewport){
         window.visualViewport.addEventListener('resize', setAppHeight);
+        window.visualViewport.addEventListener('scroll', setAppHeight);
       }
-      window.addEventListener('resize', setAppHeight);
+    }
 
+    document.addEventListener('DOMContentLoaded', () => {
+      bindAppHeight();
       loadLocalData();
       initParticles();
+      updateBottomNavMetrics();
       bindMonthNavigatorInputs();
-      window.switchMobileTab('calendar');
       lucide.createIcons();
     });
   </script>
