@@ -1,3 +1,4 @@
+<!-- /index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,30 +20,34 @@
 
   <style>
    :root{
-  --gold-primary:#f59e0b;
-  --dark-bg:#050507;
-  --card-surface:rgba(255,255,255,0.03);
-  --card-border:rgba(255,255,255,0.06);
+      --gold-primary:#f59e0b;
+      --dark-bg:#050507;
+      --card-surface:rgba(255,255,255,0.03);
+      --card-border:rgba(255,255,255,0.06);
 
-  /* iOS safe areas */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+      /* iOS safe areas */
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* dynamic app height (visualViewport) */
-  --app-h: 100vh;
+      /* dynamic app height (visualViewport) */
+      --app-h: 100vh;
 
-  /* bottom nav sizing */
-  --bottom-nav-visible: 64px; /* visual height of nav (without safe area) */
-  --bottom-nav-gap: 12px;     /* breathing space above nav for content */
-  --bottom-nav-h: calc(var(--bottom-nav-visible) + var(--safe-bottom));
-  --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap));
+      /* bottom nav sizing */
+      --bottom-nav-visible: 64px; /* visual height of nav (without safe area) */
+      --bottom-nav-gap: 12px;     /* breathing space above nav for content */
+      --bottom-nav-h: calc(var(--bottom-nav-visible) + var(--safe-bottom));
+      --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap));
 
-  /* ✅ ТВОЁ СМЕЩЕНИЕ МЕНЮ (минус = ниже) */
-  --bottom-nav-shift: -40px;
+      /* ✅ ТВОЁ СМЕЩЕНИЕ МЕНЮ (минус = ниже) */
+      --bottom-nav-shift: -40px;
 
-  /* ✅ доп. запас чтобы контент не "целовался" с меню */
-  --bottom-nav-extra: 18px;
-}
+      /* ✅ доп. запас чтобы контент не "целовался" с меню */
+      --bottom-nav-extra: 18px;
+
+      /* ✅ Отдельный запас ТОЛЬКО для Дашборда (календарь не трогаем) */
+      --dashboard-bottom-gap: 70px; /* сделает воздух между событиями и меню */
+    }
+
     html, body{
       width:100%;
       height:100%;
@@ -211,18 +216,20 @@
     .confetti{ position:absolute; width:8px; height:8px; background-color:#f59e0b; animation:fall linear forwards; z-index:9999; }
     @keyframes fall{ to{ transform:translateY(100vh) rotate(720deg); opacity:0; } }
 
-   .pb-under-nav{
-  padding-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
-}
-.mb-under-nav{
-  margin-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
-}
+    /* ✅ КАЛЕНДАРЬ: специально "липнет" к меню (учитываем shift -40) */
+    .pb-under-nav{
+      padding-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
+    }
+    .mb-under-nav{
+      margin-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
+    }
 
-/* ✅ БОЛЬШЕ воздуха снизу ТОЛЬКО в Дашборде */
-.pb-under-nav-dashboard{
-  padding-bottom: calc(
-    var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift) + 42px
-  ) !important;
+    /* ✅ ДАШБОРД: делаем воздух между событиями и меню (shift НЕ учитываем) */
+    .pb-under-nav-dashboard{
+      padding-bottom: calc(
+        var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--dashboard-bottom-gap)
+      ) !important;
+    }
 
     button{ min-height:44px; }
 
@@ -248,28 +255,23 @@
     }
 
     /* ✅ Bottom nav anchored to REAL bottom.
-   Background extends into safe area, controls sit above it. */
-#mobile-bottom-nav{
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: var(--bottom-nav-shift);
-  z-index: 40;
+       Background extends into safe area, controls sit above it. */
+    #mobile-bottom-nav{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: var(--bottom-nav-shift);
+      z-index: 40;
 
-  padding-left: 16px;
-  padding-right: 16px;
+      padding-left: 16px;
+      padding-right: 16px;
 
-  padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+      padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
 
-  pointer-events: auto;
-
-
-
-
-
-
+      pointer-events: auto;
     }
+
     #mobile-bottom-nav .nav-inner{
       height: var(--bottom-nav-visible);
       background: rgba(15,23,42,.92);
@@ -425,7 +427,7 @@
       </div>
 
       <!-- DASHBOARD VIEW -->
-     <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav-dashboard mobile-hidden">
+      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav-dashboard mobile-hidden">
         <div class="flex flex-col gap-4 h-full">
 
           <div class="glass-panel rounded-2xl p-4 shrink-0">
@@ -525,7 +527,8 @@
               </div>
             </div>
 
-            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"></div>>
+            <!-- ✅ фикс: убран лишний ">" -->
+            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"></div>
           </div>
 
         </div>
@@ -826,7 +829,7 @@
     const toISODateLocal = (d)=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
     const parseNum = (v) => {
-      const s = String(v ?? '').replace(/\\s/g,'').replace(',','.');
+      const s = String(v ?? '').replace(/\s/g,'').replace(',','.');
       const n = Number(s);
       return Number.isFinite(n) ? n : 0;
     };
@@ -1216,7 +1219,7 @@
     }
 
     function normalizeText(s){
-      return String(s || '').toLowerCase().replace(/\\s+/g,' ').trim();
+      return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
     }
     function primaryTypeOfEvent(e){
       return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
@@ -1449,10 +1452,10 @@
           }));
         }
 
-        if(e.dateISO && /^\\d{4}-\\d{2}-\\d{2}$/.test(e.dateISO)) return e;
+        if(e.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(e.dateISO)) return e;
 
         if(typeof e.date === 'string'){
-          if(/^\\d{4}-\\d{2}-\\d{2}$/.test(e.date)){
+          if(/^\d{4}-\d{2}-\d{2}$/.test(e.date)){
             e.dateISO = e.date;
             changed = true;
             return e;
