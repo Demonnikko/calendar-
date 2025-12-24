@@ -233,22 +233,24 @@
     }
 
     /* ✅ Bottom nav anchored to REAL bottom.
-       Background extends into safe area, controls sit above it. */
-   #mobile-bottom-nav{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:-10px; /* ниже: -6 / -10 / -14 */
-  z-index:40;
+   Background extends into safe area, controls sit above it. */
+#mobile-bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -26px;   /* ниже: -22 / -26 / -30 */
 
-  padding-left:16px;
-  padding-right:16px;
+  z-index: 40;
 
-  /* сначала legacy, потом env */
+  padding-left: 16px;
+  padding-right: 16px;
+
   padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
 
-  pointer-events:auto;
+  pointer-events: auto;
+
+
 
 
 
