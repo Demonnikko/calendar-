@@ -5,32 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Illusionist OS</title>
 
-  <!-- PWA-ish -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Illusionist OS">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
-
-  <!-- IMPORTANT: lock stable app height for iOS (prevents jump on modal/keyboard) -->
-  <script>
-    (function () {
-      function setAppHeight() {
-        const vv = window.visualViewport;
-        const h = Math.round((vv && vv.height) ? vv.height : window.innerHeight);
-        document.documentElement.style.setProperty('--app-h', h + 'px');
-        document.documentElement.style.setProperty('--sheet-h', Math.round(h * 0.92) + 'px');
-      }
-      setAppHeight();
-      window.addEventListener('resize', () => setTimeout(setAppHeight, 60), { passive: true });
-      window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 180), { passive: true });
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => setTimeout(setAppHeight, 60), { passive: true });
-        window.visualViewport.addEventListener('scroll', () => setTimeout(setAppHeight, 60), { passive: true });
-      }
-      document.addEventListener('DOMContentLoaded', setAppHeight, { passive: true });
-    })();
-  </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -46,19 +25,22 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      --bottom-nav-h: 64px;
-      --bottom-nav-gap: 12px;
-      --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap) + var(--safe-bottom));
-
-      /* stable heights (set by JS) */
+      /* ✅ real viewport height for iOS (no jumps) */
       --app-h: 100vh;
-      --sheet-h: 92vh;
+
+      /* ✅ bottom nav metrics (total includes safe-bottom) */
+      --bottom-nav-visible: 64px;
+      --bottom-nav-gap: 12px;
+      --bottom-nav-h: calc(var(--bottom-nav-visible) + var(--safe-bottom));
+      --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap));
     }
 
     html, body{
       width:100%;
       height:100%;
+      margin:0;
       overflow:hidden;
+      overflow-x:hidden !important;
       overscroll-behavior:none;
       background:var(--dark-bg);
       -webkit-text-size-adjust: 100%;
@@ -67,15 +49,23 @@
     body{
       font-family:'Inter',sans-serif;
       color:#e2e8f0;
-      margin:0;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
+      position:relative;
+      height: var(--app-h);
+      background:var(--dark-bg);
+      touch-action: pan-y;
     }
 
     h1,h2,h3,.font-display{ font-family:'Cinzel',serif; }
 
-    /* Prevent iOS input zoom */
-    input, select, textarea { font-size:16px; }
+    /* ✅ app is always pinned to viewport (prevents “jump up” on iOS) */
+    #app-shell{
+      position: fixed;
+      inset: 0;
+      height: var(--app-h);
+      width: 100%;
+      overflow: hidden;
+      z-index: 10;
+    }
 
     .noise-overlay{
       position:fixed; inset:0;
@@ -84,7 +74,7 @@
     }
 
     .glass-panel{
-      background:linear-gradient(180deg, rgba(30,41,59,.72) 0%, rgba(15,23,42,.62) 100%);
+      background:linear-gradient(180deg, rgba(30,41,59,.7) 0%, rgba(15,23,42,.6) 100%);
       backdrop-filter:blur(24px);
       -webkit-backdrop-filter:blur(24px);
       border:1px solid rgba(255,255,255,.08);
@@ -95,6 +85,13 @@
     ::-webkit-scrollbar-track{ background:transparent; }
     ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.1); border-radius:10px; }
 
+    .tab-active{
+      background-color:rgba(51,65,85,.5);
+      color:#fff;
+      box-shadow:0 0 10px rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+    }
+
     #bg-canvas{ position:fixed; inset:0; z-index:-1; }
 
     input[type="time"]::-webkit-calendar-picker-indicator,
@@ -104,100 +101,155 @@
       cursor:pointer;
     }
 
-    .is-hidden{ display:none !important; }
+    .no-hor-scroll{ overflow-x:hidden !important; max-width:100vw; }
+    #view-dashboard, #calendar-grid, #events-list, #month-results, .custom-scrollbar{
+      overflow-x:hidden !important;
+      overscroll-behavior-x: none;
+      touch-action: pan-y;
+    }
 
-    .pb-safe{ padding-bottom: var(--safe-bottom); }
-    .pt-safe{ padding-top: var(--safe-top); }
-
-    .pb-under-nav{ padding-bottom: calc(var(--bottom-nav-total) + 18px) !important; }
-    .mb-under-nav{ margin-bottom: calc(var(--bottom-nav-total) + 18px) !important; }
-
-    button{ min-height:44px; }
-
-    /* Calendar cells */
     .calendar-cell{
       position:relative;
       background:var(--card-surface);
       border:1px solid var(--card-border);
-      border-radius:14px;
+      border-radius:12px;
       overflow:hidden;
-      transition:all .18s ease;
+      transition:all .2s ease;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:flex-start;
-      padding-top:7px;
-      gap:6px;
+      padding-top:6px;
+      gap:4px;
     }
-    .calendar-cell:active{ transform:scale(.99); }
+    .calendar-cell:hover{
+      border-color:rgba(255,255,255,.15);
+      background:rgba(255,255,255,.05);
+      transform:translateY(-1px);
+    }
     .calendar-cell.selected{
-      border-color:rgba(245,158,11,.45);
-      box-shadow:0 0 16px rgba(245,158,11,.12);
-      background:rgba(245,158,11,.06);
+      border-color:rgba(245,158,11,.4);
+      box-shadow:0 0 15px rgba(245,158,11,.1);
+      background:rgba(245,158,11,.05);
     }
     .calendar-cell.today .date-number{
       background:linear-gradient(135deg,#fbbf24,#d97706);
       color:#000;
-      font-weight:800;
+      font-weight:700;
       box-shadow:0 2px 5px rgba(245,158,11,.3);
     }
 
     .date-number{
-      font-size:11px; font-weight:600; color:rgba(255,255,255,.62);
-      width:22px; height:22px;
+      font-size:11px; font-weight:500; color:rgba(255,255,255,.6);
+      width:20px; height:20px;
       display:flex; align-items:center; justify-content:center;
-      border-radius:7px;
+      border-radius:6px; transition:all .2s;
     }
 
-    /* No words in calendar: only color markers */
-    .calendar-markers{
+    .calendar-cell-content{
       width:100%;
       display:flex;
       flex-direction:column;
-      gap:4px;
-      padding:0 6px 6px;
-      align-items:stretch;
-      justify-content:flex-start;
+      gap:2px;
+      padding:0 3px;
+      align-items:center;
     }
-    .event-marker{
-      height:8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      opacity:.95;
-    }
-    .event-marker:active{ transform:scale(.99); }
 
-    .event-stage{ background:rgba(245,158,11,.25); border-color:rgba(245,158,11,.28); }
-    .event-closeup{ background:rgba(168,85,247,.22); border-color:rgba(168,85,247,.26); }
-    .event-kids{ background:rgba(16,185,129,.22); border-color:rgba(16,185,129,.26); }
-    .event-concert{ background:rgba(59,130,246,.22); border-color:rgba(59,130,246,.26); }
-    .event-rehearsal{ background:rgba(148,163,184,.18); border-color:rgba(148,163,184,.20); }
+    .event-label{
+      font-size:8px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      border-radius:3px;
+      padding:2px 4px;
+      text-align:center;
+      cursor:pointer;
+      transition:all .2s;
+      color:rgba(255,255,255,.9);
+      font-weight:600;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      width:90%;
+      border:1px solid transparent;
+    }
+    .event-label:hover{ transform:scale(1.02); filter:brightness(1.1); z-index:10; }
+
+    .event-stage{ background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#fbbf24; }
+    .event-closeup{ background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.3); color:#c084fc; }
+    .event-kids{ background:rgba(16,185,129,.15); border-color:rgba(16,185,129,.3); color:#34d399; }
+    .event-concert{ background:rgba(59,130,246,.15); border-color:rgba(59,130,246,.3); color:#60a5fa; }
+    .event-rehearsal{ background:rgba(148,163,184,.15); border-color:rgba(148,163,184,.3); color:#cbd5e1; }
 
     .month-summary{
-      margin-top:auto; margin-bottom:6px;
-      background:linear-gradient(90deg,transparent,rgba(245,158,11,.10),transparent);
-      border-top:1px solid rgba(245,158,11,.18);
-      border-bottom:1px solid rgba(245,158,11,.18);
-      padding:3px 0;
-      font-size:8px;
-      width:84%;
+      margin-top:auto; margin-bottom:4px;
+      background:linear-gradient(90deg,transparent,rgba(245,158,11,.1),transparent);
+      border-top:1px solid rgba(245,158,11,.2);
+      border-bottom:1px solid rgba(245,158,11,.2);
+      padding:2px 0;
+      font-size:7px;
+      width:80%;
       text-align:center;
       text-transform:uppercase;
-      font-weight:800;
+      font-weight:700;
       color:#fbbf24;
-      letter-spacing:1.7px;
+      letter-spacing:1.5px;
     }
 
     .confetti{ position:absolute; width:8px; height:8px; background-color:#f59e0b; animation:fall linear forwards; z-index:9999; }
     @keyframes fall{ to{ transform:translateY(100vh) rotate(720deg); opacity:0; } }
 
+    .pb-safe{ padding-bottom: var(--safe-bottom); }
+    .pt-safe{ padding-top: var(--safe-top); }
+
+    .pb-under-nav{ padding-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
+    .mb-under-nav{ margin-bottom: calc(var(--bottom-nav-total) + 20px) !important; }
+
+    button{ min-height:44px; -webkit-tap-highlight-color: transparent; }
+
+    .type-btn{ position:relative; overflow:hidden; }
+    .type-btn.selected{ background-color:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); }
+    .type-btn.selected i{ transform:scale(1.1); }
+    .type-btn#type-stage.selected{ border-color:#f59e0b; background-color:rgba(245,158,11,.1); }
+    .type-btn#type-closeup.selected{ border-color:#a855f7; background-color:rgba(168,85,247,.1); }
+    .type-btn#type-kids.selected{ border-color:#10b981; background-color:rgba(16,185,129,.1); }
+    .type-btn#type-concert.selected{ border-color:#3b82f6; background-color:rgba(59,130,246,.1); }
+    .type-btn#type-rehearsal.selected{ border-color:#94a3b8; background-color:rgba(148,163,184,.1); }
+
+    .act-row{
+      display:grid;
+      grid-template-columns: 40px 1fr 84px 30px;
+      gap:8px;
+      align-items:center;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:10px;
+      padding:8px;
+      margin-bottom:8px;
+    }
+
+    /* ✅ bottom nav: background reaches the very bottom */
     #mobile-bottom-nav{
       position:fixed;
-      left:16px;
-      right:16px;
-      height:64px;
-      bottom: calc(var(--safe-bottom) + 0px);
-      z-index:60;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:40;
+      padding: 0 16px;
+      padding-bottom: var(--safe-bottom);
+      pointer-events:auto;
+    }
+    #mobile-bottom-nav .nav-inner{
+      height: var(--bottom-nav-visible);
+      background: rgba(15,23,42,.90);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      box-shadow: 0 16px 50px rgba(0,0,0,.55);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 24px;
     }
 
     #toast{
@@ -232,65 +284,53 @@
       border-color: rgba(245,158,11,.35);
     }
 
-    .act-row{
-      display:grid;
-      grid-template-columns: 40px 1fr 88px 30px;
-      gap:8px;
-      align-items:center;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:12px;
-      padding:10px;
-      margin-bottom:10px;
-    }
-
-    /* Month navigator rows */
     .mn-row{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
       padding:10px 12px;
-      border-radius:14px;
+      border-radius:12px;
       background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.06);
       cursor:pointer;
       transition: all .15s ease;
     }
-    .mn-row:active{
+    .mn-row:hover{
       border-color: rgba(245,158,11,.28);
-      background: rgba(245,158,11,.07);
-      transform: scale(.995);
+      background: rgba(245,158,11,.06);
+      transform: translateY(-1px);
     }
     .mn-chip{
       font-size:9px;
       letter-spacing:.12em;
       text-transform:uppercase;
       font-weight:800;
-      padding:4px 10px;
+      padding:3px 8px;
       border-radius:999px;
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
-      color: rgba(226,232,240,.92);
+      color: rgba(226,232,240,.9);
       white-space:nowrap;
     }
 
-    /* ---- FIX: prevent background jump/scroll on iOS when modal opens ---- */
-    body.modal-open #view-dashboard,
-    body.modal-open #calendar-grid{
-      overflow: hidden !important;
-      -webkit-overflow-scrolling: auto !important;
-      overscroll-behavior: none !important;
-    }
+    /* ✅ mobile tabs */
+    .mobile-hidden{ display:none !important; }
 
-    /* make sheet use stable height */
-    .bottom-sheet{
-      height: var(--sheet-h);
+    /* ✅ modal open: no background drag */
+    body.modal-open{
+      touch-action: none;
+    }
+    body.modal-open #event-modal,
+    body.modal-open #settings-modal,
+    body.modal-open #goal-modal,
+    body.modal-open #month-picker-modal{
+      touch-action: pan-y;
     }
   </style>
 </head>
 
-<body class="pt-safe">
+<body class="no-hor-scroll pt-safe">
 
   <div class="noise-overlay"></div>
   <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
@@ -307,55 +347,50 @@
     </div>
   </div>
 
-  <!-- APP SHELL (mobile only layout) -->
-  <div id="app-shell"
-       class="relative z-10 w-full flex flex-col px-4 pb-under-nav"
-       style="height: var(--app-h);">
+  <div id="app-shell" class="relative w-full flex flex-col p-4 no-hor-scroll pb-under-nav">
 
     <!-- HEADER -->
-    <header class="flex justify-between items-center mt-2 mb-3 shrink-0 gap-2">
-      <div class="flex items-center gap-3 overflow-hidden">
-        <div class="relative w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#0f0f13] border border-amber-500/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+    <header class="flex justify-between items-center mb-4 shrink-0 gap-2">
+      <div class="flex items-center gap-2 overflow-hidden">
+        <div class="relative w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#0f0f13] border border-amber-500/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
           <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-500/10 to-transparent opacity-50"></div>
-          <i data-lucide="calendar" class="relative z-10 w-6 h-6 text-amber-500 drop-shadow-[0_2px_4px_rgba(245,158,11,0.25)]"></i>
+          <i data-lucide="calendar" class="relative z-10 w-5 h-5 text-amber-500 drop-shadow-[0_2px_4px_rgba(245,158,11,0.25)]"></i>
         </div>
 
         <div class="min-w-0 flex flex-col justify-center">
-          <h1 class="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight tracking-widest font-display">
-            ILLUSIONIST OS
-          </h1>
-          <span class="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase leading-none mt-0.5">Calendar</span>
+          <h1 class="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight tracking-widest font-display">ILLUSIONIST OS</h1>
+          <span class="text-[8px] text-slate-500 font-bold tracking-[0.2em] uppercase leading-none mt-0.5">Calendar</span>
         </div>
       </div>
 
       <div class="flex items-center gap-2 flex-shrink-0">
-        <div class="flex items-center glass-panel p-0.5 rounded-xl h-10">
-          <button onclick="window.changeMonth(-1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 active:scale-[0.98] transition">
-            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        <div class="flex items-center glass-panel p-0.5 rounded-lg h-10">
+          <button onclick="window.changeMonth(-1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
-          <button onclick="window.openMonthPicker()" id="current-month-display" class="px-3 text-center font-display font-bold text-sm whitespace-nowrap min-w-[110px] hover:text-amber-400 transition cursor-pointer"></button>
-          <button onclick="window.changeMonth(1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 active:scale-[0.98] transition">
-            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          <button onclick="window.openMonthPicker()" id="current-month-display" class="px-4 text-center font-display font-bold text-sm whitespace-nowrap min-w-[120px] hover:text-amber-400 transition cursor-pointer"></button>
+          <button onclick="window.changeMonth(1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
 
-        <button onclick="window.goToToday()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-amber-400 hover:border-amber-500/30 active:scale-[0.98] transition" title="Сегодня">
-          <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+        <button onclick="window.goToToday()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0" title="Сегодня">
+          <i data-lucide="calendar-clock" class="w-4 h-4"></i>
         </button>
 
-        <button onclick="window.openSettings()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-amber-400 hover:border-amber-500/30 active:scale-[0.98] transition">
-          <i data-lucide="settings" class="w-5 h-5"></i>
+        <button onclick="window.openSettings()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0">
+          <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
     </header>
 
-    <!-- CONTENT -->
+    <!-- VIEWS WRAP -->
     <div class="flex-1 overflow-hidden relative">
 
       <!-- CALENDAR VIEW -->
-      <div id="view-calendar" class="h-full w-full absolute inset-0 flex flex-col">
-        <div class="glass-panel rounded-2xl p-3 flex flex-col h-full overflow-hidden">
-          <div class="grid grid-cols-7 mb-2 border-b border-white/5 pb-2">
+      <div id="view-calendar" class="h-full w-full absolute inset-0 flex flex-col transition-opacity duration-300">
+        <div class="glass-panel rounded-2xl p-3 flex flex-col h-full relative overflow-hidden">
+          <div class="grid grid-cols-7 mb-1 border-b border-white/5 pb-1">
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Пн</div>
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Вт</div>
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Ср</div>
@@ -364,15 +399,15 @@
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Сб</div>
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Вс</div>
           </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-2 flex-1 auto-rows-fr overflow-y-auto pb-under-nav"></div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-2 flex-1 auto-rows-fr overflow-y-auto custom-scrollbar pb-under-nav"></div>
         </div>
       </div>
 
       <!-- DASHBOARD VIEW -->
-      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto pb-under-nav is-hidden">
-        <div class="flex flex-col gap-4">
-          <!-- FINANCE CARD -->
-          <div class="glass-panel rounded-2xl p-4">
+      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav mobile-hidden">
+        <div class="flex flex-col gap-4 h-full">
+
+          <div class="glass-panel rounded-2xl p-4 shrink-0">
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Финансы
@@ -403,13 +438,13 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-center mb-4">
-              <div class="bg-white/5 p-2 rounded-xl border border-white/10">
+              <div class="bg-white/5 p-2 rounded-lg">
                 <p class="text-[9px] text-slate-500 uppercase">Доход</p>
-                <p id="stat-income" class="text-sm font-bold text-emerald-400">0</p>
+                <p id="stat-income" class="text-xs font-bold text-emerald-400">0</p>
               </div>
-              <div class="bg-white/5 p-2 rounded-xl border border-white/10">
+              <div class="bg-white/5 p-2 rounded-lg">
                 <p class="text-[9px] text-slate-500 uppercase">Расход</p>
-                <p id="stat-expense" class="text-sm font-bold text-red-400">0</p>
+                <p id="stat-expense" class="text-xs font-bold text-red-400">0</p>
               </div>
             </div>
 
@@ -423,12 +458,11 @@
             </div>
           </div>
 
-          <!-- DAY CARD -->
-          <div class="glass-panel rounded-2xl flex flex-col min-h-[520px] overflow-hidden">
-            <div class="p-4 border-b border-white/5 bg-slate-900/30">
+          <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[520px] relative overflow-hidden mb-under-nav">
+            <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0">
               <div class="flex justify-between items-start gap-3">
                 <div class="w-full min-w-0">
-                  <h2 id="selected-date-big" class="text-3xl font-display font-bold text-white"></h2>
+                  <h2 id="selected-date-big" class="text-2xl font-display font-bold text-white"></h2>
                   <p id="selected-weekday" class="text-amber-500 text-[10px] uppercase font-bold tracking-widest"></p>
 
                   <div id="jumper-wrap" class="mt-3 hidden">
@@ -444,14 +478,16 @@
                       <div class="text-[9px] text-slate-500 font-mono" id="month-nav-count">0</div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-2">
-                      <div class="relative">
-                        <input id="month-search" type="text" placeholder="Поиск: название, локация, клиент, доп..."
-                          class="w-full bg-black/25 border border-white/10 rounded-xl pl-10 pr-3 py-3 text-white outline-none focus:border-amber-500/40">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="col-span-2">
+                        <div class="relative">
+                          <input id="month-search" type="text" placeholder="Поиск: название, локация, клиент, доп..."
+                            class="w-full bg-black/25 border border-white/10 rounded-xl pl-10 pr-3 py-2 text-sm text-white outline-none focus:border-amber-500/40">
+                          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        </div>
                       </div>
 
-                      <select id="month-filter" class="rounded-xl px-3 py-3">
+                      <select id="month-filter" class="col-span-2 rounded-xl px-3 py-2 text-sm">
                         <option value="all">Все типы</option>
                         <option value="stage">Сцена</option>
                         <option value="closeup">Микро</option>
@@ -461,59 +497,61 @@
                       </select>
                     </div>
 
-                    <div id="month-results" class="mt-2 space-y-2 max-h-[220px] overflow-y-auto pr-1"></div>
+                    <div id="month-results" class="mt-2 space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1"></div>
                   </div>
 
                 </div>
               </div>
             </div>
 
-            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 pb-under-nav"></div>
+            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-under-nav"></div>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- MOBILE BOTTOM NAV -->
-  <div id="mobile-bottom-nav" class="bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between px-6">
-    <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center justify-center gap-1 text-amber-400 w-16 transition-all duration-200">
-      <i data-lucide="calendar" class="w-5 h-5"></i>
-      <span class="text-[9px] font-bold tracking-wide">Календарь</span>
-    </button>
+  <!-- ✅ MOBILE BOTTOM NAV (background goes to very bottom) -->
+  <div id="mobile-bottom-nav" class="no-hor-scroll">
+    <div class="nav-inner">
+      <button onclick="window.switchMobileTab('calendar')" id="nav-calendar" class="flex flex-col items-center justify-center gap-1 text-amber-400 w-16 transition-all duration-300">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span class="text-[9px] font-bold tracking-wide">Календарь</span>
+      </button>
 
-    <button onclick="window.openModal(false)" class="relative -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center active:scale-95 transition border-4 border-[#050507]">
-      <i data-lucide="plus" class="w-7 h-7"></i>
-    </button>
+      <button onclick="window.openModal()" class="relative -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center transform active:scale-95 transition border-4 border-[#050507]">
+        <i data-lucide="plus" class="w-7 h-7"></i>
+      </button>
 
-    <button onclick="window.switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-slate-500 w-16 transition-all duration-200">
-      <i data-lucide="layout-list" class="w-5 h-5"></i>
-      <span class="text-[9px] font-bold tracking-wide">Дашборд</span>
-    </button>
+      <button onclick="window.switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-slate-500 w-16 transition-all duration-300">
+        <i data-lucide="layout-list" class="w-5 h-5"></i>
+        <span class="text-[9px] font-bold tracking-wide">Дашборд</span>
+      </button>
+    </div>
   </div>
 
   <!-- EVENT MODAL -->
-  <div id="event-modal" class="fixed inset-0 z-[100] hidden">
+  <div id="event-modal" class="fixed inset-0 z-[100] hidden no-hor-scroll">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeModal()"></div>
 
-    <!-- sheet -->
-    <div class="bottom-sheet absolute bottom-0 left-0 right-0 w-full bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden">
-
+    <div class="absolute bottom-0 left-0 right-0 w-full h-[90vh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter">
       <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
         <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="modal-title">Новое Событие</h3>
-        <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 active:scale-[0.98] transition">
-          <i data-lucide="x" class="w-5 h-5 text-slate-300"></i>
+        <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
         </button>
       </div>
 
-      <div class="flex p-1.5 bg-black/20 gap-1 mx-4 mt-4 rounded-xl shrink-0 justify-center">
-        <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded-xl transition">Инфо</button>
-        <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded-xl transition">Доп</button>
-        <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded-xl transition">Касса</button>
-        <button onclick="window.switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded-xl transition">Заметки</button>
+      <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0 justify-center">
+        <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
+        <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Доп</button>
+        <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
+        <button onclick="window.switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
       </div>
 
-      <div class="p-5 overflow-y-auto overflow-x-hidden flex-1 pb-under-nav">
+      <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
         <div id="tab-info" class="space-y-4 max-w-xs mx-auto">
 
           <div class="grid grid-cols-5 gap-3">
@@ -534,7 +572,7 @@
 
             <button onclick="window.setType('concert')" id="type-concert" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
               <i data-lucide="mic-2" class="w-5 h-5"></i>
-              <span class="text-[9px] font-bold uppercase tracking-wider">Конц</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider">Концерт</span>
             </button>
 
             <button onclick="window.setType('rehearsal')" id="type-rehearsal" class="type-btn group relative p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-500 hover:bg-white/10 flex flex-col items-center gap-2 overflow-hidden transition-all">
@@ -543,34 +581,29 @@
             </button>
           </div>
 
-          <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)"
-                 class="w-full bg-black/30 border border-white/10 rounded-2xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors text-center font-bold">
+          <input type="text" id="inp-title" placeholder="Название (напр. Свадьба)" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white text-lg focus:border-amber-500/50 outline-none transition-colors text-center font-bold">
 
           <div>
             <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Дата</label>
-            <input type="date" id="inp-date"
-                   class="w-full bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
+            <input type="date" id="inp-date" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
 
-          <div class="bg-white/5 rounded-2xl border border-white/10 p-3">
+          <div class="bg-white/5 rounded-xl border border-white/10 p-3">
             <label class="text-[10px] text-amber-500 uppercase font-bold mb-2 block text-center">Тайминг Выступлений</label>
             <div id="schedule-list" class="space-y-2 mb-3"></div>
-            <button onclick="window.addAct()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 transition flex items-center justify-center gap-2 active:scale-[0.99]">
-              <i data-lucide="plus" class="w-4 h-4"></i> Добавить выход
+            <button onclick="window.addAct()" class="w-full py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300 hover:bg-white/10 transition flex items-center justify-center gap-2">
+              <i data-lucide="plus" class="w-3 h-3"></i> Добавить выход
             </button>
           </div>
 
           <div>
             <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block pl-1 text-center">Локация</label>
-            <input type="text" id="inp-location" placeholder="Ресторан..."
-                   class="w-full bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
+            <input type="text" id="inp-location" placeholder="Ресторан..." class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
 
           <div class="grid grid-cols-1 gap-3 pt-2 border-t border-white/5">
-            <input type="text" id="inp-client-name" placeholder="Имя Клиента"
-                   class="w-full bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
-            <input type="tel" id="inp-client-phone" placeholder="Телефон"
-                   class="w-full bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center">
+            <input type="text" id="inp-client-name" placeholder="Имя Клиента" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
+            <input type="tel" id="inp-client-phone" placeholder="Телефон" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
         </div>
 
@@ -579,115 +612,110 @@
             Добавь пункты “доп” (условия, реквизит, договор, дедлайны) — они будут видны на карточке события.
           </div>
           <div class="flex gap-2">
-            <input type="text" id="inp-trick" placeholder="Пункт доп..."
-                   class="flex-1 bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none">
-            <button onclick="window.addTrick()" class="bg-amber-600 px-4 rounded-2xl text-white active:scale-[0.98]">
-              <i data-lucide="plus"></i>
-            </button>
+            <input type="text" id="inp-trick" placeholder="Пункт доп..." class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
+            <button onclick="window.addTrick()" class="bg-amber-600 px-4 rounded-xl text-white"><i data-lucide="plus"></i></button>
           </div>
           <ul id="setlist-container" class="space-y-2 text-sm text-slate-300 pb-4"></ul>
         </div>
 
         <div id="tab-finance" class="hidden space-y-4 max-w-xs mx-auto">
-          <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl text-center">
+          <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
             <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая стоимость</label>
-            <input type="number" id="inp-income" placeholder="0"
-                   class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center"
-                   oninput="window.calcBalanceFromAmount()">
+            <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+            <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center relative group">
               <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Предоплата</label>
-              <input type="number" id="inp-prepay" placeholder="0"
-                     class="w-full bg-transparent text-lg font-mono text-white outline-none text-center"
-                     oninput="window.calcBalanceFromAmount()">
+              <input type="number" id="inp-prepay" placeholder="0" class="w-full bg-transparent text-lg font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
             </div>
 
-            <div class="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+            <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">%</label>
-              <input type="text" id="inp-prepay-percent" placeholder="0"
-                     class="w-full bg-transparent text-lg font-mono text-amber-400 outline-none text-center"
-                     inputmode="decimal" oninput="window.calcBalanceFromPercent()">
+              <input type="text" id="inp-prepay-percent" placeholder="0" class="w-full bg-transparent text-lg font-mono text-amber-400 outline-none text-center" inputmode="decimal" oninput="window.calcBalanceFromPercent()">
             </div>
           </div>
 
-          <div class="p-3 bg-white/5 border border-white/10 rounded-2xl text-center flex flex-col justify-center">
+          <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center flex flex-col justify-center">
             <label class="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Остаток</label>
             <span id="txt-balance" class="text-lg font-mono text-slate-500 font-bold">0</span>
           </div>
 
-          <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-2xl text-center">
+          <div class="p-3 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
             <label class="text-[10px] text-red-400 font-bold uppercase block mb-1">Расход</label>
-            <input type="number" id="inp-expense" placeholder="0"
-                   class="w-full bg-transparent text-xl font-mono text-white outline-none text-center">
+            <input type="number" id="inp-expense" placeholder="0" class="w-full bg-transparent text-xl font-mono text-white outline-none text-center">
           </div>
         </div>
 
         <div id="tab-notes" class="hidden max-w-xs mx-auto">
-          <textarea id="inp-notes" placeholder="Заметки..."
-                    class="w-full h-44 bg-black/30 border border-white/10 rounded-2xl p-3 text-white resize-none outline-none text-sm"></textarea>
+          <textarea id="inp-notes" placeholder="Заметки..." class="w-full h-40 bg-black/30 border border-white/10 rounded-xl p-3 text-white resize-none outline-none text-sm"></textarea>
         </div>
+
       </div>
 
-      <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-[calc(16px+var(--safe-bottom))] shrink-0 flex flex-col gap-3 items-center">
-        <button onclick="window.saveEvent()" class="w-full max-w-xs py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg text-lg active:scale-[0.99] transition">
+      <div class="p-5 border-t border-white/5 bg-slate-900/80 pb-8 shrink-0 flex flex-col gap-3 items-center">
+        <button onclick="window.saveEvent()" class="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg text-lg hover:scale-[1.02] transition">
           Сохранить
         </button>
-        <button id="btn-delete" onclick="window.deleteEventFromModal()" class="w-full max-w-xs py-3 rounded-2xl border border-red-500/30 text-red-400 font-bold hover:bg-red-500/10 active:scale-[0.99] transition hidden">
+        <button id="btn-delete" onclick="window.deleteEventFromModal()" class="w-full max-w-xs py-3 rounded-xl border border-red-500/30 text-red-400 font-bold hover:bg-red-500/10 transition hidden">
           Удалить
         </button>
       </div>
+
     </div>
   </div>
 
   <!-- MONTH PICKER -->
-  <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden flex items-center justify-center p-4">
+  <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
-    <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 flex flex-col items-center">
+    <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
+
       <div class="flex items-center justify-between w-full mb-6">
-        <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-xl text-slate-300 active:scale-[0.98] transition">
+        <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-left" class="w-6 h-6"></i>
         </button>
         <span id="picker-year-display" class="text-2xl font-display font-bold text-white tracking-widest">2024</span>
-        <button onclick="window.changePickerYear(1)" class="p-2 hover:bg-white/10 rounded-xl text-slate-300 active:scale-[0.98] transition">
+        <button onclick="window.changePickerYear(1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-right" class="w-6 h-6"></i>
         </button>
       </div>
+
       <div class="grid grid-cols-3 gap-3 w-full">
-        <button onclick="window.selectMonth(0)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ЯНВ</button>
-        <button onclick="window.selectMonth(1)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ФЕВ</button>
-        <button onclick="window.selectMonth(2)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАР</button>
-        <button onclick="window.selectMonth(3)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АПР</button>
-        <button onclick="window.selectMonth(4)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАЙ</button>
-        <button onclick="window.selectMonth(5)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮН</button>
-        <button onclick="window.selectMonth(6)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮЛ</button>
-        <button onclick="window.selectMonth(7)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АВГ</button>
-        <button onclick="window.selectMonth(8)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">СЕН</button>
-        <button onclick="window.selectMonth(9)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ОКТ</button>
-        <button onclick="window.selectMonth(10)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">НОЯ</button>
-        <button onclick="window.selectMonth(11)" class="month-btn p-3 rounded-2xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ДЕК</button>
+        <button onclick="window.selectMonth(0)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ЯНВ</button>
+        <button onclick="window.selectMonth(1)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ФЕВ</button>
+        <button onclick="window.selectMonth(2)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАР</button>
+        <button onclick="window.selectMonth(3)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АПР</button>
+        <button onclick="window.selectMonth(4)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">МАЙ</button>
+        <button onclick="window.selectMonth(5)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮН</button>
+        <button onclick="window.selectMonth(6)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ИЮЛ</button>
+        <button onclick="window.selectMonth(7)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">АВГ</button>
+        <button onclick="window.selectMonth(8)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">СЕН</button>
+        <button onclick="window.selectMonth(9)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ОКТ</button>
+        <button onclick="window.selectMonth(10)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">НОЯ</button>
+        <button onclick="window.selectMonth(11)" class="month-btn p-3 rounded-xl border border-white/5 bg-white/5 text-slate-300 hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400 transition font-bold text-sm">ДЕК</button>
       </div>
+
       <button onclick="window.closeMonthPicker()" class="mt-8 text-slate-500 text-xs hover:text-white transition">Закрыть</button>
     </div>
   </div>
 
   <!-- SETTINGS MODAL -->
-  <div id="settings-modal" class="fixed inset-0 z-[140] hidden flex items-center justify-center p-4">
+  <div id="settings-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
+
     <div class="relative w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i data-lucide="settings" class="w-5 h-5 text-amber-400"></i>
           <div class="font-display font-bold text-white tracking-widest">Настройки</div>
         </div>
-        <button onclick="window.closeSettings()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 active:scale-[0.98] transition">
-          <i data-lucide="x" class="w-5 h-5 text-slate-300"></i>
+        <button onclick="window.closeSettings()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
         </button>
       </div>
 
-      <div class="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-        <button onclick="window.editGoal()" class="w-full glass-panel rounded-2xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
+      <div class="p-4 space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <button onclick="window.editGoal()" class="w-full glass-panel rounded-xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
           <div class="flex items-center gap-3">
             <i data-lucide="target" class="w-5 h-5 text-amber-400"></i>
             <div>
@@ -698,7 +726,7 @@
           <i data-lucide="chevron-right" class="w-5 h-5 text-slate-500"></i>
         </button>
 
-        <button onclick="window.exportData()" class="w-full glass-panel rounded-2xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
+        <button onclick="window.exportData()" class="w-full glass-panel rounded-xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
           <div class="flex items-center gap-3">
             <i data-lucide="download" class="w-5 h-5 text-emerald-400"></i>
             <div>
@@ -709,7 +737,7 @@
           <i data-lucide="chevron-right" class="w-5 h-5 text-slate-500"></i>
         </button>
 
-        <div class="glass-panel rounded-2xl p-3">
+        <div class="glass-panel rounded-xl p-3">
           <div class="flex items-center gap-3 mb-2">
             <i data-lucide="upload" class="w-5 h-5 text-blue-400"></i>
             <div>
@@ -720,7 +748,7 @@
           <input id="import-file" type="file" accept="application/json" class="w-full text-xs text-slate-400" onchange="window.importData(this)">
         </div>
 
-        <button onclick="window.resetData()" class="w-full glass-panel rounded-2xl p-3 flex items-center justify-between hover:border-red-500/30 transition">
+        <button onclick="window.resetData()" class="w-full glass-panel rounded-xl p-3 flex items-center justify-between hover:border-red-500/30 transition">
           <div class="flex items-center gap-3">
             <i data-lucide="trash-2" class="w-5 h-5 text-red-400"></i>
             <div>
@@ -733,13 +761,13 @@
       </div>
 
       <div class="p-4 border-t border-white/5 bg-slate-900/60 flex justify-end">
-        <button onclick="window.closeSettings()" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 active:scale-[0.98] transition">Закрыть</button>
+        <button onclick="window.closeSettings()" class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition">Закрыть</button>
       </div>
     </div>
   </div>
 
   <!-- GOAL MODAL -->
-  <div id="goal-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
+  <div id="goal-modal" class="fixed inset-0 z-[150] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeGoalModal()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-5">
       <div class="flex items-center justify-between mb-4">
@@ -747,19 +775,17 @@
           <i data-lucide="target" class="w-5 h-5 text-amber-400"></i>
           <div class="font-display font-bold text-white tracking-widest">Цель месяца</div>
         </div>
-        <button onclick="window.closeGoalModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 active:scale-[0.98] transition">
-          <i data-lucide="x" class="w-5 h-5 text-slate-300"></i>
+        <button onclick="window.closeGoalModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
         </button>
       </div>
 
       <label class="text-[10px] text-slate-400 uppercase font-bold mb-1 block">Сумма (₽)</label>
-      <input id="goal-input" type="number" inputmode="numeric"
-             class="w-full bg-black/30 border border-white/10 rounded-2xl p-3 text-white outline-none focus:border-amber-500/50 text-center text-xl font-mono"
-             placeholder="200000">
+      <input id="goal-input" type="number" inputmode="numeric" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-amber-500/50 text-center text-xl font-mono" placeholder="200000">
 
       <div class="flex gap-2 mt-4">
-        <button onclick="window.closeGoalModal()" class="flex-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 active:scale-[0.98] transition">Отмена</button>
-        <button onclick="window.saveGoalFromModal()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold hover:scale-[1.01] active:scale-[0.99] transition">Сохранить</button>
+        <button onclick="window.closeGoalModal()" class="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition">Отмена</button>
+        <button onclick="window.saveGoalFromModal()" class="flex-1 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold hover:scale-[1.01] transition">Сохранить</button>
       </div>
     </div>
   </div>
@@ -791,30 +817,56 @@
     let goalCelebrated = false;
 
     let currentType = 'stage';
-    let currentSetlist = [];
+    let currentSetlist = []; // "Доп"
     let currentSchedule = [];
     let editingId = null;
 
-    // ---- FIX: scroll lock state (prevents iOS jump when opening sheet) ----
-    let __scrollLock = { dashTop: 0, calTop: 0 };
+    /* ✅ iOS: stable viewport height (prevents “everything jumps up”) */
+    function setAppHeight(){
+      const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
+    }
 
-    function lockBackgroundScroll() {
+    /* ✅ modal scroll lock (prevents background moving) */
+    const __scrollLock = { dashTop:0, calTop:0 };
+    let __pageFreezeY = 0;
+
+    function freezePage(){
+      __pageFreezeY = window.scrollY || document.documentElement.scrollTop || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${__pageFreezeY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+    }
+
+    function unfreezePage(){
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      window.scrollTo(0, __pageFreezeY);
+    }
+
+    function lockBackgroundScroll(){
       const dash = document.getElementById('view-dashboard');
       const cal = document.getElementById('calendar-grid');
       __scrollLock.dashTop = dash ? dash.scrollTop : 0;
       __scrollLock.calTop = cal ? cal.scrollTop : 0;
 
       document.body.classList.add('modal-open');
+      freezePage();
     }
 
-    function unlockBackgroundScroll() {
+    function unlockBackgroundScroll(){
+      document.body.classList.remove('modal-open');
+      unfreezePage();
+
       const dash = document.getElementById('view-dashboard');
       const cal = document.getElementById('calendar-grid');
-
-      document.body.classList.remove('modal-open');
-
-      if (dash) dash.scrollTop = __scrollLock.dashTop;
-      if (cal) cal.scrollTop = __scrollLock.calTop;
+      if(dash) dash.scrollTop = __scrollLock.dashTop;
+      if(cal) cal.scrollTop = __scrollLock.calTop;
     }
 
     function renderApp(){
@@ -824,10 +876,6 @@
       renderAnalytics();
       renderMonthNavigator();
       lucide.createIcons();
-    }
-
-    function primaryTypeOfEvent(e){
-      return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
     }
 
     function renderCalendar(){
@@ -856,23 +904,16 @@
         const dayEvents = events.filter(e => e.dateISO === dateISO);
         const dayProfit = dayEvents.reduce((acc, curr) => acc + parseNum(curr.income), 0);
 
-        let markersHtml = `<div class="calendar-markers">`;
-        const sliceCount = 3;
+        let eventLabels = '';
+        const sliceCount = isLastDay ? 2 : 3;
         dayEvents.slice(0, sliceCount).forEach(e => {
-          const tKey = primaryTypeOfEvent(e);
-          const t = TYPES[tKey] || TYPES.stage;
-          markersHtml += `
-            <div
-              class="event-marker ${t.color}"
-              role="button"
-              title="${t.label}"
-              onclick="event.stopPropagation(); window.editEvent(${e.id});"
-            ></div>`;
+          const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
+          const t = TYPES[primaryType] || TYPES.stage;
+          eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${t.color} ${t.text} border-b ${t.border}/20 shadow-sm">${t.label}</div>`;
         });
-        markersHtml += `</div>`;
 
         let profitHtml = dayProfit > 0
-          ? `<span class="absolute top-1 right-1 text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-lg font-mono border border-emerald-500/15">+${(dayProfit/1000).toFixed(0)}k</span>`
+          ? `<span class="absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>`
           : '';
 
         let summaryHtml = '';
@@ -881,20 +922,20 @@
         }
 
         const cell = document.createElement('div');
-        cell.className = `calendar-cell relative cursor-pointer aspect-[3/4] min-h-[76px] ${isSelected?'selected':''} ${isToday?'today':''}`;
+        cell.className = `calendar-cell relative cursor-pointer aspect-[4/5] min-h-[70px] ${isSelected?'selected':''} ${isToday?'today':''}`;
 
         cell.onclick = () => {
           selectedDate = new Date(year, month, d);
           renderCalendar();
           renderSidebar();
           renderMonthNavigator();
-          window.switchMobileTab('dashboard');
+          window.openModal(false);
         };
 
         cell.innerHTML = `
           <div class="date-number">${d}</div>
           ${profitHtml}
-          ${markersHtml}
+          <div class="calendar-cell-content">${eventLabels}</div>
           ${summaryHtml}
         `;
         grid.appendChild(cell);
@@ -910,8 +951,7 @@
     function renderSidebar(){
       const dateISO = toISODateLocal(selectedDate);
       document.getElementById('selected-date-big').innerText = selectedDate.getDate();
-      document.getElementById('selected-weekday').innerText =
-        selectedDate.toLocaleDateString('ru-RU', { weekday:'long', month:'long' });
+      document.getElementById('selected-weekday').innerText = selectedDate.toLocaleDateString('ru-RU', { weekday:'long', month:'long' });
 
       const list = document.getElementById('events-list');
       list.innerHTML = '';
@@ -950,13 +990,14 @@
 
       if(dayEvents.length === 0){
         list.innerHTML = `
-          <div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-60">
+          <div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-50">
             <i data-lucide="wand-2" class="w-10 h-10"></i><p class="text-sm">Нет шоу</p>
-            <p class="text-xs text-slate-500">Нажми “+” чтобы создать</p>
           </div>`;
       } else {
         dayEvents.forEach(e => {
-          const primaryType = primaryTypeOfEvent(e);
+          const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
+          const t = TYPES[primaryType] || TYPES.stage;
+
           const income = parseNum(e.income);
           const prepay = parseNum(e.prepay);
 
@@ -999,7 +1040,7 @@
           if(Array.isArray(e.setlist) && e.setlist.length){
             const joined = e.setlist.slice(0,6).join(' • ');
             extraBlock = `
-              <div class="mt-2 text-xs text-slate-300 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+              <div class="mt-2 text-xs text-slate-300 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
                 <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Доп</div>
                 <div class="leading-snug">${joined}${e.setlist.length>6 ? ' …' : ''}</div>
               </div>
@@ -1022,7 +1063,7 @@
 
           const el = document.createElement('div');
           el.id = `event-card-${e.id}`;
-          el.className = 'group relative bg-white/5 rounded-2xl p-3 border border-white/10 hover:border-amber-500/30 transition cursor-pointer';
+          el.className = 'group relative bg-white/5 rounded-xl p-3 border border-white/5 hover:border-amber-500/30 transition animate-enter cursor-pointer';
           el.onclick = () => window.editEvent(e.id);
 
           el.innerHTML = `
@@ -1039,7 +1080,7 @@
                   ${profitHtml}
                   ${balanceBlock}
                 </div>
-                <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-500 hover:text-red-400 p-1 active:scale-[0.98]">
+                <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
               </div>
@@ -1052,7 +1093,7 @@
       lucide.createIcons();
     }
 
-    function renderSetlist(){
+    window.renderSetlist = () => {
       const ul = document.getElementById('setlist-container');
       if(currentSetlist.length === 0){
         ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Пока пусто</li>';
@@ -1061,9 +1102,9 @@
       ul.innerHTML = '';
       currentSetlist.forEach((t, i) => {
         ul.innerHTML += `
-          <li class="flex justify-between bg-white/5 p-2 rounded-xl border border-white/10">
+          <li class="flex justify-between bg-white/5 p-2 rounded border border-white/5">
             <span><span class="text-amber-500 mr-2">${i+1}.</span>${t}</span>
-            <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-400 hover:text-white active:scale-[0.98]">
+            <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-400 hover:text-white">
               <i data-lucide="x" class="w-3 h-3"></i>
             </button>
           </li>`;
@@ -1112,7 +1153,9 @@
       goalBar.style.width = `${pct}%`;
 
       const remaining = Math.max(0, Math.round(monthlyGoal - profit));
-      document.getElementById('goal-remaining').textContent = `Осталось: ${remaining.toLocaleString()} ₽`;
+      const remEl = document.getElementById('goal-remaining');
+      const paceEl = document.getElementById('goal-pace');
+      if(remEl) remEl.textContent = `Осталось: ${remaining.toLocaleString()} ₽`;
 
       const daysInMonth = new Date(year, currentDate.getMonth()+1, 0).getDate();
       const today = new Date();
@@ -1130,7 +1173,7 @@
       }
 
       const pace = (daysLeft > 0 && remaining > 0) ? Math.ceil(remaining / daysLeft) : 0;
-      document.getElementById('goal-pace').textContent = `Темп: ${pace.toLocaleString()} ₽/д`;
+      if(paceEl) paceEl.textContent = `Темп: ${pace.toLocaleString()} ₽/д`;
     }
 
     function renderAnalytics(){
@@ -1201,6 +1244,11 @@
     function normalizeText(s){
       return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
     }
+
+    function primaryTypeOfEvent(e){
+      return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
+    }
+
     function eventSearchBlob(e){
       const parts = [
         e.title, e.location, e.clientName, e.clientPhone, e.notes,
@@ -1208,6 +1256,7 @@
       ];
       return normalizeText(parts.join(' '));
     }
+
     function formatDateShort(iso){
       const [y,m,d] = iso.split('-').map(Number);
       const dt = new Date(y, m-1, d);
@@ -1215,9 +1264,11 @@
       const mm = String(dt.getMonth()+1).padStart(2,'0');
       return `${dd}.${mm}`;
     }
+
     function safeTime(e){
       return (e.time || (e.schedule?.[0]?.time) || '—');
     }
+
     function buildMonthIndex(){
       const year = currentDate.getFullYear();
       const month1 = currentDate.getMonth() + 1;
@@ -1228,29 +1279,27 @@
           if(da !== 0) return da;
           return safeTime(a).localeCompare(safeTime(b));
         })
-        .map(e => {
-          const t = primaryTypeOfEvent(e);
-          const cfg = TYPES[t] || TYPES.stage;
-          return {
-            id: e.id,
-            dateISO: e.dateISO,
-            dateShort: formatDateShort(e.dateISO),
-            time: safeTime(e),
-            title: e.title || 'Событие',
-            type: t,
-            typeLabel: cfg.label,
-            typeIcon: cfg.icon,
-            search: eventSearchBlob(e),
-          };
-        });
+        .map(e => ({
+          id: e.id,
+          dateISO: e.dateISO,
+          dateShort: formatDateShort(e.dateISO),
+          time: safeTime(e),
+          title: e.title || 'Событие',
+          type: primaryTypeOfEvent(e),
+          typeLabel: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).label,
+          typeIcon: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).icon,
+          typeColor: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).color,
+          search: eventSearchBlob(e),
+        }));
     }
 
     function renderMonthNavigator(){
+      const wrap = document.getElementById('month-nav-wrap');
       const results = document.getElementById('month-results');
       const countEl = document.getElementById('month-nav-count');
       const inp = document.getElementById('month-search');
       const sel = document.getElementById('month-filter');
-      if(!results || !inp || !sel) return;
+      if(!wrap || !results || !inp || !sel) return;
 
       const q = normalizeText(inp.value);
       const filter = sel.value || 'all';
@@ -1258,8 +1307,12 @@
       const idx = buildMonthIndex();
       let filtered = idx;
 
-      if(filter !== 'all') filtered = filtered.filter(x => x.type === filter);
-      if(q) filtered = filtered.filter(x => x.search.includes(q));
+      if(filter !== 'all'){
+        filtered = filtered.filter(x => x.type === filter);
+      }
+      if(q){
+        filtered = filtered.filter(x => x.search.includes(q));
+      }
 
       if(countEl) countEl.textContent = `${filtered.length}`;
 
@@ -1278,6 +1331,7 @@
         row.className = 'mn-row';
         row.onclick = () => window.jumpToEvent(x.id);
 
+        const chip = `<span class="mn-chip">${x.dateShort} • ${x.time}</span>`;
         row.innerHTML = `
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -1288,7 +1342,7 @@
               <div class="text-[10px] text-slate-400 uppercase font-bold tracking-widest truncate">${x.typeLabel}</div>
             </div>
           </div>
-          <div class="shrink-0"><span class="mn-chip">${x.dateShort} • ${x.time}</span></div>
+          <div class="shrink-0">${chip}</div>
         `;
         results.appendChild(row);
       });
@@ -1304,7 +1358,11 @@
       selectedDate = new Date(y, m-1, d);
       currentDate = new Date(y, m-1, 1);
 
-      window.switchMobileTab('dashboard');
+      const dashIsHidden = document.getElementById('view-dashboard')?.classList.contains('mobile-hidden');
+      if(dashIsHidden){
+        window.switchMobileTab('dashboard');
+      }
+
       renderCalendar();
       renderSidebar();
       renderMonthNavigator();
@@ -1318,7 +1376,6 @@
       }, 120);
     };
 
-    // schedule controls
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
@@ -1333,15 +1390,15 @@
         const cfg = TYPES[item.type] || TYPES.stage;
 
         row.innerHTML = `
-          <button onclick="window.updateActType(${index}, '${nextType}')" class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 active:scale-[0.98] transition" title="${cfg.label}">
+          <button onclick="window.updateActType(${index}, '${nextType}')" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition" title="${cfg.label}">
             <i data-lucide="${cfg.icon}" class="w-4 h-4 ${cfg.text}"></i>
           </button>
 
           <input type="time" value="${item.time}" onchange="window.updateActTime(${index}, this.value)" class="bg-transparent text-white text-sm font-mono text-center outline-none w-full">
 
-          <input type="number" min="1" value="${parseNum(item.duration) || cfg.defDur}" onchange="window.updateActDuration(${index}, this.value)" class="bg-black/20 border border-white/10 rounded-xl px-2 py-2 text-white text-xs font-mono text-center outline-none w-full" title="Длительность, мин" placeholder="мин">
+          <input type="number" min="1" value="${parseNum(item.duration) || cfg.defDur}" onchange="window.updateActDuration(${index}, this.value)" class="bg-black/20 border border-white/10 rounded-lg px-2 py-2 text-white text-xs font-mono text-center outline-none w-full" title="Длительность, мин" placeholder="мин">
 
-          <button onclick="window.removeAct(${index})" class="text-red-400 hover:text-white flex items-center justify-center active:scale-[0.98]">
+          <button onclick="window.removeAct(${index})" class="text-red-400 hover:text-white flex items-center justify-center">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         `;
@@ -1377,15 +1434,18 @@
       currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur)));
     };
 
-    // month picker
     window.openMonthPicker = () => {
+      lockBackgroundScroll();
       pickerYear = currentDate.getFullYear();
       document.getElementById('picker-year-display').innerText = pickerYear;
       document.getElementById('month-picker-modal').classList.remove('hidden');
       window.highlightCurrentMonth();
       lucide.createIcons();
     };
-    window.closeMonthPicker = () => document.getElementById('month-picker-modal').classList.add('hidden');
+    window.closeMonthPicker = () => {
+      document.getElementById('month-picker-modal').classList.add('hidden');
+      unlockBackgroundScroll();
+    };
     window.changePickerYear = (delta) => {
       pickerYear += delta;
       document.getElementById('picker-year-display').innerText = pickerYear;
@@ -1469,12 +1529,15 @@
       renderApp();
     }
 
-    // settings
     window.openSettings = () => {
+      lockBackgroundScroll();
       document.getElementById('settings-modal').classList.remove('hidden');
       lucide.createIcons();
     };
-    window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden');
+    window.closeSettings = () => {
+      document.getElementById('settings-modal').classList.add('hidden');
+      unlockBackgroundScroll();
+    };
 
     window.resetData = () => {
       if(!confirm('Сбросить все данные?')) return;
@@ -1484,11 +1547,12 @@
       localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
       renderApp();
       window.showToast('Данные сброшены');
+      window.closeSettings();
     };
 
     window.exportData = () => {
       const dateStr = new Date().toISOString().split('T')[0];
-      const data = { events, goal: monthlyGoal, version: 'mobile-1.0' };
+      const data = { events, goal: monthlyGoal, version: '1.8-mobile' };
       const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1527,11 +1591,15 @@
     };
 
     window.editGoal = () => {
+      lockBackgroundScroll();
       document.getElementById('goal-input').value = monthlyGoal;
       document.getElementById('goal-modal').classList.remove('hidden');
       lucide.createIcons();
     };
-    window.closeGoalModal = () => document.getElementById('goal-modal').classList.add('hidden');
+    window.closeGoalModal = () => {
+      document.getElementById('goal-modal').classList.add('hidden');
+      unlockBackgroundScroll();
+    };
     window.saveGoalFromModal = () => {
       const v = parseNum(document.getElementById('goal-input').value);
       if(v <= 0){
@@ -1551,7 +1619,6 @@
       const y = currentDate.getFullYear();
       const m = currentDate.getMonth();
       currentDate = new Date(y, m + delta, 1);
-      selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       renderApp();
     };
 
@@ -1560,7 +1627,6 @@
       currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
       selectedDate = now;
       renderApp();
-      window.switchMobileTab('dashboard');
     };
 
     window.switchMobileTab = (tab) => {
@@ -1570,31 +1636,30 @@
       const dashNav = document.getElementById('nav-dashboard');
 
       if(tab === 'calendar'){
-        calView.classList.remove('is-hidden');
-        dashView.classList.add('is-hidden');
+        calView.classList.remove('mobile-hidden');
+        dashView.classList.add('mobile-hidden');
 
         calNav.classList.add('text-amber-400');
         calNav.classList.remove('text-slate-500');
         dashNav.classList.remove('text-amber-400');
         dashNav.classList.add('text-slate-500');
       } else {
-        calView.classList.add('is-hidden');
-        dashView.classList.remove('is-hidden');
+        calView.classList.add('mobile-hidden');
+        dashView.classList.remove('mobile-hidden');
 
         dashNav.classList.add('text-amber-400');
         dashNav.classList.remove('text-slate-500');
         calNav.classList.remove('text-amber-400');
         calNav.classList.add('text-slate-500');
       }
-      updateBottomNavMetrics();
     };
 
-    // event modal
     window.openModal = (isEdit=false) => {
-      // FIX: prevent iOS jump
+      /* ✅ iOS: stop focus + force top without page jump */
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-      lockBackgroundScroll();
+      setTimeout(() => { window.scrollTo(0,0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }, 0);
 
+      lockBackgroundScroll();
       document.getElementById('event-modal').classList.remove('hidden');
       document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
 
@@ -1640,10 +1705,10 @@
     window.switchTab = (tab) => {
       ['info','setlist','finance','notes'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded-xl transition";
+        document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition";
       });
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded-xl transition";
+      document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition";
     };
 
     window.setType = (type) => {
@@ -1695,9 +1760,7 @@
       document.getElementById('inp-notes').value = ev.notes || '';
 
       currentSetlist = Array.isArray(ev.setlist) ? ev.setlist : [];
-      currentSchedule = (ev.schedule && ev.schedule.length)
-        ? ev.schedule
-        : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: TYPES[ev.type || 'stage']?.defDur || 60 }];
+      currentSchedule = (ev.schedule && ev.schedule.length) ? ev.schedule : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: TYPES[ev.type || 'stage']?.defDur || 60 }];
       currentType = currentSchedule[0].type || 'stage';
 
       document.getElementById('inp-date').value = ev.dateISO || toISODateLocal(new Date());
@@ -1753,7 +1816,6 @@
 
       window.closeModal();
       renderApp();
-      window.switchMobileTab('dashboard');
     };
 
     window.deleteEvent = (id) => {
@@ -1840,7 +1902,6 @@
       }
     };
 
-    // background particles (unchanged)
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1911,17 +1972,6 @@
       start();
     }
 
-    function updateBottomNavMetrics(){
-      const nav = document.getElementById('mobile-bottom-nav');
-      if(!nav) return;
-      const rect = nav.getBoundingClientRect();
-      const h = rect.height || 64;
-      document.documentElement.style.setProperty('--bottom-nav-h', `${Math.round(h)}px`);
-    }
-
-    window.addEventListener('resize', updateBottomNavMetrics);
-    window.addEventListener('orientationchange', () => setTimeout(updateBottomNavMetrics, 120));
-
     function bindMonthNavigatorInputs(){
       const inp = document.getElementById('month-search');
       const sel = document.getElementById('month-filter');
@@ -1936,12 +1986,17 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      setAppHeight();
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize', setAppHeight);
+      }
+      window.addEventListener('resize', setAppHeight);
+
       loadLocalData();
       initParticles();
-      updateBottomNavMetrics();
       bindMonthNavigatorInputs();
-      lucide.createIcons();
       window.switchMobileTab('calendar');
+      lucide.createIcons();
     });
   </script>
 </body>
