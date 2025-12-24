@@ -211,12 +211,19 @@
     .confetti{ position:absolute; width:8px; height:8px; background-color:#f59e0b; animation:fall linear forwards; z-index:9999; }
     @keyframes fall{ to{ transform:translateY(100vh) rotate(720deg); opacity:0; } }
 
-    .pb-under-nav{
+   .pb-under-nav{
   padding-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
 }
 .mb-under-nav{
   margin-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
 }
+
+/* ✅ БОЛЬШЕ воздуха снизу ТОЛЬКО в Дашборде */
+.pb-under-nav-dashboard{
+  padding-bottom: calc(
+    var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift) + 42px
+  ) !important;
+
     button{ min-height:44px; }
 
     .type-btn{ position:relative; overflow:hidden; }
@@ -418,7 +425,7 @@
       </div>
 
       <!-- DASHBOARD VIEW -->
-      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav mobile-hidden">
+     <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav-dashboard mobile-hidden">
         <div class="flex flex-col gap-4 h-full">
 
           <div class="glass-panel rounded-2xl p-4 shrink-0">
@@ -518,7 +525,7 @@
               </div>
             </div>
 
-            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-under-nav"></div>
+            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"></div>>
           </div>
 
         </div>
