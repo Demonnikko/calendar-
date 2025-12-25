@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Illusionist OS</title>
+  <title>Illusionist OS — Calendar</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,36 +16,35 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-   :root{
+    :root{
       --gold-primary:#f59e0b;
       --dark-bg:#050507;
       --card-surface:rgba(255,255,255,0.03);
       --card-border:rgba(255,255,255,0.06);
 
-      /* iOS safe areas */
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      /* dynamic app height (visualViewport) */
       --app-h: 100vh;
 
-      /* bottom nav sizing */
-      --bottom-nav-visible: 64px; /* visual height of nav (without safe area) */
-      --bottom-nav-gap: 12px;     /* breathing space above nav for content */
+      --bottom-nav-visible: 64px;
+      --bottom-nav-gap: 12px;
       --bottom-nav-h: calc(var(--bottom-nav-visible) + var(--safe-bottom));
       --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-gap));
 
-      /* ✅ ТВОЁ СМЕЩЕНИЕ МЕНЮ (минус = ниже) */
+      /* ✅ нижнее меню держим -40 */
       --bottom-nav-shift: -40px;
 
-      /* ✅ доп. запас чтобы контент не "целовался" с меню */
-      --bottom-nav-extra: 18px;
+      /* ✅ календарь “липнет” к меню, но не прячется под ним */
+      --calendar-bottom-pad: calc(var(--bottom-nav-h) + 12px + var(--bottom-nav-shift));
 
-      /* ✅ Отдельный запас ТОЛЬКО для Дашборда (календарь не трогаем) */
-      --dashboard-bottom-gap: 70px; /* сделает воздух между событиями и меню */
+      /* ✅ подняли календарь выше: ограничиваем высоту сетки месяца,
+         чтобы список событий дня влезал */
+      --month-grid-max: clamp(250px, 40vh, 380px);
+      --daylist-list-max: clamp(220px, 34vh, 460px);
     }
 
     html, body{
@@ -69,8 +68,6 @@
 
     h1,h2,h3,.font-display{ font-family:'Cinzel',serif; }
 
-    /* ✅ App shell is the only fixed layer.
-       Safe-area padding must live HERE (not on body), otherwise iOS can "forget" it when overlays open. */
     #app-shell{
       position:fixed;
       inset:0;
@@ -78,9 +75,6 @@
       height:var(--app-h);
       overflow:hidden;
       z-index:10;
-
-      /* Safe top padding (legacy constant + env) */
-      padding-top: calc(14px + constant(safe-area-inset-top));
       padding-top: calc(14px + env(safe-area-inset-top, 0px));
     }
 
@@ -91,7 +85,7 @@
     }
 
     .glass-panel{
-      background:linear-gradient(180deg, rgba(30,41,59,.7) 0%, rgba(15,23,42,.6) 100%);
+      background:linear-gradient(180deg, rgba(30,41,59,.72) 0%, rgba(15,23,42,.62) 100%);
       backdrop-filter:blur(24px);
       -webkit-backdrop-filter:blur(24px);
       border:1px solid rgba(255,255,255,.08);
@@ -102,13 +96,6 @@
     ::-webkit-scrollbar-track{ background:transparent; }
     ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.1); border-radius:10px; }
 
-    .tab-active{
-      background-color:rgba(51,65,85,.5);
-      color:#fff;
-      box-shadow:0 0 10px rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.1);
-    }
-
     #bg-canvas{ position:fixed; inset:0; z-index:-1; }
 
     input[type="time"]::-webkit-calendar-picker-indicator,
@@ -118,21 +105,17 @@
       cursor:pointer;
     }
 
-    /* hard stop for horizontal scroll */
     .no-hor-scroll{ overflow-x:hidden !important; max-width:100vw; }
-    #view-dashboard, #calendar-grid, #events-list, #month-results, .custom-scrollbar{
-      overflow-x:hidden !important;
-      overscroll-behavior-x:none;
-      touch-action: pan-y;
-    }
+    .custom-scrollbar{ overflow-x:hidden !important; }
 
+    /* Calendar cells */
     .calendar-cell{
       position:relative;
       background:var(--card-surface);
       border:1px solid var(--card-border);
       border-radius:12px;
       overflow:hidden;
-      transition:all .2s ease;
+      transition:all .18s ease;
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -146,22 +129,23 @@
       transform:translateY(-1px);
     }
     .calendar-cell.selected{
-      border-color:rgba(245,158,11,.4);
-      box-shadow:0 0 15px rgba(245,158,11,.1);
-      background:rgba(245,158,11,.05);
+      border-color:rgba(245,158,11,.45);
+      box-shadow:0 0 15px rgba(245,158,11,.12);
+      background:rgba(245,158,11,.06);
     }
     .calendar-cell.today .date-number{
       background:linear-gradient(135deg,#fbbf24,#d97706);
       color:#000;
-      font-weight:700;
-      box-shadow:0 2px 5px rgba(245,158,11,.3);
+      font-weight:800;
+      box-shadow:0 2px 6px rgba(245,158,11,.35);
     }
 
     .date-number{
-      font-size:11px; font-weight:500; color:rgba(255,255,255,.6);
+      font-size:11px; font-weight:600; color:rgba(255,255,255,.6);
       width:20px; height:20px;
       display:flex; align-items:center; justify-content:center;
-      border-radius:6px; transition:all .2s;
+      border-radius:6px;
+      transition:all .18s;
     }
 
     .calendar-cell-content{
@@ -182,15 +166,15 @@
       padding:2px 4px;
       text-align:center;
       cursor:pointer;
-      transition:all .2s;
-      color:rgba(255,255,255,.9);
-      font-weight:600;
+      transition:all .18s;
+      color:rgba(255,255,255,.92);
+      font-weight:700;
       letter-spacing:.03em;
       text-transform:uppercase;
       width:90%;
       border:1px solid transparent;
     }
-    .event-label:hover{ transform:scale(1.02); filter:brightness(1.1); z-index:10; }
+    .event-label:hover{ transform:scale(1.02); filter:brightness(1.12); z-index:10; }
 
     .event-stage{ background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#fbbf24; }
     .event-closeup{ background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.3); color:#c084fc; }
@@ -198,80 +182,68 @@
     .event-concert{ background:rgba(59,130,246,.15); border-color:rgba(59,130,246,.3); color:#60a5fa; }
     .event-rehearsal{ background:rgba(148,163,184,.15); border-color:rgba(148,163,184,.3); color:#cbd5e1; }
 
-    .month-summary{
-      margin-top:auto; margin-bottom:4px;
-      background:linear-gradient(90deg,transparent,rgba(245,158,11,.1),transparent);
-      border-top:1px solid rgba(245,158,11,.2);
-      border-bottom:1px solid rgba(245,158,11,.2);
-      padding:2px 0;
-      font-size:7px;
-      width:80%;
-      text-align:center;
-      text-transform:uppercase;
-      font-weight:700;
-      color:#fbbf24;
-      letter-spacing:1.5px;
-    }
-
-    .confetti{ position:absolute; width:8px; height:8px; background-color:#f59e0b; animation:fall linear forwards; z-index:9999; }
-    @keyframes fall{ to{ transform:translateY(100vh) rotate(720deg); opacity:0; } }
-
-    /* ✅ КАЛЕНДАРЬ: специально "липнет" к меню (учитываем shift -40) */
-    .pb-under-nav{
-      padding-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
-    }
-    .mb-under-nav{
-      margin-bottom: calc(var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--bottom-nav-shift)) !important;
-    }
-
-    /* ✅ ДАШБОРД: делаем воздух между событиями и меню (shift НЕ учитываем) */
-    .pb-under-nav-dashboard{
-      padding-bottom: calc(
-        var(--bottom-nav-total) + var(--bottom-nav-extra) + var(--dashboard-bottom-gap)
-      ) !important;
-    }
-
-    button{ min-height:44px; }
-
-    .type-btn{ position:relative; overflow:hidden; }
-    .type-btn.selected{ background-color:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); }
-    .type-btn.selected i{ transform:scale(1.1); }
-    .type-btn#type-stage.selected{ border-color:#f59e0b; background-color:rgba(245,158,11,.1); }
-    .type-btn#type-closeup.selected{ border-color:#a855f7; background-color:rgba(168,85,247,.1); }
-    .type-btn#type-kids.selected{ border-color:#10b981; background-color:rgba(16,185,129,.1); }
-    .type-btn#type-concert.selected{ border-color:#3b82f6; background-color:rgba(59,130,246,.1); }
-    .type-btn#type-rehearsal.selected{ border-color:#94a3b8; background-color:rgba(148,163,184,.1); }
-
-    .act-row{
-      display:grid;
-      grid-template-columns: 40px 1fr 84px 30px;
-      gap:8px;
+    /* Apple-like day list rows */
+    .daylist-row{
+      display:flex;
       align-items:center;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:10px;
-      padding:8px;
-      margin-bottom:8px;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+      transition: all .14s ease;
+    }
+    .daylist-row:hover{
+      border-color: rgba(245,158,11,.25);
+      background: rgba(245,158,11,.06);
+      transform: translateY(-1px);
+    }
+    .daylist-dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.02);
+      flex-shrink:0;
+    }
+    .daylist-title{
+      font-weight:700;
+      color:#fff;
+      font-size:13px;
+      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .daylist-sub{
+      font-size:11px;
+      color: rgba(148,163,184,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-top:2px;
+    }
+    .daylist-time{
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      font-weight:800;
+      color: rgba(245,158,11,.95);
+      flex-shrink:0;
+      text-align:right;
     }
 
-    /* ✅ Bottom nav anchored to REAL bottom.
-       Background extends into safe area, controls sit above it. */
+    /* Bottom nav */
     #mobile-bottom-nav{
       position: fixed;
       left: 0;
       right: 0;
       bottom: var(--bottom-nav-shift);
       z-index: 40;
-
       padding-left: 16px;
       padding-right: 16px;
-
-      padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-
       pointer-events: auto;
     }
-
     #mobile-bottom-nav .nav-inner{
       height: var(--bottom-nav-visible);
       background: rgba(15,23,42,.92);
@@ -286,6 +258,7 @@
       padding: 0 24px;
     }
 
+    /* Toast */
     #toast{
       position:fixed;
       left:16px;
@@ -294,16 +267,10 @@
       z-index:300;
       transform: translateY(-12px);
       opacity:0;
-      transition: all .25s ease;
+      transition: all .22s ease;
       pointer-events:none;
     }
     #toast.show{ transform: translateY(0); opacity:1; }
-
-    .flash-highlight{
-      outline: 2px solid rgba(245,158,11,.35);
-      box-shadow: 0 0 0 3px rgba(245,158,11,.08);
-      transition: all .2s ease;
-    }
 
     select{
       background: rgba(0,0,0,.25);
@@ -313,53 +280,20 @@
     }
     select:focus{ border-color: rgba(245,158,11,.35); }
 
-    .mn-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.06);
-      cursor:pointer;
-      transition: all .15s ease;
-    }
-    .mn-row:hover{
-      border-color: rgba(245,158,11,.28);
-      background: rgba(245,158,11,.06);
-      transform: translateY(-1px);
-    }
-    .mn-chip{
-      font-size:9px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      font-weight:800;
-      padding:3px 8px;
-      border-radius:999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      color: rgba(226,232,240,.9);
-      white-space:nowrap;
-    }
-
     .mobile-hidden{ display:none !important; }
-
-    /* prevent underlying view scroll-jumps when modal opens */
     body.modal-open { overflow:hidden; }
 
-    /* modal entrance */
     .animate-enter{ animation: enter .18s ease-out; }
     @keyframes enter{ from{ transform: translateY(10px); opacity:.0 } to{ transform: translateY(0); opacity:1 } }
+
+    button{ min-height:44px; }
   </style>
 </head>
 
 <body class="no-hor-scroll">
-
   <div class="noise-overlay"></div>
-  <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
+  <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/18 via-transparent to-amber-900/10 pointer-events-none z-[-1]"></div>
   <canvas id="bg-canvas"></canvas>
-  <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[200]"></div>
 
   <div id="toast" class="glass-panel rounded-2xl px-4 py-3 flex items-center gap-3">
     <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -383,17 +317,17 @@
 
         <div class="min-w-0 flex flex-col justify-center">
           <h1 class="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 truncate leading-tight tracking-widest font-display">ILLUSIONIST OS</h1>
-          <span class="text-[8px] text-slate-500 font-bold tracking-[0.2em] uppercase leading-none mt-0.5">Calendar</span>
+          <span id="header-subtitle" class="text-[8px] text-slate-500 font-bold tracking-[0.2em] uppercase leading-none mt-0.5">Calendar</span>
         </div>
       </div>
 
       <div class="flex items-center gap-2 flex-shrink-0">
         <div class="flex items-center glass-panel p-0.5 rounded-lg h-10">
-          <button onclick="window.changeMonth(-1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
+          <button onclick="window.changeMonth(-1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition" aria-label="Пред. месяц">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>
           </button>
           <button onclick="window.openMonthPicker()" id="current-month-display" class="px-3 text-center font-display font-bold text-sm whitespace-nowrap min-w-[120px] hover:text-amber-400 transition cursor-pointer"></button>
-          <button onclick="window.changeMonth(1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition">
+          <button onclick="window.changeMonth(1)" class="w-10 h-full flex items-center justify-center hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition" aria-label="След. месяц">
             <i data-lucide="chevron-right" class="w-4 h-4"></i>
           </button>
         </div>
@@ -402,13 +336,13 @@
           <i data-lucide="calendar-clock" class="w-4 h-4"></i>
         </button>
 
-        <button onclick="window.openSettings()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0">
+        <button onclick="window.openSettings()" class="w-10 h-10 flex items-center justify-center glass-panel rounded-lg text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition flex-shrink-0" title="Настройки">
           <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
     </header>
 
-    <div class="flex-1 overflow-hidden relative">
+    <div class="flex-1 overflow-hidden relative" style="padding-bottom: var(--calendar-bottom-pad);">
 
       <!-- CALENDAR VIEW -->
       <div id="view-calendar" class="h-full w-full absolute inset-0 flex flex-col transition-opacity duration-300">
@@ -422,27 +356,60 @@
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Сб</div>
             <div class="text-center text-slate-500 text-[10px] font-bold uppercase">Вс</div>
           </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-2 flex-1 auto-rows-fr overflow-y-auto custom-scrollbar pb-under-nav"></div>
+
+          <!-- ✅ Month grid ограничили по высоте, чтобы снизу влезал список событий -->
+          <div id="calendar-grid"
+               class="grid grid-cols-7 gap-1 flex-none overflow-y-auto custom-scrollbar pr-1"
+               style="max-height: var(--month-grid-max);">
+          </div>
+
+          <!-- Apple-like day list -->
+          <div class="mt-3 border-t border-white/5 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <div class="min-w-0">
+                <div id="daylist-title" class="text-[11px] text-slate-300 font-bold tracking-widest uppercase truncate">—</div>
+                <div id="daylist-subtitle" class="text-[10px] text-slate-500 font-bold truncate">—</div>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span id="daylist-count" class="text-[10px] text-slate-500 font-bold bg-white/5 border border-white/10 px-2 py-1 rounded-full">0</span>
+              </div>
+            </div>
+
+            <div id="calendar-day-list"
+                 class="space-y-2 overflow-y-auto custom-scrollbar pr-1"
+                 style="max-height: var(--daylist-list-max);">
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- DASHBOARD VIEW -->
-      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar pb-under-nav-dashboard mobile-hidden">
-        <div class="flex flex-col gap-4 h-full">
+      <div id="view-dashboard" class="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar mobile-hidden" style="padding-bottom: var(--calendar-bottom-pad);">
+        <div class="flex flex-col gap-4">
 
-          <div class="glass-panel rounded-2xl p-4 shrink-0">
-            <div class="flex justify-between items-center mb-3">
-              <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Финансы
-              </h3>
+          <!-- FINANCE PRO -->
+          <div class="glass-panel rounded-2xl p-4">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="min-w-0">
+                <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                  <i data-lucide="coins" class="w-4 h-4"></i> Финансы месяца
+                </h3>
+                <div id="dash-month-label" class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">—</div>
+              </div>
+
+              <button onclick="window.editGoal()" class="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 hover:border-amber-500/25 transition text-xs font-bold flex items-center gap-2">
+                <i data-lucide="target" class="w-4 h-4 text-amber-400"></i> Цель
+              </button>
             </div>
 
             <div class="text-center mb-3 relative">
               <span id="stat-profit" class="text-3xl font-display font-bold text-white tracking-tight">0</span>
               <span class="text-lg text-slate-500 font-display ml-1">₽</span>
+
               <div id="goal-badge" class="hidden absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">
                 ЦЕЛЬ!
               </div>
+              <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">ПРИБЫЛЬ (доход − расход)</div>
             </div>
 
             <div class="mb-3">
@@ -450,85 +417,75 @@
                 <span>Цель</span>
                 <span id="goal-amount" class="cursor-pointer hover:text-white border-b border-dashed border-slate-600" onclick="window.editGoal()">200k ₽</span>
               </div>
-              <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden relative">
+              <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden relative">
                 <div id="goal-progress" class="h-full bg-gradient-to-r from-amber-700 to-yellow-400 transition-all duration-1000" style="width: 0%"></div>
               </div>
-            </div>
-
-            <div class="flex justify-between text-xs text-slate-400 mb-3">
-              <span id="goal-remaining">Осталось: 0 ₽</span>
-              <span id="goal-pace">Темп: 0 ₽/д</span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 text-center mb-4">
-              <div class="bg-white/5 p-2 rounded-lg">
-                <p class="text-[9px] text-slate-500 uppercase">Доход</p>
-                <p id="stat-income" class="text-xs font-bold text-emerald-400">0</p>
+              <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                <span id="goal-remaining">Осталось: 0 ₽</span>
+                <span id="goal-pace">Темп: 0 ₽/д</span>
               </div>
-              <div class="bg-white/5 p-2 rounded-lg">
-                <p class="text-[9px] text-slate-500 uppercase">Расход</p>
-                <p id="stat-expense" class="text-xs font-bold text-red-400">0</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Доход</p>
+                <p id="stat-income" class="text-sm font-bold text-emerald-400 mt-1">0</p>
+              </div>
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Расход</p>
+                <p id="stat-expense" class="text-sm font-bold text-red-400 mt-1">0</p>
+              </div>
+
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Шоу (шт.)</p>
+                <p id="kpi-shows" class="text-sm font-bold text-white mt-1">0</p>
+              </div>
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Средний чек</p>
+                <p id="kpi-avg-check" class="text-sm font-bold text-amber-300 mt-1">0</p>
+              </div>
+
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Предоплата</p>
+                <p id="kpi-prepay" class="text-sm font-bold text-sky-300 mt-1">0</p>
+              </div>
+              <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Остаток к сбору</p>
+                <p id="kpi-outstanding" class="text-sm font-bold text-amber-400 mt-1">0</p>
               </div>
             </div>
 
             <div class="pt-3 border-t border-white/5">
-              <div class="flex justify-between items-center mb-3">
-                <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                  <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Типы событий
-                </h3>
-              </div>
-              <div id="analytics-list" class="space-y-3"></div>
+              <h4 class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                <i data-lucide="sparkle" class="w-4 h-4 text-amber-400"></i> Инсайты
+              </h4>
+              <div id="dash-insights" class="space-y-2 text-xs text-slate-300"></div>
             </div>
           </div>
 
-          <div class="glass-panel rounded-2xl flex-1 flex flex-col min-h-[420px] relative overflow-hidden">
-            <div class="p-4 border-b border-white/5 bg-slate-900/30 shrink-0">
-              <div class="flex justify-between items-start gap-3">
-                <div class="w-full min-w-0">
-                  <h2 id="selected-date-big" class="text-2xl font-display font-bold text-white"></h2>
-                  <p id="selected-weekday" class="text-amber-500 text-[10px] uppercase font-bold tracking-widest"></p>
+          <!-- TYPES ANALYTICS PRO -->
+          <div class="glass-panel rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Типы событий
+              </h3>
+              <div id="dash-types-meta" class="text-[10px] text-slate-500 font-bold">—</div>
+            </div>
 
-                  <div id="jumper-wrap" class="mt-3 hidden">
-                    <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Быстрый переход (день)</label>
-                    <select id="event-jumper" class="w-full rounded-xl px-3 py-2 text-sm">
-                      <option value="">—</option>
-                    </select>
-                  </div>
+            <div id="analytics-list" class="space-y-4"></div>
 
-                  <div id="month-nav-wrap" class="mt-4">
-                    <div class="flex items-center justify-between">
-                      <label class="block text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Навигатор месяца</label>
-                      <div class="text-[9px] text-slate-500 font-mono" id="month-nav-count">0</div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="col-span-2">
-                        <div class="relative">
-                          <input id="month-search" type="text" placeholder="Поиск: название, локация, клиент, доп..."
-                            class="w-full bg-black/25 border border-white/10 rounded-xl pl-10 pr-3 py-2 text-sm text-white outline-none focus:border-amber-500/40">
-                          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                        </div>
-                      </div>
-
-                      <select id="month-filter" class="col-span-2 rounded-xl px-3 py-2 text-sm">
-                        <option value="all">Все типы</option>
-                        <option value="stage">Сцена</option>
-                        <option value="closeup">Микро</option>
-                        <option value="kids">Дети</option>
-                        <option value="concert">Концерт</option>
-                        <option value="rehearsal">Репетиция</option>
-                      </select>
-                    </div>
-
-                    <div id="month-results" class="mt-2 space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1"></div>
-                  </div>
-
+            <div class="pt-3 border-t border-white/5 mt-3">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Топ тип</p>
+                  <p id="kpi-top-type" class="text-sm font-bold text-white mt-1">—</p>
+                </div>
+                <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Лучший день</p>
+                  <p id="kpi-best-day" class="text-sm font-bold text-white mt-1">—</p>
                 </div>
               </div>
             </div>
-
-            <!-- ✅ фикс: убран лишний ">" -->
-            <div id="events-list" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"></div>
           </div>
 
         </div>
@@ -545,43 +502,142 @@
         <span class="text-[9px] font-bold tracking-wide">Календарь</span>
       </button>
 
-      <button onclick="window.openModal()" class="relative -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center transform active:scale-95 transition border-4 border-[#050507]">
+      <button onclick="window.openEditorModal(false)" class="relative -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 flex items-center justify-center transform active:scale-95 transition border-4 border-[#050507]" aria-label="Добавить">
         <i data-lucide="plus" class="w-7 h-7"></i>
       </button>
 
       <button onclick="window.switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-slate-500 w-16 transition-all duration-300">
-        <i data-lucide="layout-list" class="w-5 h-5"></i>
+        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
         <span class="text-[9px] font-bold tracking-wide">Дашборд</span>
       </button>
     </div>
   </div>
 
-  <!-- EVENT MODAL -->
-  <div id="event-modal" class="fixed inset-0 z-[100] hidden no-hor-scroll">
-    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeModal()"></div>
+  <!-- EVENT DETAILS (READ ONLY) -->
+  <div id="details-modal" class="fixed inset-0 z-[120] hidden no-hor-scroll">
+    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeDetails()"></div>
+
+    <div class="absolute bottom-0 left-0 right-0 w-full h-[86vh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter"
+         style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);">
+
+      <div class="p-4 border-b border-white/5 flex items-start justify-between bg-white/5 shrink-0 gap-3">
+        <div class="min-w-0">
+          <div id="details-type" class="text-[10px] text-amber-400 font-bold tracking-widest uppercase">—</div>
+          <div id="details-title" class="text-xl font-display font-bold text-white truncate">—</div>
+          <div id="details-time" class="text-xs text-slate-400 font-mono mt-1">—</div>
+        </div>
+
+        <button onclick="window.closeDetails()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition flex-shrink-0" aria-label="Закрыть">
+          <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
+        <div class="space-y-3 max-w-md mx-auto">
+
+          <div class="glass-panel rounded-2xl p-4">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="calendar-days" class="w-4 h-4"></i> Дата и тайминг
+            </div>
+            <div id="details-date" class="text-white font-semibold">—</div>
+            <div id="details-schedule" class="mt-3 space-y-2 text-sm text-slate-200"></div>
+          </div>
+
+          <div id="details-location-card" class="glass-panel rounded-2xl p-4 hidden">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4"></i> Локация
+            </div>
+            <div id="details-location" class="text-white font-semibold">—</div>
+          </div>
+
+          <div id="details-client-card" class="glass-panel rounded-2xl p-4 hidden">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="user" class="w-4 h-4"></i> Клиент
+            </div>
+            <div id="details-client" class="text-white font-semibold">—</div>
+            <a id="details-phone" href="#" class="mt-2 inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm font-mono">
+              <i data-lucide="phone" class="w-4 h-4"></i> <span id="details-phone-text">—</span>
+            </a>
+          </div>
+
+          <div class="glass-panel rounded-2xl p-4">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="banknote" class="w-4 h-4"></i> Деньги
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Сумма</div>
+                <div id="details-income" class="text-emerald-300 font-bold font-mono mt-1">0</div>
+              </div>
+              <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Предоплата</div>
+                <div id="details-prepay" class="text-sky-300 font-bold font-mono mt-1">0</div>
+              </div>
+              <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Остаток</div>
+                <div id="details-balance" class="text-amber-300 font-bold font-mono mt-1">0</div>
+              </div>
+              <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Расход</div>
+                <div id="details-expense" class="text-red-300 font-bold font-mono mt-1">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="details-notes-card" class="glass-panel rounded-2xl p-4 hidden">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="sticky-note" class="w-4 h-4"></i> Заметки
+            </div>
+            <div id="details-notes" class="text-sm text-slate-200 whitespace-pre-wrap"></div>
+          </div>
+
+          <div id="details-extra-card" class="glass-panel rounded-2xl p-4 hidden">
+            <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+              <i data-lucide="check-square" class="w-4 h-4"></i> Доп
+            </div>
+            <div id="details-extra" class="text-sm text-slate-200"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-white/5 bg-slate-900/70 shrink-0 flex gap-2 justify-center">
+        <button onclick="window.editFromDetails()" class="flex-1 max-w-[220px] py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg hover:scale-[1.01] transition flex items-center justify-center gap-2">
+          <i data-lucide="pencil" class="w-4 h-4"></i> Править
+        </button>
+        <button onclick="window.deleteFromDetails()" class="flex-1 max-w-[220px] py-3 rounded-xl border border-red-500/30 text-red-300 font-bold hover:bg-red-500/10 transition flex items-center justify-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Удалить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT EDITOR MODAL -->
+  <div id="editor-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll">
+    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeEditorModal()"></div>
 
     <div class="absolute bottom-0 left-0 right-0 w-full h-[90vh] bg-[#0f172a] border-t border-amber-500/20 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-enter"
-         style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); padding-bottom: calc(constant(safe-area-inset-bottom) + 10px);">
+         style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);">
 
       <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 shrink-0">
-        <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="modal-title">Новое Событие</h3>
-        <button onclick="window.closeModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition">
+        <h3 class="text-lg font-display font-bold text-white text-center w-full ml-8" id="editor-title">Новое событие</h3>
+        <button onclick="window.closeEditorModal()" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition" aria-label="Закрыть">
           <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
         </button>
       </div>
 
       <div class="flex p-2 bg-black/20 gap-1 mx-4 mt-4 rounded-lg shrink-0 justify-center">
-        <button onclick="window.switchTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
-        <button onclick="window.switchTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Доп</button>
-        <button onclick="window.switchTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
-        <button onclick="window.switchTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
+        <button onclick="window.switchEditorTab('info')" id="tab-btn-info" class="tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition">Инфо</button>
+        <button onclick="window.switchEditorTab('setlist')" id="tab-btn-setlist" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Доп</button>
+        <button onclick="window.switchEditorTab('finance')" id="tab-btn-finance" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Касса</button>
+        <button onclick="window.switchEditorTab('notes')" id="tab-btn-notes" class="flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition">Заметки</button>
       </div>
 
       <div class="p-5 overflow-y-auto overflow-x-hidden custom-scrollbar flex-1">
         <div id="tab-info" class="space-y-4 max-w-xs mx-auto">
 
           <div class="grid grid-cols-3 gap-3">
-            <button onclick="window.setType('stage')" id="type-stage" class="type-btn group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all selected">
+            <button onclick="window.setType('stage')" id="type-stage" class="type-btn selected group relative p-3 rounded-2xl border border-amber-500 bg-amber-500/10 text-amber-400 flex flex-col items-center gap-2 overflow-hidden transition-all">
               <i data-lucide="star" class="w-5 h-5"></i>
               <span class="text-[9px] font-bold uppercase tracking-wider">Сцена</span>
             </button>
@@ -615,7 +671,7 @@
           </div>
 
           <div class="bg-white/5 rounded-xl border border-white/10 p-3">
-            <label class="text-[10px] text-amber-500 uppercase font-bold mb-2 block text-center">Тайминг Выступлений</label>
+            <label class="text-[10px] text-amber-500 uppercase font-bold mb-2 block text-center">Тайминг</label>
             <div id="schedule-list" class="space-y-2 mb-3"></div>
             <button onclick="window.addAct()" class="w-full py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300 hover:bg-white/10 transition flex items-center justify-center gap-2">
               <i data-lucide="plus" class="w-3 h-3"></i> Добавить выход
@@ -628,14 +684,14 @@
           </div>
 
           <div class="grid grid-cols-1 gap-3 pt-2 border-t border-white/5">
-            <input type="text" id="inp-client-name" placeholder="Имя Клиента" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
+            <input type="text" id="inp-client-name" placeholder="Имя клиента" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
             <input type="tel" id="inp-client-phone" placeholder="Телефон" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none transition-colors focus:border-amber-500/50 text-center text-sm">
           </div>
         </div>
 
         <div id="tab-setlist" class="hidden space-y-3 max-w-xs mx-auto">
           <div class="text-center text-slate-400 text-xs">
-            Добавь пункты “доп” (условия, реквизит, договор, дедлайны) — они будут видны на карточке события.
+            “Доп” — условия / реквизит / дедлайны. Коротко и по делу.
           </div>
           <div class="flex gap-2">
             <input type="text" id="inp-trick" placeholder="Пункт доп..." class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none">
@@ -646,12 +702,12 @@
 
         <div id="tab-finance" class="hidden space-y-4 max-w-xs mx-auto">
           <div class="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-center">
-            <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая стоимость</label>
+            <label class="text-[10px] text-emerald-400 font-bold uppercase block mb-1">Общая сумма</label>
             <input type="number" id="inp-income" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center relative group">
+            <div class="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Предоплата</label>
               <input type="number" id="inp-prepay" placeholder="0" class="w-full bg-transparent text-lg font-mono text-white outline-none text-center" oninput="window.calcBalanceFromAmount()">
             </div>
@@ -683,7 +739,7 @@
         <button onclick="window.saveEvent()" class="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg text-lg hover:scale-[1.02] transition">
           Сохранить
         </button>
-        <button id="btn-delete" onclick="window.deleteEventFromModal()" class="w-full max-w-xs py-3 rounded-xl border border-red-500/30 text-red-400 font-bold hover:bg-red-500/10 transition hidden">
+        <button id="btn-delete" onclick="window.deleteEventFromEditor()" class="w-full max-w-xs py-3 rounded-xl border border-red-500/30 text-red-300 font-bold hover:bg-red-500/10 transition hidden">
           Удалить
         </button>
       </div>
@@ -692,14 +748,14 @@
   </div>
 
   <!-- MONTH PICKER -->
-  <div id="month-picker-modal" class="fixed inset-0 z-[130] hidden no-hor-scroll flex items-center justify-center p-4">
+  <div id="month-picker-modal" class="fixed inset-0 z-[160] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeMonthPicker()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-6 animate-enter flex flex-col items-center">
       <div class="flex items-center justify-between w-full mb-6">
         <button onclick="window.changePickerYear(-1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-left" class="w-6 h-6"></i>
         </button>
-        <span id="picker-year-display" class="text-2xl font-display font-bold text-white tracking-widest">2024</span>
+        <span id="picker-year-display" class="text-2xl font-display font-bold text-white tracking-widest">2025</span>
         <button onclick="window.changePickerYear(1)" class="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition">
           <i data-lucide="chevron-right" class="w-6 h-6"></i>
         </button>
@@ -724,8 +780,8 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL -->
-  <div id="settings-modal" class="fixed inset-0 z-[140] hidden no-hor-scroll flex items-center justify-center p-4">
+  <!-- SETTINGS -->
+  <div id="settings-modal" class="fixed inset-0 z-[170] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeSettings()"></div>
 
     <div class="relative w-full max-w-md bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden animate-enter">
@@ -792,7 +848,7 @@
   </div>
 
   <!-- GOAL MODAL -->
-  <div id="goal-modal" class="fixed inset-0 z-[150] hidden no-hor-scroll flex items-center justify-center p-4">
+  <div id="goal-modal" class="fixed inset-0 z-[180] hidden no-hor-scroll flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onclick="window.closeGoalModal()"></div>
     <div class="relative w-full max-w-sm bg-[#0f172a] border border-amber-500/20 rounded-2xl shadow-2xl p-5 animate-enter">
       <div class="flex items-center justify-between mb-4">
@@ -818,41 +874,92 @@
   <script>
     const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     const TYPES = {
-      stage:   { label:'Сцена',       color:'event-stage',    text:'text-amber-100',  icon:'star',      border:'border-amber-500',  bar:'bg-amber-500',  defDur: 60 },
-      closeup: { label:'Микромагия',   color:'event-closeup',  text:'text-purple-100', icon:'sparkles',  border:'border-purple-500', bar:'bg-purple-500', defDur: 40 },
-      kids:    { label:'Детское шоу',  color:'event-kids',     text:'text-emerald-100',icon:'rabbit',    border:'border-emerald-500',bar:'bg-emerald-500',defDur: 45 },
-      concert: { label:'Концерт',      color:'event-concert',  text:'text-blue-100',   icon:'mic-2',     border:'border-blue-500',   bar:'bg-blue-500',   defDur: 90 },
-      rehearsal:{label:'Репетиция',   color:'event-rehearsal', text:'text-slate-200',  icon:'hourglass', border:'border-slate-500',  bar:'bg-slate-500',  defDur: 120 }
+      stage:    { label:'Сцена',      color:'event-stage',    dot:'#f59e0b', icon:'star',      bar:'bg-amber-500',  defDur: 60 },
+      closeup:  { label:'Микромагия',  color:'event-closeup',  dot:'#a855f7', icon:'sparkles',  bar:'bg-purple-500', defDur: 40 },
+      kids:     { label:'Детское шоу', color:'event-kids',     dot:'#10b981', icon:'rabbit',    bar:'bg-emerald-500',defDur: 45 },
+      concert:  { label:'Концерт',     color:'event-concert',  dot:'#3b82f6', icon:'mic-2',     bar:'bg-blue-500',   defDur: 90 },
+      rehearsal:{ label:'Репетиция',   color:'event-rehearsal',dot:'#94a3b8', icon:'hourglass', bar:'bg-slate-500',  defDur: 120 }
     };
 
     const pad2 = (n)=>String(n).padStart(2,'0');
     const toISODateLocal = (d)=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-
     const parseNum = (v) => {
       const s = String(v ?? '').replace(/\s/g,'').replace(',','.');
       const n = Number(s);
       return Number.isFinite(n) ? n : 0;
     };
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
     let currentDate = new Date();
     let selectedDate = new Date();
     let pickerYear = new Date().getFullYear();
+
     let events = [];
     let monthlyGoal = 200000;
     let goalCelebrated = false;
 
     let currentType = 'stage';
-    let currentSetlist = []; // "Доп"
+    let currentSetlist = [];
     let currentSchedule = [];
     let editingId = null;
 
+    let viewingId = null;
+
+    function timeToMin(t){
+      if(!t || typeof t !== 'string' || !t.includes(':')) return null;
+      const [hh, mm] = t.split(':').map(Number);
+      if(!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+      return hh*60 + mm;
+    }
+    function minToTime(m){
+      if(m === null || m === undefined) return '—';
+      const hh = Math.floor(m/60);
+      const mm = m % 60;
+      return `${pad2(hh)}:${pad2(mm)}`;
+    }
+    function getPrimaryType(e){
+      return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
+    }
+    function getEventRange(e){
+      const sch = Array.isArray(e.schedule) ? e.schedule.slice() : [];
+      if(!sch.length){
+        const s = timeToMin(e.time);
+        if(s === null) return { start:null, end:null };
+        const dur = parseNum(TYPES[getPrimaryType(e)]?.defDur) || 60;
+        return { start:s, end:s + dur };
+      }
+      const points = sch.map(a=>{
+        const s = timeToMin(a.time);
+        const dur = Math.max(1, Math.round(parseNum(a.duration) || (TYPES[a.type]?.defDur || 60)));
+        if(s === null) return null;
+        return { s, e: s + dur };
+      }).filter(Boolean);
+
+      if(!points.length) return { start:null, end:null };
+      const start = Math.min(...points.map(p=>p.s));
+      const end = Math.max(...points.map(p=>p.e));
+      return { start, end };
+    }
+    function formatRuDateLong(iso){
+      const [y,m,d] = iso.split('-').map(Number);
+      const dt = new Date(y, m-1, d);
+      return dt.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    }
+
     function renderApp(){
+      renderHeaderSubtitle();
       renderCalendar();
-      renderSidebar();
-      renderStats();
-      renderAnalytics();
-      renderMonthNavigator();
+      renderDayList();
+      renderDashboard();
       lucide.createIcons();
+    }
+
+    function renderHeaderSubtitle(){
+      const sub = document.getElementById('header-subtitle');
+      if(!sub) return;
+      sub.textContent = document.getElementById('view-dashboard').classList.contains('mobile-hidden')
+        ? 'Calendar'
+        : 'Dashboard';
     }
 
     function renderCalendar(){
@@ -876,217 +983,100 @@
         const dateISO = `${year}-${pad2(month+1)}-${pad2(d)}`;
         const isSelected = dateISO === selectedISO;
         const isToday = dateISO === todayISO;
-        const isLastDay = d === daysInMonth;
 
         const dayEvents = events.filter(e => e.dateISO === dateISO);
-        const dayProfit = dayEvents.reduce((acc, curr) => acc + parseNum(curr.income), 0);
-
         let eventLabels = '';
-        const sliceCount = isLastDay ? 2 : 3;
-        dayEvents.slice(0, sliceCount).forEach(e => {
-          const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
-          const t = TYPES[primaryType] || TYPES.stage;
-          eventLabels += `<div onclick="event.stopPropagation(); window.editEvent(${e.id})" class="event-label ${t.color} ${t.text} border-b ${t.border}/20 shadow-sm">${t.label}</div>`;
+
+        dayEvents.slice(0, 3).forEach(e => {
+          const tKey = getPrimaryType(e);
+          const t = TYPES[tKey] || TYPES.stage;
+          eventLabels += `<div onclick="event.stopPropagation(); window.openDetails(${e.id})" class="event-label ${t.color} border border-white/5">${t.label}</div>`;
         });
 
-        let profitHtml = dayProfit > 0
-          ? `<span class="hidden md:block absolute top-1 right-1 text-[8px] text-emerald-400 bg-emerald-500/10 px-1 rounded font-mono">+${(dayProfit/1000).toFixed(0)}k</span>`
-          : '';
-
-        let summaryHtml = '';
-        if(isLastDay){
-          summaryHtml = `<div class="month-summary">ИТОГ</div>`;
-        }
-
         const cell = document.createElement('div');
-        cell.className = `calendar-cell relative cursor-pointer aspect-[4/5] min-h-[70px] ${isSelected?'selected':''} ${isToday?'today':''}`;
+
+        /* ✅ календарь подняли: клетки сделали компактнее (квадратные) */
+        cell.className = `calendar-cell relative cursor-pointer aspect-square min-h-[58px] ${isSelected?'selected':''} ${isToday?'today':''}`;
 
         cell.onclick = () => {
           selectedDate = new Date(year, month, d);
           renderCalendar();
-          renderSidebar();
-          renderMonthNavigator();
-          window.openModal(false);
+          renderDayList();
         };
 
         cell.innerHTML = `
           <div class="date-number">${d}</div>
-          ${profitHtml}
           <div class="calendar-cell-content">${eventLabels}</div>
-          ${summaryHtml}
         `;
         grid.appendChild(cell);
       }
     }
 
-    function flashCard(el){
-      if(!el) return;
-      el.classList.add('flash-highlight');
-      setTimeout(()=> el.classList.remove('flash-highlight'), 950);
-    }
+    function renderDayList(){
+      const iso = toISODateLocal(selectedDate);
+      const list = document.getElementById('calendar-day-list');
+      const title = document.getElementById('daylist-title');
+      const sub = document.getElementById('daylist-subtitle');
+      const count = document.getElementById('daylist-count');
 
-    function renderSidebar(){
-      const dateISO = toISODateLocal(selectedDate);
-      document.getElementById('selected-date-big').innerText = selectedDate.getDate();
-      document.getElementById('selected-weekday').innerText = selectedDate.toLocaleDateString('ru-RU', { weekday:'long', month:'long' });
-
-      const list = document.getElementById('events-list');
-      list.innerHTML = '';
+      const dateLabel = formatRuDateLong(iso);
+      title.textContent = 'События';
+      sub.textContent = dateLabel;
 
       const dayEvents = events
-        .filter(e => e.dateISO === dateISO)
-        .sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+        .filter(e => e.dateISO === iso)
+        .slice()
+        .sort((a,b)=>{
+          const ra = getEventRange(a).start ?? 99999;
+          const rb = getEventRange(b).start ?? 99999;
+          return ra - rb;
+        });
 
-      const jumperWrap = document.getElementById('jumper-wrap');
-      const jumper = document.getElementById('event-jumper');
-      if(jumperWrap && jumper){
-        if(dayEvents.length >= 2){
-          jumperWrap.classList.remove('hidden');
-          jumper.innerHTML = '';
-          dayEvents.forEach(e=>{
-            const opt = document.createElement('option');
-            opt.value = String(e.id);
-            const t = (e.time || (e.schedule?.[0]?.time) || '—');
-            opt.textContent = `${t} • ${e.title || 'Событие'}`;
-            jumper.appendChild(opt);
-          });
-          jumper.onchange = () => {
-            const id = jumper.value;
-            const target = document.getElementById(`event-card-${id}`);
-            if(target){
-              target.scrollIntoView({behavior:'smooth', block:'start'});
-              flashCard(target);
-            }
-          };
-        } else {
-          jumperWrap.classList.add('hidden');
-          jumper.innerHTML = '<option value="">—</option>';
-          jumper.onchange = null;
-        }
-      }
+      count.textContent = String(dayEvents.length);
 
+      list.innerHTML = '';
       if(dayEvents.length === 0){
         list.innerHTML = `
-          <div class="h-40 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-50">
-            <i data-lucide="wand-2" class="w-10 h-10"></i><p class="text-sm">Нет шоу</p>
-          </div>`;
-      } else {
-        dayEvents.forEach(e => {
-          const primaryType = (e.schedule && e.schedule[0]) ? e.schedule[0].type : (e.type || 'stage');
-          const t = TYPES[primaryType] || TYPES.stage;
-
-          const income = parseNum(e.income);
-          const prepay = parseNum(e.prepay);
-
-          const profitHtml = income > 0
-            ? `<div class="flex items-center gap-1 text-emerald-400 text-xs font-mono font-bold"><i data-lucide="banknote" class="w-3 h-3"></i> +${income.toLocaleString()}</div>`
-            : '';
-
-          let scheduleBlock = '<div class="flex flex-col gap-1 mb-2">';
-          if(e.schedule && e.schedule.length){
-            e.schedule.forEach(act => {
-              const cfg = TYPES[act.type] || TYPES.stage;
-              const dur = parseNum(act.duration);
-              scheduleBlock += `
-                <div class="flex justify-between items-center text-xs">
-                  <span class="flex items-center gap-1 text-slate-300">
-                    <i data-lucide="${cfg.icon}" class="w-3 h-3 text-slate-500"></i> ${cfg.label}
-                  </span>
-                  <span class="font-mono text-amber-500">${act.time}</span>
-                </div>
-                <div class="text-[10px] text-slate-500 text-right -mt-1">${dur ? `⏱ ${dur} мин` : ''}</div>
-              `;
-            });
-          }
-          scheduleBlock += '</div>';
-
-          let clientBlock = '';
-          if(e.clientName || e.clientPhone){
-            clientBlock = `<div class="mt-2 pt-2 border-t border-white/5 flex flex-col gap-1">`;
-            if(e.clientName) clientBlock += `<div class="flex items-center gap-2 text-xs text-slate-300"><i data-lucide="user" class="w-3 h-3 text-slate-500"></i> ${e.clientName}</div>`;
-            if(e.clientPhone) clientBlock += `<a href="tel:${e.clientPhone}" onclick="event.stopPropagation()" class="flex items-center gap-2 text-xs text-amber-400 hover:text-amber-300"><i data-lucide="phone" class="w-3 h-3"></i> ${e.clientPhone}</a>`;
-            clientBlock += `</div>`;
-          }
-
-          let notesBlock = '';
-          if(e.notes){
-            notesBlock = `<div class="mt-2 text-xs text-slate-500 italic line-clamp-2 pl-4 border-l-2 border-white/10">${e.notes}</div>`;
-          }
-
-          let extraBlock = '';
-          if(Array.isArray(e.setlist) && e.setlist.length){
-            const joined = e.setlist.slice(0,6).join(' • ');
-            extraBlock = `
-              <div class="mt-2 text-xs text-slate-300 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Доп</div>
-                <div class="leading-snug">${joined}${e.setlist.length>6 ? ' …' : ''}</div>
-              </div>
-            `;
-          }
-
-          let balanceBlock = '';
-          if(income > 0){
-            const bal = income - prepay;
-            if(bal > 0) balanceBlock = `<div class="text-[9px] text-amber-500/80 font-mono mt-1 text-right">Остаток: ${bal.toLocaleString()}</div>`;
-            else if(prepay > 0) balanceBlock = `<div class="text-[9px] text-slate-500/80 font-mono mt-1 text-right">Оплачено</div>`;
-          }
-
-          const stripColor =
-            primaryType === 'stage' ? 'bg-amber-500' :
-            primaryType === 'closeup' ? 'bg-purple-500' :
-            primaryType === 'kids' ? 'bg-emerald-500' :
-            primaryType === 'concert' ? 'bg-blue-500' :
-            'bg-slate-500';
-
-          const el = document.createElement('div');
-          el.id = `event-card-${e.id}`;
-          el.className = 'group relative bg-white/5 rounded-xl p-3 border border-white/5 hover:border-amber-500/30 transition animate-enter cursor-pointer';
-          el.onclick = () => window.editEvent(e.id);
-
-          el.innerHTML = `
-            <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r ${stripColor}"></div>
-            <div class="pl-3">
-              ${scheduleBlock}
-              <h4 class="text-white font-display font-semibold text-base leading-tight mb-1">${e.title}</h4>
-              ${e.location ? `<div class="text-xs text-slate-400 flex items-center gap-1 mb-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>` : ''}
-              ${clientBlock}
-              ${extraBlock}
-              ${notesBlock}
-              <div class="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
-                <div>
-                  ${profitHtml}
-                  ${balanceBlock}
-                </div>
-                <button onclick="event.stopPropagation(); window.deleteEvent('${e.id}')" class="text-slate-600 hover:text-red-400 p-1">
-                  <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-              </div>
-            </div>
-          `;
-          list.appendChild(el);
-        });
+          <div class="h-28 flex flex-col items-center justify-center text-slate-600 space-y-2 opacity-70">
+            <i data-lucide="wand-2" class="w-9 h-9"></i>
+            <p class="text-sm font-semibold">Нет событий</p>
+            <p class="text-xs text-slate-500">Нажми “+” и добавь магию.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
       }
+
+      dayEvents.forEach(e=>{
+        const tKey = getPrimaryType(e);
+        const t = TYPES[tKey] || TYPES.stage;
+        const { start, end } = getEventRange(e);
+        const timeStr = (start !== null && end !== null) ? `${minToTime(start)}–${minToTime(end)}` : (e.time || '—');
+
+        const row = document.createElement('div');
+        row.className = 'daylist-row';
+        row.onclick = () => window.openDetails(e.id);
+
+        row.innerHTML = `
+          <div class="flex items-center gap-12px min-w-0" style="gap:12px;">
+            <div class="daylist-dot" style="background:${t.dot};"></div>
+            <div class="min-w-0">
+              <div class="daylist-title">${escapeHtml(e.title || 'Событие')}</div>
+              <div class="daylist-sub">${escapeHtml(e.location || t.label)}</div>
+            </div>
+          </div>
+          <div class="daylist-time">${timeStr}</div>
+        `;
+        list.appendChild(row);
+      });
 
       lucide.createIcons();
     }
 
-    function renderSetlist(){
-      const ul = document.getElementById('setlist-container');
-      if(currentSetlist.length === 0){
-        ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Пока пусто</li>';
-        return;
-      }
-      ul.innerHTML = '';
-      currentSetlist.forEach((t, i) => {
-        ul.innerHTML += `
-          <li class="flex justify-between bg-white/5 p-2 rounded border border-white/5">
-            <span><span class="text-amber-500 mr-2">${i+1}.</span>${t}</span>
-            <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-400 hover:text-white">
-              <i data-lucide="x" class="w-3 h-3"></i>
-            </button>
-          </li>`;
-      });
-      lucide.createIcons();
+    function renderDashboard(){
+      renderStatsAndKPIs();
+      renderAnalytics();
+      renderInsights();
     }
 
     function getMonthEvents(year, month1){
@@ -1097,21 +1087,34 @@
       });
     }
 
-    function renderStats(){
+    function renderStatsAndKPIs(){
       const year = currentDate.getFullYear();
-      const month1 = currentDate.getMonth() + 1;
+      const monthIndex = currentDate.getMonth();
+      const month1 = monthIndex + 1;
 
       const monthEvents = getMonthEvents(year, month1);
 
       const income = monthEvents.reduce((acc,c)=>acc + parseNum(c.income), 0);
       const expense = monthEvents.reduce((acc,c)=>acc + parseNum(c.expense), 0);
+      const prepay = monthEvents.reduce((acc,c)=>acc + parseNum(c.prepay), 0);
       const profit = income - expense;
 
-      document.getElementById('stat-profit').innerText = profit.toLocaleString();
-      document.getElementById('stat-income').innerText = `+${income.toLocaleString()}`;
-      document.getElementById('stat-expense').innerText = `-${expense.toLocaleString()}`;
-      document.getElementById('goal-amount').innerText = `${(monthlyGoal/1000).toFixed(0)}k ₽`;
+      const showCount = monthEvents.length;
+      const avgCheck = showCount > 0 ? Math.round(income / showCount) : 0;
+      const outstanding = Math.max(0, income - prepay);
 
+      document.getElementById('dash-month-label').textContent = `${MONTHS[monthIndex]} ${year}`.toUpperCase();
+
+      document.getElementById('stat-profit').innerText = profit.toLocaleString('ru-RU');
+      document.getElementById('stat-income').innerText = `+${income.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('stat-expense').innerText = `-${expense.toLocaleString('ru-RU')} ₽`;
+
+      document.getElementById('kpi-shows').textContent = `${showCount}`;
+      document.getElementById('kpi-avg-check').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpi-prepay').textContent = `${prepay.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpi-outstanding').textContent = `${outstanding.toLocaleString('ru-RU')} ₽`;
+
+      document.getElementById('goal-amount').innerText = `${Math.round(monthlyGoal/1000)}k ₽`;
       const pct = monthlyGoal > 0 ? Math.min(100, Math.round((profit / monthlyGoal) * 100)) : 0;
       const goalBar = document.getElementById('goal-progress');
 
@@ -1119,7 +1122,7 @@
         goalBar.className = "h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-1000 animate-pulse";
         document.getElementById('goal-badge').classList.remove('hidden');
         if(!goalCelebrated){
-          window.celebrateGoal();
+          showToast('🎉 Цель достигнута. Это уже не магия, это дисциплина.');
           goalCelebrated = true;
         }
       } else {
@@ -1130,27 +1133,16 @@
       goalBar.style.width = `${pct}%`;
 
       const remaining = Math.max(0, Math.round(monthlyGoal - profit));
-      const remEl = document.getElementById('goal-remaining');
-      const paceEl = document.getElementById('goal-pace');
-      if(remEl) remEl.textContent = `Осталось: ${remaining.toLocaleString()} ₽`;
+      document.getElementById('goal-remaining').textContent = `Осталось: ${remaining.toLocaleString('ru-RU')} ₽`;
 
-      const daysInMonth = new Date(year, currentDate.getMonth()+1, 0).getDate();
+      const daysInMonth = new Date(year, monthIndex+1, 0).getDate();
       const today = new Date();
-      let daysLeft = daysInMonth;
-
-      const isCurrentMonth = (today.getFullYear() === year && (today.getMonth()+1) === month1);
-      const isPastMonth = (new Date(year, currentDate.getMonth(), 1) < new Date(today.getFullYear(), today.getMonth(), 1));
-
-      if(isPastMonth){
-        daysLeft = 0;
-      } else if(isCurrentMonth){
-        daysLeft = Math.max(0, daysInMonth - today.getDate());
-      } else {
-        daysLeft = daysInMonth;
-      }
+      const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === monthIndex);
+      let daysLeft = isCurrentMonth ? Math.max(0, daysInMonth - today.getDate()) : daysInMonth;
+      if(new Date(year, monthIndex, 1) < new Date(today.getFullYear(), today.getMonth(), 1)) daysLeft = 0;
 
       const pace = (daysLeft > 0 && remaining > 0) ? Math.ceil(remaining / daysLeft) : 0;
-      if(paceEl) paceEl.textContent = `Темп: ${pace.toLocaleString()} ₽/д`;
+      document.getElementById('goal-pace').textContent = `Темп: ${pace.toLocaleString('ru-RU')} ₽/д`;
     }
 
     function renderAnalytics(){
@@ -1163,209 +1155,367 @@
       const monthEvents = getMonthEvents(year, month1);
 
       const stats = {};
-      Object.keys(TYPES).forEach(k => stats[k] = { count:0, income:0, ...TYPES[k] });
-      let totalCount = 0;
+      Object.keys(TYPES).forEach(k => stats[k] = { count:0, income:0, prepay:0 });
 
-      monthEvents.forEach(e => {
-        const inc = parseNum(e.income);
-        if(e.schedule && e.schedule.length){
-          const prim = e.schedule[0].type;
-          if(stats[prim]) stats[prim].income += inc;
-          e.schedule.forEach(act => {
-            if(stats[act.type]){
-              stats[act.type].count++;
-              totalCount++;
-            }
-          });
-        } else {
-          const t = e.type || 'stage';
-          if(stats[t]){
-            stats[t].count++;
-            stats[t].income += inc;
-            totalCount++;
-          }
-        }
+      monthEvents.forEach(e=>{
+        const k = getPrimaryType(e);
+        if(!stats[k]) return;
+        stats[k].count++;
+        stats[k].income += parseNum(e.income);
+        stats[k].prepay += parseNum(e.prepay);
       });
+
+      const totalCount = monthEvents.length;
+      const totalIncome = monthEvents.reduce((a,c)=>a + parseNum(c.income), 0);
+
+      document.getElementById('dash-types-meta').textContent = totalCount ? `${totalCount} событий` : 'нет событий';
 
       container.innerHTML = '';
       if(totalCount === 0){
-        container.innerHTML = '<div class="text-center text-slate-500 text-xs py-2">Нет данных за этот месяц</div>';
+        container.innerHTML = `<div class="text-center text-slate-500 text-xs py-3">В этом месяце пока пусто. Пора занести шоу — и деньги тоже.</div>`;
+        document.getElementById('kpi-top-type').textContent = '—';
+        document.getElementById('kpi-best-day').textContent = '—';
         return;
       }
 
       const sorted = Object.entries(stats)
-        .map(([k,v]) => ({ key:k, ...v }))
+        .map(([k,v])=>({ key:k, ...v }))
+        .filter(x=>x.count>0)
         .sort((a,b)=> b.count - a.count);
 
-      sorted.forEach(item => {
-        if(item.count === 0) return;
+      const top = sorted[0];
+      document.getElementById('kpi-top-type').textContent = top ? `${TYPES[top.key].label} (${top.count})` : '—';
+
+      const perDay = {};
+      monthEvents.forEach(e=>{
+        perDay[e.dateISO] = (perDay[e.dateISO]||0) + parseNum(e.income);
+      });
+      const best = Object.entries(perDay).sort((a,b)=>b[1]-a[1])[0];
+      document.getElementById('kpi-best-day').textContent = best ? `${best[0].split('-').reverse().join('.')} (+${Math.round(best[1]).toLocaleString('ru-RU')}₽)` : '—';
+
+      sorted.forEach(item=>{
+        const cfg = TYPES[item.key];
         const pct = Math.round((item.count / totalCount) * 100);
+        const shareIncome = totalIncome > 0 ? Math.round((item.income / totalIncome) * 100) : 0;
+        const avg = item.count ? Math.round(item.income / item.count) : 0;
+
         container.innerHTML += `
-          <div class="flex flex-col gap-1">
-            <div class="flex justify-between text-[10px] text-slate-300">
-              <span class="flex items-center gap-1"><i data-lucide="${item.icon}" class="w-3 h-3 text-slate-400"></i> ${item.label}</span>
-              <span class="font-mono opacity-80">${item.count} (${pct}%)</span>
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <i data-lucide="${cfg.icon}" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-white font-semibold truncate">${cfg.label}</div>
+                  <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+                    ${item.count} • доля по количеству ${pct}% • доля по доходу ${shareIncome}%
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-emerald-300 font-mono font-bold">+${Math.round(item.income).toLocaleString('ru-RU')}₽</div>
+                <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">ср. чек ${avg.toLocaleString('ru-RU')}₽</div>
+              </div>
             </div>
-            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div class="h-full ${item.bar || 'bg-slate-500'}" style="width:${pct}%"></div>
-            </div>
-            <div class="text-[8px] text-slate-500 text-right">
-              ${item.income > 0 ? '+' + item.income.toLocaleString() + ' ₽' : ''}
+
+            <div class="mt-3">
+              <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full ${cfg.bar}" style="width:${clamp(pct,2,100)}%"></div>
+              </div>
             </div>
           </div>
         `;
       });
+
       lucide.createIcons();
     }
 
-    function normalizeText(s){
-      return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
-    }
-    function primaryTypeOfEvent(e){
-      return (e.schedule && e.schedule[0] && e.schedule[0].type) ? e.schedule[0].type : (e.type || 'stage');
-    }
-    function eventSearchBlob(e){
-      const parts = [
-        e.title, e.location, e.clientName, e.clientPhone, e.notes,
-        Array.isArray(e.setlist) ? e.setlist.join(' ') : ''
-      ];
-      return normalizeText(parts.join(' '));
-    }
-    function formatDateShort(iso){
-      const [y,m,d] = iso.split('-').map(Number);
-      const dt = new Date(y, m-1, d);
-      const dd = String(dt.getDate()).padStart(2,'0');
-      const mm = String(dt.getMonth()+1).padStart(2,'0');
-      return `${dd}.${mm}`;
-    }
-    function safeTime(e){
-      return (e.time || (e.schedule?.[0]?.time) || '—');
-    }
-    function buildMonthIndex(){
+    function renderInsights(){
+      const box = document.getElementById('dash-insights');
+      if(!box) return;
+
       const year = currentDate.getFullYear();
       const month1 = currentDate.getMonth() + 1;
-      return getMonthEvents(year, month1)
-        .slice()
-        .sort((a,b)=>{
-          const da = a.dateISO.localeCompare(b.dateISO);
-          if(da !== 0) return da;
-          return safeTime(a).localeCompare(safeTime(b));
-        })
-        .map(e => ({
-          id: e.id,
-          dateISO: e.dateISO,
-          dateShort: formatDateShort(e.dateISO),
-          time: safeTime(e),
-          title: e.title || 'Событие',
-          type: primaryTypeOfEvent(e),
-          typeLabel: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).label,
-          typeIcon: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).icon,
-          typeColor: (TYPES[primaryTypeOfEvent(e)] || TYPES.stage).color,
-          search: eventSearchBlob(e),
-        }));
-    }
+      const monthEvents = getMonthEvents(year, month1);
 
-    function renderMonthNavigator(){
-      const wrap = document.getElementById('month-nav-wrap');
-      const results = document.getElementById('month-results');
-      const countEl = document.getElementById('month-nav-count');
-      const inp = document.getElementById('month-search');
-      const sel = document.getElementById('month-filter');
-      if(!wrap || !results || !inp || !sel) return;
+      const income = monthEvents.reduce((acc,c)=>acc + parseNum(c.income), 0);
+      const expense = monthEvents.reduce((acc,c)=>acc + parseNum(c.expense), 0);
+      const prepay = monthEvents.reduce((acc,c)=>acc + parseNum(c.prepay), 0);
+      const profit = income - expense;
 
-      const q = normalizeText(inp.value);
-      const filter = sel.value || 'all';
+      const showCount = monthEvents.length;
+      const avg = showCount ? Math.round(income / showCount) : 0;
+      const outstanding = Math.max(0, income - prepay);
 
-      const idx = buildMonthIndex();
-      let filtered = idx;
-
-      if(filter !== 'all') filtered = filtered.filter(x => x.type === filter);
-      if(q) filtered = filtered.filter(x => x.search.includes(q));
-
-      if(countEl) countEl.textContent = `${filtered.length}`;
-
-      results.innerHTML = '';
-      if(idx.length === 0){
-        results.innerHTML = `<div class="text-center text-slate-500 text-xs py-2">В этом месяце событий нет</div>`;
-        return;
-      }
-      if(filtered.length === 0){
-        results.innerHTML = `<div class="text-center text-slate-500 text-xs py-2">Ничего не найдено</div>`;
-        return;
+      const dates = monthEvents.map(e=>e.dateISO).filter(Boolean).sort();
+      let maxGap = 0;
+      for(let i=1;i<dates.length;i++){
+        const [y1,m1,d1] = dates[i-1].split('-').map(Number);
+        const [y2,m2,d2] = dates[i].split('-').map(Number);
+        const a = new Date(y1,m1-1,d1);
+        const b = new Date(y2,m2-1,d2);
+        const gap = Math.round((b-a)/(1000*60*60*24));
+        maxGap = Math.max(maxGap, gap);
       }
 
-      filtered.slice(0, 12).forEach(x=>{
-        const row = document.createElement('div');
-        row.className = 'mn-row';
-        row.onclick = () => window.jumpToEvent(x.id);
+      const burn = income > 0 ? Math.round((expense / income) * 100) : 0;
 
-        const chip = `<span class="mn-chip">${x.dateShort} • ${x.time}</span>`;
-        row.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-              <i data-lucide="${x.typeIcon}" class="w-4 h-4"></i>
-            </div>
-            <div class="min-w-0">
-              <div class="text-white font-semibold truncate">${x.title}</div>
-              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-widest truncate">${x.typeLabel}</div>
-            </div>
-          </div>
-          <div class="shrink-0">${chip}</div>
-        `;
-        results.appendChild(row);
-      });
+      const lines = [];
+      lines.push(`<div class="bg-white/5 border border-white/10 rounded-xl p-3">🔎 <b>Средний чек</b>: ${avg.toLocaleString('ru-RU')} ₽. Поднимешь на 10% — это +${Math.round(income*0.10).toLocaleString('ru-RU')} ₽ сверху без лишних дат.</div>`);
+      lines.push(`<div class="bg-white/5 border border-white/10 rounded-xl p-3">💳 <b>Остаток к сбору</b>: ${outstanding.toLocaleString('ru-RU')} ₽. Если висит долго — это не “потом”, это “никогда”.</div>`);
+      lines.push(`<div class="bg-white/5 border border-white/10 rounded-xl p-3">🔥 <b>Расходы/доход</b>: ${burn}% (чем ниже — тем ты ближе к “богатому фокуснику”, а не к “уставшему”).</div>`);
+      if(showCount >= 2) lines.push(`<div class="bg-white/5 border border-white/10 rounded-xl p-3">📅 <b>Самая большая пауза</b> между событиями: ${maxGap} дн. Если это повторяется — пора докручивать поток заявок.</div>`);
+      if(profit <= 0 && (income>0 || expense>0)) lines.push(`<div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-200">⚠️ <b>Прибыль ≤ 0</b>. Тут не философия нужна — тут нужен контроль расходов и цены.</div>`);
 
-      lucide.createIcons();
+      box.innerHTML = lines.join('');
     }
 
-    window.jumpToEvent = (id) => {
+    // DETAILS
+    window.openDetails = (id) => {
       const ev = events.find(e => e.id === Number(id));
-      if(!ev || !ev.dateISO) return;
+      if(!ev) return;
 
-      const [y,m,d] = ev.dateISO.split('-').map(Number);
-      selectedDate = new Date(y, m-1, d);
-      currentDate = new Date(y, m-1, 1);
+      viewingId = Number(id);
+      fillDetails(ev);
 
-      const dashIsHidden = document.getElementById('view-dashboard')?.classList.contains('mobile-hidden');
-      if(dashIsHidden) window.switchMobileTab('dashboard');
-
-      renderCalendar();
-      renderSidebar();
-      renderMonthNavigator();
-
-      setTimeout(() => {
-        const target = document.getElementById(`event-card-${id}`);
-        if(target){
-          target.scrollIntoView({behavior:'smooth', block:'start'});
-          flashCard(target);
-        }
-      }, 120);
+      document.getElementById('details-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      lucide.createIcons();
+    };
+    window.closeDetails = () => {
+      document.getElementById('details-modal').classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      viewingId = null;
+    };
+    window.editFromDetails = () => {
+      if(!viewingId) return;
+      closeDetails();
+      openEditorModal(true, viewingId);
+    };
+    window.deleteFromDetails = () => {
+      if(!viewingId) return;
+      const ok = confirm('Удалить событие?');
+      if(!ok) return;
+      events = events.filter(e => e.id !== viewingId);
+      localStorage.setItem('illusionist_events', JSON.stringify(events));
+      showToast('Удалено');
+      closeDetails();
+      renderApp();
     };
 
-    // schedule controls
+    function fillDetails(ev){
+      const typeKey = getPrimaryType(ev);
+      const t = TYPES[typeKey] || TYPES.stage;
+
+      const iso = ev.dateISO || toISODateLocal(new Date());
+      const dateStr = formatRuDateLong(iso);
+
+      const { start, end } = getEventRange(ev);
+      const timeStr = (start !== null && end !== null) ? `${minToTime(start)}–${minToTime(end)}` : (ev.time || '—');
+
+      document.getElementById('details-type').textContent = t.label.toUpperCase();
+      document.getElementById('details-title').textContent = ev.title || 'Событие';
+      document.getElementById('details-time').textContent = timeStr;
+      document.getElementById('details-date').textContent = dateStr;
+
+      const scheduleWrap = document.getElementById('details-schedule');
+      scheduleWrap.innerHTML = '';
+      const sch = Array.isArray(ev.schedule) ? ev.schedule.slice().sort((a,b)=>(timeToMin(a.time)||99999)-(timeToMin(b.time)||99999)) : [];
+      if(!sch.length){
+        scheduleWrap.innerHTML = `<div class="text-slate-400 text-sm">—</div>`;
+      } else {
+        sch.forEach(a=>{
+          const cfg = TYPES[a.type] || TYPES.stage;
+          const s = timeToMin(a.time);
+          const dur = Math.max(1, Math.round(parseNum(a.duration) || (cfg.defDur || 60)));
+          const e = (s!==null) ? s + dur : null;
+          scheduleWrap.innerHTML += `
+            <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="${cfg.icon}" class="w-4 h-4 text-slate-300"></i>
+                <div class="min-w-0">
+                  <div class="text-white font-semibold truncate">${cfg.label}</div>
+                  <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">длительность ${dur} мин</div>
+                </div>
+              </div>
+              <div class="text-right font-mono text-amber-300 font-bold text-sm">
+                ${a.time || '—'}${e!==null ? `–${minToTime(e)}` : ''}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const locCard = document.getElementById('details-location-card');
+      if(ev.location && String(ev.location).trim()){
+        locCard.classList.remove('hidden');
+        document.getElementById('details-location').textContent = ev.location;
+      } else locCard.classList.add('hidden');
+
+      const clientCard = document.getElementById('details-client-card');
+      const clientName = (ev.clientName || '').trim();
+      const clientPhone = (ev.clientPhone || '').trim();
+      if(clientName || clientPhone){
+        clientCard.classList.remove('hidden');
+        document.getElementById('details-client').textContent = clientName || '—';
+        const phoneA = document.getElementById('details-phone');
+        const phoneText = document.getElementById('details-phone-text');
+        if(clientPhone){
+          phoneA.classList.remove('hidden');
+          phoneText.textContent = clientPhone;
+          phoneA.href = `tel:${clientPhone}`;
+        } else {
+          phoneA.classList.add('hidden');
+          phoneText.textContent = '—';
+          phoneA.href = '#';
+        }
+      } else clientCard.classList.add('hidden');
+
+      const income = Math.round(parseNum(ev.income));
+      const prepay = Math.round(parseNum(ev.prepay));
+      const expense = Math.round(parseNum(ev.expense));
+      const balance = Math.max(0, income - prepay);
+
+      document.getElementById('details-income').textContent = `${income.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('details-prepay').textContent = `${prepay.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('details-expense').textContent = `${expense.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('details-balance').textContent = income > 0 ? `${balance.toLocaleString('ru-RU')} ₽` : '—';
+
+      const notesCard = document.getElementById('details-notes-card');
+      if(ev.notes && String(ev.notes).trim()){
+        notesCard.classList.remove('hidden');
+        document.getElementById('details-notes').textContent = ev.notes;
+      } else notesCard.classList.add('hidden');
+
+      const extraCard = document.getElementById('details-extra-card');
+      if(Array.isArray(ev.setlist) && ev.setlist.length){
+        extraCard.classList.remove('hidden');
+        document.getElementById('details-extra').textContent = ev.setlist.join(' • ');
+      } else extraCard.classList.add('hidden');
+    }
+
+    // EDITOR
+    window.openEditorModal = (isEdit=false, id=null) => {
+      const modal = document.getElementById('editor-modal');
+      modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+
+      const dateInput = document.getElementById('inp-date');
+
+      if(!isEdit){
+        editingId = null;
+        document.getElementById('btn-delete').classList.add('hidden');
+        document.getElementById('editor-title').textContent = 'Новое событие';
+
+        document.getElementById('inp-title').value = '';
+        document.getElementById('inp-location').value = '';
+        document.getElementById('inp-client-name').value = '';
+        document.getElementById('inp-client-phone').value = '';
+        document.getElementById('inp-income').value = '';
+        document.getElementById('inp-prepay').value = '';
+        document.getElementById('inp-prepay-percent').value = '';
+        document.getElementById('inp-expense').value = '';
+        document.getElementById('inp-notes').value = '';
+        document.getElementById('txt-balance').innerText = '0';
+
+        currentSetlist = [];
+        currentType = 'stage';
+        currentSchedule = [{ type:'stage', time:'19:00', duration: TYPES.stage.defDur }];
+
+        dateInput.value = toISODateLocal(selectedDate);
+      } else {
+        const ev = events.find(e => e.id === Number(id));
+        if(!ev){
+          showToast('Событие не найдено');
+          closeEditorModal();
+          return;
+        }
+        editingId = Number(id);
+        document.getElementById('btn-delete').classList.remove('hidden');
+        document.getElementById('editor-title').textContent = 'Редактирование';
+
+        document.getElementById('inp-title').value = ev.title || '';
+        document.getElementById('inp-location').value = ev.location || '';
+        document.getElementById('inp-client-name').value = ev.clientName || '';
+        document.getElementById('inp-client-phone').value = ev.clientPhone || '';
+        document.getElementById('inp-income').value = parseNum(ev.income) || '';
+        document.getElementById('inp-prepay').value = parseNum(ev.prepay) || '';
+        document.getElementById('inp-expense').value = parseNum(ev.expense) || '';
+        document.getElementById('inp-notes').value = ev.notes || '';
+
+        currentSetlist = Array.isArray(ev.setlist) ? ev.setlist.slice() : [];
+        currentSchedule = (Array.isArray(ev.schedule) && ev.schedule.length)
+          ? ev.schedule.map(a=>({ type:a.type||'stage', time:a.time||'19:00', duration: Math.max(1, Math.round(parseNum(a.duration) || (TYPES[a.type]?.defDur || 60))) }))
+          : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: TYPES[ev.type || 'stage']?.defDur || 60 }];
+
+        currentType = currentSchedule[0]?.type || 'stage';
+        dateInput.value = ev.dateISO || toISODateLocal(selectedDate);
+
+        calcBalanceFromAmount();
+      }
+
+      renderSetlist();
+      renderSchedule();
+      switchEditorTab('info');
+      setType(currentType);
+
+      lucide.createIcons();
+    };
+
+    window.closeEditorModal = () => {
+      document.getElementById('editor-modal').classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    };
+
+    window.switchEditorTab = (tab) => {
+      ['info','setlist','finance','notes'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition";
+      });
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition";
+    };
+
+    window.setType = (type) => {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(b => {
+        b.classList.remove('selected','border-amber-500','bg-amber-500/10','text-amber-400','border-purple-500','bg-purple-500/10','text-purple-400','border-emerald-500','bg-emerald-500/10','text-emerald-400','border-blue-500','bg-blue-500/10','text-blue-400','border-slate-500','bg-slate-500/10','text-slate-300');
+        b.classList.add('border-white/5','bg-white/5','text-slate-500');
+      });
+
+      const activeBtn = document.getElementById(`type-${type}`);
+      if(activeBtn){
+        activeBtn.classList.add('selected');
+        activeBtn.classList.remove('border-white/5','bg-white/5','text-slate-500');
+        if(type === 'stage') activeBtn.classList.add('border-amber-500','bg-amber-500/10','text-amber-400');
+        else if(type === 'closeup') activeBtn.classList.add('border-purple-500','bg-purple-500/10','text-purple-400');
+        else if(type === 'kids') activeBtn.classList.add('border-emerald-500','bg-emerald-500/10','text-emerald-400');
+        else if(type === 'concert') activeBtn.classList.add('border-blue-500','bg-blue-500/10','text-blue-400');
+        else if(type === 'rehearsal') activeBtn.classList.add('border-slate-500','bg-slate-500/10','text-slate-300');
+      }
+    };
+
     window.renderSchedule = () => {
       const list = document.getElementById('schedule-list');
       list.innerHTML = '';
 
       currentSchedule.forEach((item, index) => {
-        const row = document.createElement('div');
-        row.className = 'act-row';
-
-        const typeKeys = Object.keys(TYPES);
-        const currentTypeIdx = typeKeys.indexOf(item.type);
-        const nextType = typeKeys[(currentTypeIdx + 1) % typeKeys.length];
         const cfg = TYPES[item.type] || TYPES.stage;
 
+        const row = document.createElement('div');
+        row.className = "grid grid-cols-[40px_1fr_84px_30px] gap-2 items-center bg-white/5 border border-white/10 rounded-xl p-2";
+
         row.innerHTML = `
-          <button onclick="window.updateActType(${index}, '${nextType}')" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition" title="${cfg.label}">
-            <i data-lucide="${cfg.icon}" class="w-4 h-4 ${cfg.text}"></i>
+          <button onclick="window.cycleActType(${index})" class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition" title="${cfg.label}">
+            <i data-lucide="${cfg.icon}" class="w-4 h-4 text-slate-200"></i>
           </button>
 
           <input type="time" value="${item.time}" onchange="window.updateActTime(${index}, this.value)" class="bg-transparent text-white text-sm font-mono text-center outline-none w-full">
 
-          <input type="number" min="1" value="${parseNum(item.duration) || cfg.defDur}" onchange="window.updateActDuration(${index}, this.value)" class="bg-black/20 border border-white/10 rounded-lg px-2 py-2 text-white text-xs font-mono text-center outline-none w-full" title="Длительность, мин" placeholder="мин">
+          <input type="number" min="1" value="${parseNum(item.duration) || cfg.defDur}" onchange="window.updateActDuration(${index}, this.value)" class="bg-black/20 border border-white/10 rounded-xl px-2 py-2 text-white text-xs font-mono text-center outline-none w-full" title="Длительность, мин" placeholder="мин">
 
-          <button onclick="window.removeAct(${index})" class="text-red-400 hover:text-white flex items-center justify-center">
+          <button onclick="window.removeAct(${index})" class="text-red-300 hover:text-white flex items-center justify-center">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         `;
@@ -1375,67 +1525,319 @@
       lucide.createIcons();
     };
 
+    window.cycleActType = (index) => {
+      const keys = Object.keys(TYPES);
+      const cur = currentSchedule[index].type || 'stage';
+      const idx = keys.indexOf(cur);
+      const next = keys[(idx + 1) % keys.length];
+      currentSchedule[index].type = next;
+      if(!parseNum(currentSchedule[index].duration)) currentSchedule[index].duration = TYPES[next]?.defDur || 60;
+      renderSchedule();
+    };
+
     window.addAct = () => {
       const t = currentType || 'stage';
-      const defDur = (TYPES[t]?.defDur) || 60;
+      const defDur = TYPES[t]?.defDur || 60;
       currentSchedule.push({ type: t, time: '19:00', duration: defDur });
-      window.renderSchedule();
+      renderSchedule();
     };
 
     window.removeAct = (index) => {
       currentSchedule.splice(index, 1);
-      window.renderSchedule();
-    };
-
-    window.updateActType = (index, newType) => {
-      currentSchedule[index].type = newType;
-      if(!parseNum(currentSchedule[index].duration)) currentSchedule[index].duration = TYPES[newType]?.defDur || 60;
-      window.renderSchedule();
+      renderSchedule();
     };
 
     window.updateActTime = (index, newTime) => { currentSchedule[index].time = newTime; };
     window.updateActDuration = (index, newDur) => { currentSchedule[index].duration = Math.max(1, Math.round(parseNum(newDur))); };
 
-    // month picker
+    window.addTrick = () => {
+      const val = document.getElementById('inp-trick').value.trim();
+      if(val){
+        currentSetlist.push(val);
+        document.getElementById('inp-trick').value = '';
+        renderSetlist();
+      }
+    };
+
+    function renderSetlist(){
+      const ul = document.getElementById('setlist-container');
+      if(currentSetlist.length === 0){
+        ul.innerHTML = '<li class="text-center text-slate-600 text-xs italic py-4">Пока пусто</li>';
+        return;
+      }
+      ul.innerHTML = '';
+      currentSetlist.forEach((t, i) => {
+        ul.innerHTML += `
+          <li class="flex justify-between bg-white/5 p-2 rounded-xl border border-white/10">
+            <span class="min-w-0"><span class="text-amber-400 mr-2 font-bold">${i+1}.</span>${escapeHtml(t)}</span>
+            <button onclick="currentSetlist.splice(${i},1); renderSetlist()" class="text-red-300 hover:text-white shrink-0 ml-3">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </li>`;
+      });
+      lucide.createIcons();
+    }
+
+    window.saveEvent = () => {
+      const title = document.getElementById('inp-title').value.trim();
+      const dateISO = document.getElementById('inp-date').value;
+
+      if(!title){ showToast('Введите название'); return; }
+      if(!dateISO){ showToast('Выберите дату'); return; }
+      if(currentSchedule.length === 0){ showToast('Добавьте хотя бы один выход'); return; }
+
+      const primary = currentSchedule.slice().sort((a,b)=>(timeToMin(a.time)||99999)-(timeToMin(b.time)||99999))[0];
+
+      const eventData = {
+        title,
+        time: primary?.time || '19:00',
+        type: primary?.type || currentType || 'stage',
+        schedule: currentSchedule.map(a => ({
+          type: a.type || 'stage',
+          time: a.time || '19:00',
+          duration: Math.max(1, Math.round(parseNum(a.duration) || (TYPES[a.type]?.defDur || 60)))
+        })),
+        location: document.getElementById('inp-location').value,
+        clientName: document.getElementById('inp-client-name').value,
+        clientPhone: document.getElementById('inp-client-phone').value,
+        income: Math.round(parseNum(document.getElementById('inp-income').value)),
+        prepay: Math.round(parseNum(document.getElementById('inp-prepay').value)),
+        expense: Math.round(parseNum(document.getElementById('inp-expense').value)),
+        notes: document.getElementById('inp-notes').value,
+        setlist: currentSetlist.slice(),
+        dateISO
+      };
+
+      if(editingId){
+        events = events.map(e => e.id === editingId ? { ...e, ...eventData } : e);
+        showToast('Обновлено');
+      } else {
+        events.push({ id: Date.now(), ...eventData });
+        showToast('Сохранено');
+      }
+
+      localStorage.setItem('illusionist_events', JSON.stringify(events));
+
+      const [y,m,d] = dateISO.split('-').map(Number);
+      selectedDate = new Date(y, m-1, d);
+      currentDate = new Date(y, m-1, 1);
+
+      closeEditorModal();
+      renderApp();
+    };
+
+    window.deleteEventFromEditor = () => {
+      if(!editingId) return;
+      if(!confirm('Удалить событие?')) return;
+      events = events.filter(e => e.id !== editingId);
+      localStorage.setItem('illusionist_events', JSON.stringify(events));
+      showToast('Удалено');
+      closeEditorModal();
+      renderApp();
+    };
+
+    window.calcBalanceFromAmount = () => {
+      const total = parseNum(document.getElementById('inp-income').value);
+      const prepay = parseNum(document.getElementById('inp-prepay').value);
+
+      if(total > 0){
+        const percent = (prepay / total) * 100;
+        document.getElementById('inp-prepay-percent').value = (Math.round(percent * 10) / 10).toString().replace('.', ',');
+      } else {
+        document.getElementById('inp-prepay-percent').value = '0';
+      }
+      updateBalanceDisplay(total, prepay);
+    };
+
+    window.calcBalanceFromPercent = () => {
+      const total = parseNum(document.getElementById('inp-income').value);
+      const percent = parseNum(document.getElementById('inp-prepay-percent').value);
+
+      const prepay = Math.round(total * (percent / 100));
+      document.getElementById('inp-prepay').value = prepay;
+      updateBalanceDisplay(total, prepay);
+    };
+
+    function updateBalanceDisplay(total, prepay){
+      const balance = total - prepay;
+      const balEl = document.getElementById('txt-balance');
+      if(!balEl) return;
+
+      if(total > 0 && balance <= 0){
+        balEl.innerText = "Оплачено";
+        balEl.className = "text-lg font-mono text-slate-400 font-bold";
+      } else {
+        balEl.innerText = `${Math.max(0, balance).toLocaleString('ru-RU')} ₽`;
+        balEl.className = "text-lg font-mono text-amber-300 font-bold";
+      }
+    }
+
+    // NAV / PICKER / SETTINGS / GOAL (без изменений по логике)
+    window.switchMobileTab = (tab) => {
+      const calView = document.getElementById('view-calendar');
+      const dashView = document.getElementById('view-dashboard');
+      const calNav = document.getElementById('nav-calendar');
+      const dashNav = document.getElementById('nav-dashboard');
+
+      if(tab === 'calendar'){
+        calView.classList.remove('mobile-hidden');
+        dashView.classList.add('mobile-hidden');
+        calNav.classList.add('text-amber-400'); calNav.classList.remove('text-slate-500');
+        dashNav.classList.remove('text-amber-400'); dashNav.classList.add('text-slate-500');
+      } else {
+        calView.classList.add('mobile-hidden');
+        dashView.classList.remove('mobile-hidden');
+        dashNav.classList.add('text-amber-400'); dashNav.classList.remove('text-slate-500');
+        calNav.classList.remove('text-amber-400'); calNav.classList.add('text-slate-500');
+      }
+      renderHeaderSubtitle();
+      updateBottomNavMetrics();
+    };
+
+    window.changeMonth = (delta) => {
+      const y = currentDate.getFullYear();
+      const m = currentDate.getMonth();
+      currentDate = new Date(y, m + delta, 1);
+      renderApp();
+    };
+
+    window.goToToday = () => {
+      const now = new Date();
+      currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      selectedDate = now;
+      renderApp();
+    };
+
     window.openMonthPicker = () => {
       pickerYear = currentDate.getFullYear();
       document.getElementById('picker-year-display').innerText = pickerYear;
       document.getElementById('month-picker-modal').classList.remove('hidden');
-      window.highlightCurrentMonth();
+      highlightCurrentMonth();
       document.body.classList.add('modal-open');
+      lucide.createIcons();
     };
+
     window.closeMonthPicker = () => {
       document.getElementById('month-picker-modal').classList.add('hidden');
       document.body.classList.remove('modal-open');
     };
+
     window.changePickerYear = (delta) => {
       pickerYear += delta;
       document.getElementById('picker-year-display').innerText = pickerYear;
-      window.highlightCurrentMonth();
+      highlightCurrentMonth();
     };
+
     window.selectMonth = (monthIndex) => {
       currentDate = new Date(pickerYear, monthIndex, 1);
       selectedDate = new Date(pickerYear, monthIndex, 1);
       renderApp();
-      window.closeMonthPicker();
+      closeMonthPicker();
     };
-    window.highlightCurrentMonth = () => {
+
+    function highlightCurrentMonth(){
       const btns = document.querySelectorAll('.month-btn');
       btns.forEach((btn, idx) => {
-        if(pickerYear === currentDate.getFullYear() && idx === currentDate.getMonth()){
-          btn.classList.add('bg-amber-500','text-black','border-amber-500');
+        const active = (pickerYear === currentDate.getFullYear() && idx === currentDate.getMonth());
+        btn.classList.toggle('bg-amber-500', active);
+        btn.classList.toggle('text-black', active);
+        btn.classList.toggle('border-amber-500', active);
+        if(active){
           btn.classList.remove('bg-white/5','text-slate-300','border-white/5');
         } else {
-          btn.classList.remove('bg-amber-500','text-black','border-amber-500');
           btn.classList.add('bg-white/5','text-slate-300','border-white/5');
         }
       });
+    }
+
+    window.openSettings = () => {
+      document.getElementById('settings-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      lucide.createIcons();
+    };
+    window.closeSettings = () => {
+      document.getElementById('settings-modal').classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    };
+
+    window.resetData = () => {
+      if(!confirm('Сбросить все данные?')) return;
+      events = [];
+      monthlyGoal = 200000;
+      localStorage.removeItem('illusionist_events');
+      localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
+      renderApp();
+      showToast('Данные сброшены');
+    };
+
+    window.exportData = () => {
+      const dateStr = new Date().toISOString().split('T')[0];
+      const data = { events, goal: monthlyGoal, version: '2.1-calendar-up' };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `IllusionistOS_Backup_${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Архив скачан');
+    };
+
+    window.importData = (input) => {
+      const file = input.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try{
+          const data = JSON.parse(e.target.result);
+          if(data.events){
+            const mig = migrateEventsToISO(data.events);
+            events = mig.out;
+            localStorage.setItem('illusionist_events', JSON.stringify(events));
+          }
+          if(data.goal !== undefined){
+            monthlyGoal = parseNum(data.goal) || monthlyGoal;
+            localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
+          }
+          renderApp();
+          closeSettings();
+          showToast('Данные восстановлены');
+        } catch(err){
+          showToast('Ошибка файла');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    window.editGoal = () => {
+      document.getElementById('goal-input').value = monthlyGoal;
+      document.getElementById('goal-modal').classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      lucide.createIcons();
+    };
+    window.closeGoalModal = () => {
+      document.getElementById('goal-modal').classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    };
+    window.saveGoalFromModal = () => {
+      const v = parseNum(document.getElementById('goal-input').value);
+      if(v <= 0){
+        showToast('Введите цель > 0');
+        return;
+      }
+      monthlyGoal = Math.round(v);
+      localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
+      renderDashboard();
+      closeGoalModal();
+      showToast('Цель обновлена');
     };
 
     function migrateEventsToISO(list){
       let changed = false;
       const out = (Array.isArray(list) ? list : []).map(ev => {
         const e = { ...ev };
+
         e.income = parseNum(e.income);
         e.expense = parseNum(e.expense);
         e.prepay = parseNum(e.prepay);
@@ -1491,315 +1893,7 @@
       renderApp();
     }
 
-    // settings
-    window.openSettings = () => {
-      document.getElementById('settings-modal').classList.remove('hidden');
-      document.body.classList.add('modal-open');
-      lucide.createIcons();
-    };
-    window.closeSettings = () => {
-      document.getElementById('settings-modal').classList.add('hidden');
-      document.body.classList.remove('modal-open');
-    };
-
-    window.resetData = () => {
-      if(!confirm('Сбросить все данные?')) return;
-      events = [];
-      monthlyGoal = 200000;
-      localStorage.removeItem('illusionist_events');
-      localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
-      renderApp();
-      window.showToast('Данные сброшены');
-    };
-
-    window.exportData = () => {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const data = { events, goal: monthlyGoal, version: '1.7-mobile' };
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `IllusionistOS_Calendar_Backup_${dateStr}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.showToast('Архив скачан!');
-    };
-
-    window.importData = (input) => {
-      const file = input.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try{
-          const data = JSON.parse(e.target.result);
-          if(data.events){
-            const mig = migrateEventsToISO(data.events);
-            events = mig.out;
-            localStorage.setItem('illusionist_events', JSON.stringify(events));
-          }
-          if(data.goal !== undefined){
-            monthlyGoal = parseNum(data.goal) || monthlyGoal;
-            localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
-          }
-          renderApp();
-          window.closeSettings();
-          window.showToast('Данные восстановлены!');
-        } catch(err){
-          window.showToast('Ошибка файла');
-        }
-      };
-      reader.readAsText(file);
-    };
-
-    window.editGoal = () => {
-      document.getElementById('goal-input').value = monthlyGoal;
-      document.getElementById('goal-modal').classList.remove('hidden');
-      document.body.classList.add('modal-open');
-      lucide.createIcons();
-    };
-    window.closeGoalModal = () => {
-      document.getElementById('goal-modal').classList.add('hidden');
-      document.body.classList.remove('modal-open');
-    };
-    window.saveGoalFromModal = () => {
-      const v = parseNum(document.getElementById('goal-input').value);
-      if(v <= 0){
-        window.showToast('Введите цель > 0');
-        return;
-      }
-      monthlyGoal = Math.round(v);
-      localStorage.setItem('illusionist_goal', JSON.stringify(monthlyGoal));
-      renderStats();
-      renderAnalytics();
-      renderMonthNavigator();
-      window.closeGoalModal();
-      window.showToast('Цель обновлена');
-    };
-
-    window.changeMonth = (delta) => {
-      const y = currentDate.getFullYear();
-      const m = currentDate.getMonth();
-      currentDate = new Date(y, m + delta, 1);
-      renderApp();
-    };
-
-    window.goToToday = () => {
-      const now = new Date();
-      currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      selectedDate = now;
-      renderApp();
-    };
-
-    window.switchMobileTab = (tab) => {
-      const calView = document.getElementById('view-calendar');
-      const dashView = document.getElementById('view-dashboard');
-      const calNav = document.getElementById('nav-calendar');
-      const dashNav = document.getElementById('nav-dashboard');
-
-      if(tab === 'calendar'){
-        calView.classList.remove('mobile-hidden');
-        dashView.classList.add('mobile-hidden');
-
-        calNav.classList.add('text-amber-400');
-        calNav.classList.remove('text-slate-500');
-        dashNav.classList.remove('text-amber-400');
-        dashNav.classList.add('text-slate-500');
-      } else {
-        calView.classList.add('mobile-hidden');
-        dashView.classList.remove('mobile-hidden');
-
-        dashNav.classList.add('text-amber-400');
-        dashNav.classList.remove('text-slate-500');
-        calNav.classList.remove('text-amber-400');
-        calNav.classList.add('text-slate-500');
-      }
-      updateBottomNavMetrics();
-    };
-
-    // event modal
-    window.openModal = (isEdit=false) => {
-      document.getElementById('event-modal').classList.remove('hidden');
-      document.body.classList.add('modal-open');
-      document.getElementById('modal-title').innerText = isEdit ? 'Редактировать' : 'Новое Событие';
-
-      const dateInput = document.getElementById('inp-date');
-
-      if(!isEdit){
-        editingId = null;
-        document.getElementById('btn-delete').classList.add('hidden');
-
-        document.getElementById('inp-title').value = '';
-        document.getElementById('inp-location').value = '';
-        document.getElementById('inp-client-name').value = '';
-        document.getElementById('inp-client-phone').value = '';
-        document.getElementById('inp-income').value = '';
-        document.getElementById('inp-prepay').value = '';
-        document.getElementById('inp-prepay-percent').value = '';
-        document.getElementById('inp-expense').value = '';
-        document.getElementById('inp-notes').value = '';
-        document.getElementById('txt-balance').innerText = '0';
-
-        currentSetlist = [];
-        currentType = 'stage';
-        currentSchedule = [{ type:'stage', time:'19:00', duration: TYPES.stage.defDur }];
-
-        dateInput.value = toISODateLocal(selectedDate);
-      } else {
-        document.getElementById('btn-delete').classList.remove('hidden');
-      }
-
-      window.renderSetlist();
-      window.renderSchedule();
-      window.switchTab('info');
-      window.setType(currentType || 'stage');
-
-      updateBottomNavMetrics();
-      lucide.createIcons();
-    };
-
-    window.closeModal = () => {
-      document.getElementById('event-modal').classList.add('hidden');
-      document.body.classList.remove('modal-open');
-    };
-
-    window.switchTab = (tab) => {
-      ['info','setlist','finance','notes'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`tab-btn-${t}`).className = "flex-1 py-2 text-[10px] font-bold uppercase text-slate-500 rounded transition";
-      });
-      document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      document.getElementById(`tab-btn-${tab}`).className = "tab-active flex-1 py-2 text-[10px] font-bold uppercase rounded transition";
-    };
-
-    window.setType = (type) => {
-      currentType = type;
-      document.querySelectorAll('.type-btn').forEach(b => {
-        b.classList.remove('selected');
-        b.classList.remove('border-amber-500','bg-amber-500/10','text-amber-400');
-        b.classList.remove('border-purple-500','bg-purple-500/10','text-purple-400');
-        b.classList.remove('border-emerald-500','bg-emerald-500/10','text-emerald-400');
-        b.classList.remove('border-blue-500','bg-blue-500/10','text-blue-400');
-        b.classList.remove('border-slate-500','bg-slate-500/10','text-slate-300');
-        b.classList.add('border-white/5','bg-white/5','text-slate-500');
-      });
-
-      const activeBtn = document.getElementById(`type-${type}`);
-      if(activeBtn){
-        activeBtn.classList.add('selected');
-        activeBtn.classList.remove('border-white/5','bg-white/5','text-slate-500');
-        if(type === 'stage') activeBtn.classList.add('border-amber-500','bg-amber-500/10','text-amber-400');
-        else if(type === 'closeup') activeBtn.classList.add('border-purple-500','bg-purple-500/10','text-purple-400');
-        else if(type === 'kids') activeBtn.classList.add('border-emerald-500','bg-emerald-500/10','text-emerald-400');
-        else if(type === 'concert') activeBtn.classList.add('border-blue-500','bg-blue-500/10','text-blue-400');
-        else if(type === 'rehearsal') activeBtn.classList.add('border-slate-500','bg-slate-500/10','text-slate-300');
-      }
-    };
-
-    window.addTrick = () => {
-      const val = document.getElementById('inp-trick').value.trim();
-      if(val){
-        currentSetlist.push(val);
-        document.getElementById('inp-trick').value = '';
-        window.renderSetlist();
-      }
-    };
-
-    window.editEvent = (id) => {
-      const ev = events.find(e => e.id === id);
-      if(!ev) return;
-
-      editingId = id;
-
-      document.getElementById('inp-title').value = ev.title || '';
-      document.getElementById('inp-location').value = ev.location || '';
-      document.getElementById('inp-client-name').value = ev.clientName || '';
-      document.getElementById('inp-client-phone').value = ev.clientPhone || '';
-      document.getElementById('inp-income').value = parseNum(ev.income) || '';
-      document.getElementById('inp-prepay').value = parseNum(ev.prepay) || '';
-      document.getElementById('inp-expense').value = parseNum(ev.expense) || '';
-      document.getElementById('inp-notes').value = ev.notes || '';
-
-      currentSetlist = Array.isArray(ev.setlist) ? ev.setlist : [];
-      currentSchedule = (ev.schedule && ev.schedule.length) ? ev.schedule : [{ type: ev.type || 'stage', time: ev.time || '19:00', duration: TYPES[ev.type || 'stage']?.defDur || 60 }];
-      currentType = currentSchedule[0].type || 'stage';
-
-      document.getElementById('inp-date').value = ev.dateISO || toISODateLocal(new Date());
-
-      window.calcBalanceFromAmount();
-      window.openModal(true);
-    };
-
-    window.saveEvent = async () => {
-      const title = document.getElementById('inp-title').value.trim();
-      const dateISO = document.getElementById('inp-date').value;
-
-      if(!title){ window.showToast('Введите название!'); return; }
-      if(!dateISO){ window.showToast('Выберите дату!'); return; }
-      if(currentSchedule.length === 0){ window.showToast('Добавьте хотя бы один выход!'); return; }
-
-      const [y,m,d] = dateISO.split('-').map(Number);
-      const eventDateObj = new Date(y, m-1, d);
-      const primary = currentSchedule[0];
-
-      const eventData = {
-        title,
-        time: primary.time,
-        type: primary.type,
-        schedule: currentSchedule.map(a => ({
-          type: a.type,
-          time: a.time,
-          duration: Math.max(1, Math.round(parseNum(a.duration) || (TYPES[a.type]?.defDur || 60)))
-        })),
-        location: document.getElementById('inp-location').value,
-        clientName: document.getElementById('inp-client-name').value,
-        clientPhone: document.getElementById('inp-client-phone').value,
-        income: Math.round(parseNum(document.getElementById('inp-income').value)),
-        prepay: Math.round(parseNum(document.getElementById('inp-prepay').value)),
-        expense: Math.round(parseNum(document.getElementById('inp-expense').value)),
-        notes: document.getElementById('inp-notes').value,
-        setlist: currentSetlist,
-        dateISO
-      };
-
-      if(editingId){
-        events = events.map(e => e.id === editingId ? { ...e, ...eventData } : e);
-        window.showToast('Обновлено!');
-      } else {
-        events.push({ id: Date.now(), ...eventData });
-        window.showToast('Магия создана!');
-      }
-
-      localStorage.setItem('illusionist_events', JSON.stringify(events));
-
-      selectedDate = eventDateObj;
-      currentDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-
-      window.closeModal();
-      renderApp();
-    };
-
-    window.deleteEvent = (id) => {
-      const numId = Number(id);
-      if(!confirm('Удалить событие?')) return;
-      events = events.filter(e => e.id !== numId);
-      localStorage.setItem('illusionist_events', JSON.stringify(events));
-      renderApp();
-      window.showToast('Удалено');
-    };
-
-    window.deleteEventFromModal = () => {
-      if(editingId){
-        if(!confirm('Удалить это событие?')) return;
-        events = events.filter(e => e.id !== editingId);
-        localStorage.setItem('illusionist_events', JSON.stringify(events));
-        renderApp();
-        window.closeModal();
-        window.showToast('Событие удалено');
-      }
-    };
-
-    window.showToast = (msg) => {
+    function showToast(msg){
       const t = document.getElementById('toast');
       const m = document.getElementById('toast-msg');
       if(!t || !m) return;
@@ -1807,63 +1901,34 @@
       m.innerText = msg;
       t.classList.add('show');
       clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-    };
+      window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
 
-    window.celebrateGoal = () => {
-      const container = document.getElementById('confetti-container');
-      const colors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e'];
-      for(let i=0;i<50;i++){
-        const el = document.createElement('div');
-        el.className = 'confetti';
-        el.style.left = Math.random() * 100 + 'vw';
-        el.style.top = '-10px';
-        el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        el.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        el.style.opacity = Math.random();
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 5000);
+    function updateBottomNavMetrics(){
+      const inner = document.querySelector('#mobile-bottom-nav .nav-inner');
+      if(!inner) return;
+      const rect = inner.getBoundingClientRect();
+      const h = rect.height || 64;
+      document.documentElement.style.setProperty('--bottom-nav-visible', `${Math.round(h)}px`);
+    }
+
+    function setAppHeight(){
+      const vv = window.visualViewport;
+      const h = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
+    }
+
+    function bindAppHeight(){
+      setAppHeight();
+      window.addEventListener('resize', setAppHeight);
+      window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 150));
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize', setAppHeight);
+        window.visualViewport.addEventListener('scroll', setAppHeight);
       }
-      window.showToast('🎉 Цель достигнута! Так держать!');
-    };
+    }
 
-    window.calcBalanceFromAmount = () => {
-      const total = parseNum(document.getElementById('inp-income').value);
-      const prepay = parseNum(document.getElementById('inp-prepay').value);
-
-      if(total > 0){
-        const percent = (prepay / total) * 100;
-        document.getElementById('inp-prepay-percent').value = (Math.round(percent * 10) / 10).toString().replace('.', ',');
-      } else {
-        document.getElementById('inp-prepay-percent').value = '0';
-      }
-      window.updateBalanceDisplay(total, prepay);
-    };
-
-    window.calcBalanceFromPercent = () => {
-      const total = parseNum(document.getElementById('inp-income').value);
-      const percent = parseNum(document.getElementById('inp-prepay-percent').value);
-
-      const prepay = Math.round(total * (percent / 100));
-      document.getElementById('inp-prepay').value = prepay;
-      window.updateBalanceDisplay(total, prepay);
-    };
-
-    window.updateBalanceDisplay = (total, prepay) => {
-      const balance = total - prepay;
-      const balEl = document.getElementById('txt-balance');
-      if(!balEl) return;
-
-      if(total > 0 && balance <= 0){
-        balEl.innerText = "Оплачено";
-        balEl.className = "text-lg font-mono text-slate-500 font-bold";
-      } else {
-        balEl.innerText = `${Math.max(0, balance).toLocaleString()} ₽`;
-        balEl.className = "text-lg font-mono text-amber-400 font-bold";
-      }
-    };
-
-    // background particles
+    // Background particles (легкие)
     let particleRAF = null;
     let particleState = { running:false, ctx:null, canvas:null, particles:[] };
 
@@ -1892,14 +1957,13 @@
           speedX: Math.random()*0.5-0.25,
           speedY: Math.random()*0.5-0.25,
           color: Math.random()>0.5 ? '245, 158, 11' : '139, 92, 246',
-          opacity: Math.random()*0.5
+          opacity: Math.random()*0.45
         });
       }
 
       function step(){
         if(!particleState.running) return;
         ctx.clearRect(0,0,canvas.width,canvas.height);
-
         particleState.particles.forEach(p => {
           p.x += p.speedX; p.y += p.speedY;
           if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
@@ -1910,7 +1974,6 @@
           ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
           ctx.fill();
         });
-
         particleRAF = requestAnimationFrame(step);
       }
 
@@ -1934,50 +1997,20 @@
       start();
     }
 
-    function updateBottomNavMetrics(){
-      const inner = document.querySelector('#mobile-bottom-nav .nav-inner');
-      if(!inner) return;
-      const rect = inner.getBoundingClientRect();
-      const h = rect.height || 64;
-      document.documentElement.style.setProperty('--bottom-nav-visible', `${Math.round(h)}px`);
-    }
-
-    function bindMonthNavigatorInputs(){
-      const inp = document.getElementById('month-search');
-      const sel = document.getElementById('month-filter');
-      if(inp && !inp.__bound){
-        inp.__bound = true;
-        inp.addEventListener('input', () => renderMonthNavigator());
-      }
-      if(sel && !sel.__bound){
-        sel.__bound = true;
-        sel.addEventListener('change', () => renderMonthNavigator());
-      }
-    }
-
-    // ✅ iOS: keep app height stable (prevents "jump up" when overlays open / Safari UI changes)
-    function setAppHeight(){
-      const vv = window.visualViewport;
-      const h = vv ? vv.height : window.innerHeight;
-      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
-    }
-
-    function bindAppHeight(){
-      setAppHeight();
-      window.addEventListener('resize', setAppHeight);
-      window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 150));
-      if(window.visualViewport){
-        window.visualViewport.addEventListener('resize', setAppHeight);
-        window.visualViewport.addEventListener('scroll', setAppHeight);
-      }
+    function escapeHtml(s){
+      return String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       bindAppHeight();
-      loadLocalData();
       initParticles();
       updateBottomNavMetrics();
-      bindMonthNavigatorInputs();
+      loadLocalData();
       lucide.createIcons();
     });
   </script>
