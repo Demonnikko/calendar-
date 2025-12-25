@@ -175,28 +175,6 @@
       border:1px solid transparent;
     }
     .event-label:hover{ transform:scale(1.02); filter:brightness(1.12); z-index:10; }
-    .cell-overflow-badge{
-      position:absolute;
-      top:4px;
-      right:4px;
-      padding:2px 6px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      color:rgba(255,255,255,.9);
-      font-size:9px;
-      font-weight:800;
-      letter-spacing:0.08em;
-      border-radius:999px;
-      box-shadow:0 6px 18px rgba(0,0,0,.35);
-      backdrop-filter:blur(6px);
-      -webkit-backdrop-filter:blur(6px);
-      pointer-events:none;
-    }
-    .calendar-cell.selected .cell-overflow-badge{
-      background:rgba(245,158,11,.12);
-      border-color:rgba(245,158,11,.45);
-      color:#fbbf24;
-    }
 
     .event-stage{ background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#fbbf24; }
     .event-closeup{ background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.3); color:#c084fc; }
@@ -853,7 +831,6 @@
       </div>
 
       <div class="p-4 space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
-        <!-- ✅ цель редактируется ТОЛЬКО тут -->
         <button onclick="window.editGoal()" class="w-full glass-panel rounded-xl p-3 flex items-center justify-between hover:border-amber-500/30 transition">
           <div class="flex items-center gap-3">
             <i data-lucide="target" class="w-5 h-5 text-amber-400"></i>
@@ -1039,13 +1016,8 @@
         dayEvents.slice(0, 3).forEach(e => {
           const tKey = getPrimaryType(e);
           const t = TYPES[tKey] || TYPES.stage;
-          /* ✅ тап по мини-лейблу открывает карточку (там есть “Править”) */
           eventLabels += `<div onclick="event.stopPropagation(); window.openDetails(${e.id})" class="event-label ${t.color} border border-white/5">${t.label}</div>`;
         });
-
-        const overflowBadge = dayEvents.length > 3
-          ? `<div class="cell-overflow-badge">+${dayEvents.length - 3}</div>`
-          : '';
 
         const cell = document.createElement('div');
         cell.className = `calendar-cell relative cursor-pointer aspect-square min-h-[58px] ${isSelected?'selected':''} ${isToday?'today':''}`;
@@ -1056,7 +1028,6 @@
         };
 
         cell.innerHTML = `
-          ${overflowBadge}
           <div class="date-number">${d}</div>
           <div class="calendar-cell-content">${eventLabels}</div>
         `;
@@ -1107,7 +1078,6 @@
 
         const row = document.createElement('div');
         row.className = 'daylist-row';
-        /* ✅ тап по строке открывает карточку, дальше “Править” */
         row.onclick = () => window.openDetails(e.id);
 
         row.innerHTML = `
@@ -1328,11 +1298,15 @@
       document.body.classList.remove('modal-open');
       viewingId = null;
     };
+
+    // ✅ FIX: сохраняем id ДО closeDetails(), иначе viewingId обнулялся и редактирование не открывалось
     window.editFromDetails = () => {
-      if(!viewingId) return;
+      const id = viewingId;
+      if(!id) return;
       closeDetails();
-      openEditorModal(true, viewingId);
+      openEditorModal(true, id);
     };
+
     window.deleteFromDetails = () => {
       if(!viewingId) return;
       const ok = confirm('Удалить событие?');
