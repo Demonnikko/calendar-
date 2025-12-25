@@ -175,6 +175,28 @@
       border:1px solid transparent;
     }
     .event-label:hover{ transform:scale(1.02); filter:brightness(1.12); z-index:10; }
+    .cell-overflow-badge{
+      position:absolute;
+      top:4px;
+      right:4px;
+      padding:2px 6px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      color:rgba(255,255,255,.9);
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:0.08em;
+      border-radius:999px;
+      box-shadow:0 6px 18px rgba(0,0,0,.35);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+      pointer-events:none;
+    }
+    .calendar-cell.selected .cell-overflow-badge{
+      background:rgba(245,158,11,.12);
+      border-color:rgba(245,158,11,.45);
+      color:#fbbf24;
+    }
 
     .event-stage{ background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#fbbf24; }
     .event-closeup{ background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.3); color:#c084fc; }
@@ -1021,6 +1043,10 @@
           eventLabels += `<div onclick="event.stopPropagation(); window.openDetails(${e.id})" class="event-label ${t.color} border border-white/5">${t.label}</div>`;
         });
 
+        const overflowBadge = dayEvents.length > 3
+          ? `<div class="cell-overflow-badge">+${dayEvents.length - 3}</div>`
+          : '';
+
         const cell = document.createElement('div');
         cell.className = `calendar-cell relative cursor-pointer aspect-square min-h-[58px] ${isSelected?'selected':''} ${isToday?'today':''}`;
         cell.onclick = () => {
@@ -1030,6 +1056,7 @@
         };
 
         cell.innerHTML = `
+          ${overflowBadge}
           <div class="date-number">${d}</div>
           <div class="calendar-cell-content">${eventLabels}</div>
         `;
