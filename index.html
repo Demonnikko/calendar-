@@ -523,6 +523,8 @@
     .dashboard-container {
       padding: 12px 16px;
       padding-top: 8px;
+      padding-left: max(16px, env(safe-area-inset-left)) !important;
+      padding-right: max(16px, env(safe-area-inset-right)) !important;
       padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
       height: 100%;
       overflow-y: auto;
@@ -688,6 +690,8 @@
       overflow-y: auto;
       overflow-x: hidden;
       padding: 24px;
+      padding-left: max(24px, env(safe-area-inset-left)) !important;
+      padding-right: max(24px, env(safe-area-inset-right)) !important;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
@@ -1197,8 +1201,8 @@
     /* FAB */
     .fab {
       position: fixed;
-      bottom: calc(100px + var(--safe-bottom));
-      right: 20px;
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      right: max(20px, env(safe-area-inset-right, 0px));
       width: 64px;
       height: 64px;
       background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
@@ -1208,7 +1212,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 
+      box-shadow:
         0 8px 32px rgba(245,158,11,0.4),
         0 0 40px rgba(245,158,11,0.3);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2107,8 +2111,6 @@
   <!-- DASHBOARD TAB -->
   <div id="dashboard-tab" class="tab-content">
     <div class="dashboard-container">
-      <h2 class="month-title" style="margin-bottom: 24px;">Статистика</h2>
-      
       <!-- PROFIT CARD -->
       <div class="glass-panel" style="padding: 24px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
