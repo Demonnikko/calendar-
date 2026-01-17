@@ -62,14 +62,14 @@
       min-height: 100vh;
       min-height: -webkit-fill-available;
       min-height: 100dvh;
-      padding-top: var(--safe-top);
-      padding-bottom: var(--safe-bottom);
-      padding-left: var(--safe-left);
-      padding-right: var(--safe-right);
+      padding: 0;
+      margin: 0;
       overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
       -webkit-user-select: none;
       user-select: none;
+      position: fixed;
+      inset: 0;
     }
 
     /* Touch optimization */
@@ -112,7 +112,8 @@
     }
 
     .tab-content.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
     }
 
     /* PREMIUM GLASS PANEL */
@@ -133,9 +134,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px;
-      padding-top: calc(16px + env(safe-area-inset-top)) !important;
-      padding-left: max(20px, env(safe-area-inset-left)) !important;
-      padding-right: max(20px, env(safe-area-inset-right)) !important;
+      padding-top: max(16px, env(safe-area-inset-top, 0px)) !important;
+      padding-left: max(20px, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(20px, env(safe-area-inset-right, 0px)) !important;
       border-bottom: 1px solid rgba(245,158,11,0.1);
       background: linear-gradient(180deg, rgba(245,158,11,0.03) 0%, transparent 100%);
     }
@@ -229,9 +230,9 @@
     /* CALENDAR CONTAINER */
     .calendar-container {
       padding: 8px;
-      padding-left: max(8px, env(safe-area-inset-left)) !important;
-      padding-right: max(8px, env(safe-area-inset-right)) !important;
-      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+      padding-left: max(8px, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(8px, env(safe-area-inset-right, 0px)) !important;
+      padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom, 0px))) !important;
       height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
@@ -523,9 +524,9 @@
     .dashboard-container {
       padding: 12px 16px;
       padding-top: 8px;
-      padding-left: max(16px, env(safe-area-inset-left)) !important;
-      padding-right: max(16px, env(safe-area-inset-right)) !important;
-      padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+      padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
+      padding-bottom: max(100px, calc(100px + env(safe-area-inset-bottom, 0px))) !important;
       height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
@@ -1097,8 +1098,10 @@
       left: 0;
       right: 0;
       z-index: 100;
-      padding: 12px 20px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      padding: 12px;
+      padding-left: max(12px, env(safe-area-inset-left, 0px));
+      padding-right: max(12px, env(safe-area-inset-right, 0px));
+      padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
       background: var(--bg);
       border-top: 1.5px solid rgba(245,158,11,0.12);
       pointer-events: none;
@@ -2926,16 +2929,16 @@
       document.getElementById('kpi-tax').textContent = `${Math.round(totalTax).toLocaleString('ru-RU')} ₽`;
       
       // Goal progress
-      const goalPercent = monthlyGoal > 0 ? Math.min(Math.round((profit / monthlyGoal) * 100), 100) : 0;
+      const goalPercent = monthlyGoal > 0 ? Math.min(Math.round((netProfit / monthlyGoal) * 100), 100) : 0;
       document.getElementById('goal-progress').style.width = `${goalPercent}%`;
       document.getElementById('goal-percent').textContent = `${goalPercent}%`;
       document.getElementById('goal-text').textContent = `Цель: ${monthlyGoal.toLocaleString('ru-RU')} ₽`;
-      
+
       // Check if goal achieved (100% or more) and trigger celebration
-      if(goalPercent >= 100) {
+      if(monthlyGoal > 0 && netProfit >= monthlyGoal) {
         const celebrationKey = `goal-celebration-${year}-${month}`;
         const hasSeenCelebration = localStorage.getItem(celebrationKey);
-        
+
         if(!hasSeenCelebration) {
           setTimeout(() => {
             triggerMagicHatCelebration();
@@ -2956,9 +2959,10 @@
         if(avgCheck > 0) {
           insights.push(`📈 Средний чек: ${avgCheck.toLocaleString('ru-RU')} ₽`);
         }
-        
-        if(balance > 0) {
-          insights.push(`💳 Осталось собрать ${Math.round(balance).toLocaleString('ru-RU')} ₽`);
+
+        const remainingBalance = totalIncome - totalPrepay;
+        if(remainingBalance > 0) {
+          insights.push(`💳 Осталось собрать ${Math.round(remainingBalance).toLocaleString('ru-RU')} ₽`);
         }
         
         const profitMargin = totalIncome > 0 ? Math.round((profit / totalIncome) * 100) : 0;
