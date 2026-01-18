@@ -33,10 +33,11 @@
       --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
     }
 
-    * {
+    *, *::before, *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      max-width: 100%;
     }
 
     html, body {
@@ -49,11 +50,6 @@
       height: -webkit-fill-available;
       scroll-behavior: smooth;
       font-size: 16px;
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      max-width: 100%;
     }
 
     body {
@@ -1053,16 +1049,13 @@
 
     .btn-danger {
       width: 100%;
-      border-radius: 16px;
-      padding: 14px 18px;
-      font-size: 14px;
-      font-weight: 700;
-      background: rgba(239,68,68,.12);
-      border: 1px solid rgba(239,68,68,0.3);
       border-radius: 14px;
-      color: #ef4444;
+      padding: 14px 18px;
       font-size: 15px;
       font-weight: 900;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       cursor: pointer;
@@ -1086,25 +1079,29 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
 
     .nav-inner {
       pointer-events: all;
       display: flex;
       align-items: flex-end;
-      justify-content: center;
-      gap: 20px;
+      justify-content: space-between;
+      gap: 0;
       position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
     }
 
     .nav-item {
-      width: 56px;
-      height: 56px;
+      width: 64px;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: transparent;
-      border: 1.5px solid rgba(245,158,11,0.2);
+      border: 2px solid rgba(245,158,11,0.25);
       border-radius: 50%;
       color: rgba(148,163,184,0.8);
       cursor: pointer;
@@ -1126,16 +1123,16 @@
 
     /* FAB - центральная кнопка */
     .nav-item:nth-child(2) {
-      width: 68px;
-      height: 68px;
+      width: 80px;
+      height: 80px;
       background: transparent;
-      border: 2px solid rgba(245,158,11,0.3);
-      margin-bottom: 8px;
+      border: 2.5px solid rgba(245,158,11,0.35);
+      margin-bottom: 12px;
     }
 
     .nav-item:nth-child(2):hover {
       transform: translateY(-6px) scale(1.05);
-      border-color: rgba(245,158,11,0.5);
+      border-color: rgba(245,158,11,0.6);
     }
 
     .nav-item:nth-child(2).active {
@@ -1144,14 +1141,14 @@
     }
 
     .nav-item i {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       transition: all 0.3s;
     }
 
     .nav-item:nth-child(2) i {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
     }
 
     .nav-item.active i {
@@ -1984,10 +1981,6 @@
             <div style="font-size: 11px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.05em;">Средний чек</div>
             <div style="font-size: 18px; font-weight: 900; color: #f59e0b; font-family: 'JetBrains Mono', monospace;" id="kpi-avg">0 ₽</div>
           </div>
-          <div style="background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(96,165,250,0.03)); border: 1px solid rgba(96,165,250,0.15); border-radius: 14px; padding: 14px;">
-            <div style="font-size: 11px; color: rgba(96,165,250,0.8); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.05em;">Предоплата</div>
-            <div style="font-size: 18px; font-weight: 900; color: #60a5fa; font-family: 'JetBrains Mono', monospace;" id="kpi-prepay">0 ₽</div>
-          </div>
           <div style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.04)); border: 1px solid rgba(245,158,11,0.25); border-radius: 14px; padding: 14px;">
             <div style="font-size: 11px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.05em;">Чистая прибыль</div>
             <div style="font-size: 18px; font-weight: 900; color: #f59e0b; font-family: 'JetBrains Mono', monospace;" id="kpi-balance">0 ₽</div>
@@ -2074,9 +2067,9 @@
 
       <div class="modal-body">
         <div class="modal-tabs">
-          <button class="modal-tab active" onclick="switchModalTab('info')">Инфо</button>
-          <button class="modal-tab" onclick="switchModalTab('schedule')">Расписание</button>
-          <button class="modal-tab" onclick="switchModalTab('finance')">Финансы</button>
+          <button class="modal-tab active" onclick="switchModalTab('info', event)">Инфо</button>
+          <button class="modal-tab" onclick="switchModalTab('schedule', event)">Расписание</button>
+          <button class="modal-tab" onclick="switchModalTab('finance', event)">Финансы</button>
         </div>
 
         <!-- INFO TAB -->
@@ -2103,6 +2096,11 @@
           <div class="form-group">
             <label class="form-label">Локация</label>
             <input type="text" id="event-location" class="form-input" placeholder="Ресторан XYZ">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Адрес</label>
+            <input type="text" id="event-address" class="form-input" placeholder="Москва, ул. Пушкина, д. 10">
           </div>
 
           <div class="form-group">
@@ -2520,28 +2518,68 @@
     // ==========================================
     function switchTab(tab) {
       currentView = tab;
-      
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      
+
+      const bottomNav = document.getElementById('bottom-nav');
+
       if(tab === 'calendar') {
         document.getElementById('calendar-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
+
+        // Проверяем позицию скролла календаря и скрываем меню если не внизу
+        setTimeout(() => {
+          const calContainer = document.querySelector('.calendar-container');
+          if(calContainer) {
+            const scrollTop = calContainer.scrollTop;
+            const scrollHeight = calContainer.scrollHeight;
+            const clientHeight = calContainer.clientHeight;
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+            if(!isAtBottom) {
+              bottomNav.style.transform = 'translateY(120px)';
+              bottomNav.style.opacity = '0';
+            } else {
+              bottomNav.style.transform = 'translateY(0)';
+              bottomNav.style.opacity = '1';
+            }
+          }
+        }, 50);
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
+
+        // Проверяем позицию скролла дашборда и скрываем меню если не внизу
+        setTimeout(() => {
+          const dashContainer = document.querySelector('.dashboard-container');
+          if(dashContainer) {
+            const scrollTop = dashContainer.scrollTop;
+            const scrollHeight = dashContainer.scrollHeight;
+            const clientHeight = dashContainer.clientHeight;
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+            if(!isAtBottom) {
+              bottomNav.style.transform = 'translateY(120px)';
+              bottomNav.style.opacity = '0';
+            } else {
+              bottomNav.style.transform = 'translateY(0)';
+              bottomNav.style.opacity = '1';
+            }
+          }
+        }, 50);
       }
     }
 
-    function switchModalTab(tab) {
+    function switchModalTab(tab, event) {
       document.querySelectorAll('.modal-tab').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-      
+
       event.target.classList.add('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
-      
+
       lucide.createIcons();
     }
 
@@ -2651,20 +2689,25 @@
           <div style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
           </div>
-          <div class="day-list-info">
+          <div class="day-list-info" style="flex: 1;">
             <div class="day-list-title">${event.title}</div>
             <div class="day-list-subtitle">
               <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
               <span>${event.location || 'Не указано'}</span>
             </div>
           </div>
+          ${event.address ? `
+          <button class="nav-btn" onclick="openNavigation('${event.address}', event)" style="width: 40px; height: 40px; padding: 0; margin-right: 8px; flex-shrink: 0;" title="Построить маршрут">
+            <i data-lucide="navigation" style="width: 20px; height: 20px;"></i>
+          </button>
+          ` : ''}
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
             <div class="day-list-time">${event.time || '—'}</div>
             <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></div>
           </div>
         `;
 
-        row.onclick = () => editEvent(event.id);
+        row.querySelector('.day-list-info')?.addEventListener('click', () => editEvent(event.id));
         container.appendChild(row);
       });
       
@@ -2701,7 +2744,6 @@
       document.getElementById('kpi-expense').textContent = `${Math.round(totalExpense).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} вых.)`;
       document.getElementById('kpi-avg').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpi-prepay').textContent = `${Math.round(totalPrepay).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-balance').textContent = `${Math.round(netProfit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-tax').textContent = `${Math.round(totalTax).toLocaleString('ru-RU')} ₽`;
       
@@ -2756,16 +2798,27 @@
       // Type analytics
       const typeStats = {};
       monthEvents.forEach(event => {
-        if(event.schedule) {
+        if(event.schedule && event.schedule.length > 0) {
+          // Группируем show по типам внутри одного события
+          const eventTypeGroups = {};
           event.schedule.forEach(show => {
             const type = show.type || 'rabbit';
+            if(!eventTypeGroups[type]) {
+              eventTypeGroups[type] = 0;
+            }
+            eventTypeGroups[type]++;
+          });
+
+          // Добавляем в общую статистику
+          Object.keys(eventTypeGroups).forEach(type => {
             if(!typeStats[type]) {
               typeStats[type] = { count: 0, income: 0 };
             }
-            typeStats[type].count++;
-            typeStats[type].income += (event.income || 0) / event.schedule.length;
+            typeStats[type].count += eventTypeGroups[type];
+            typeStats[type].income += (event.income || 0) * (eventTypeGroups[type] / event.schedule.length);
           });
         } else {
+          // Событие без schedule - используем event.type
           const type = event.type || 'rabbit';
           if(!typeStats[type]) {
             typeStats[type] = { count: 0, income: 0 };
@@ -3335,6 +3388,7 @@
       document.getElementById('event-date').value = event.date || '';
       document.getElementById('event-status').value = event.status || 'pending';
       document.getElementById('event-location').value = event.location || '';
+      document.getElementById('event-address').value = event.address || '';
       document.getElementById('event-client').value = event.client || '';
       document.getElementById('event-phone').value = event.phone || '';
       document.getElementById('event-guests').value = event.guests || '';
@@ -3363,6 +3417,7 @@
     function resetForm() {
       document.getElementById('event-title').value = '';
       document.getElementById('event-location').value = '';
+      document.getElementById('event-address').value = '';
       document.getElementById('event-client').value = '';
       document.getElementById('event-phone').value = '';
       document.getElementById('event-guests').value = '';
@@ -3372,7 +3427,7 @@
       document.getElementById('event-tax').value = '';
       document.getElementById('event-notes').value = '';
       document.getElementById('balance-display').textContent = '0 ₽';
-      
+
       schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
       renderSchedule();
       
@@ -3547,6 +3602,7 @@
           duration: parseInt(item.duration) || 60
         })),
         location: document.getElementById('event-location').value,
+        address: document.getElementById('event-address').value,
         client: document.getElementById('event-client').value,
         phone: document.getElementById('event-phone').value,
         guests: parseInt(document.getElementById('event-guests').value) || 0,
@@ -3615,14 +3671,47 @@
     function showToast(message) {
       const toast = document.getElementById('toast');
       const msg = document.getElementById('toast-msg');
-      
+
       msg.textContent = message;
       toast.classList.add('show');
-      
+
       clearTimeout(window.toastTimer);
       window.toastTimer = setTimeout(() => {
         toast.classList.remove('show');
       }, 2500);
+    }
+
+    // ==========================================
+    // NAVIGATION
+    // ==========================================
+    function openNavigation(address, event) {
+      if(event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+
+      if(!address || address.trim() === '') {
+        showToast('Адрес не указан');
+        return;
+      }
+
+      // Кодируем адрес для URL
+      const encodedAddress = encodeURIComponent(address);
+
+      // Пробуем открыть Яндекс.Навигатор
+      const yandexNaviUrl = `yandexnavi://build_route_on_map?addr_to=${encodedAddress}`;
+
+      // Резервный вариант - Яндекс.Карты
+      const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&mode=routes`;
+
+      // Пытаемся открыть навигатор
+      window.location.href = yandexNaviUrl;
+
+      // Если навигатор не установлен, через 1 секунду откроем Яндекс.Карты
+      setTimeout(() => {
+        if(document.hidden) return; // Если приложение ушло в фон, значит навигатор открылся
+        window.open(yandexMapsUrl, '_blank');
+      }, 1000);
     }
 
     // ==========================================
@@ -3749,6 +3838,34 @@
     }
 
     // ==========================================
+    // BOTTOM NAV AUTO-HIDE ON SCROLL
+    // ==========================================
+    const bottomNav = document.getElementById('bottom-nav');
+
+    function handleScroll(e) {
+      const scrollTop = e.target.scrollTop;
+      const scrollHeight = e.target.scrollHeight;
+      const clientHeight = e.target.clientHeight;
+
+      // Проверяем, достигнут ли конец страницы (с запасом 10px)
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+      if (isAtBottom) {
+        // Достигли конца - показываем меню
+        bottomNav.style.transform = 'translateY(0)';
+        bottomNav.style.opacity = '1';
+      } else {
+        // Не внизу - скрываем меню
+        bottomNav.style.transform = 'translateY(120px)';
+        bottomNav.style.opacity = '0';
+      }
+    }
+
+    // Добавляем обработчики скролла
+    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll);
+    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScroll);
+
+    // ==========================================
     // HELPERS
     // ==========================================
     function formatDate(date) {
@@ -3760,19 +3877,6 @@
 
     function formatDateInput(date) {
       return formatDate(date);
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      const msg = document.getElementById('toast-msg');
-      
-      msg.textContent = message;
-      toast.classList.add('show');
-      
-      clearTimeout(window.toastTimer);
-      window.toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2500);
     }
 
     // ==========================================
