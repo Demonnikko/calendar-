@@ -109,11 +109,11 @@
 
     /* PREMIUM GLASS PANEL */
     .glass-panel {
-      background: var(--panel);
+      background: transparent;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid var(--stroke);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      border: 1.5px solid rgba(245,158,11,0.2);
+      box-shadow: none;
       border-radius: 24px;
       position: relative;
       overflow-x: hidden;
@@ -219,7 +219,7 @@
     /* CALENDAR CONTAINER */
     .calendar-container {
       padding: 8px;
-      padding-bottom: 160px;
+      padding-bottom: 120px;
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
@@ -512,7 +512,7 @@
     .dashboard-container {
       padding: 12px 16px;
       padding-top: 8px;
-      padding-bottom: 100px;
+      padding-bottom: 120px;
       height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
@@ -592,7 +592,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
@@ -613,15 +613,12 @@
       width: 100%;
       max-width: 600px;
       max-height: 90vh;
-      background: linear-gradient(135deg, rgba(20,25,35,0.95) 0%, rgba(10,15,25,0.98) 100%);
+      background: #000;
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
-      border: 1px solid rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.2);
       border-radius: 32px 32px 0 0;
-      box-shadow: 
-        0 -8px 40px rgba(0,0,0,0.6),
-        0 0 100px rgba(245,158,11,0.1),
-        inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.8);
       transform: translateY(100%);
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
@@ -1084,29 +1081,28 @@
       left: 0;
       right: 0;
       z-index: 100;
-      padding: 12px;
-      padding-left: max(12px, env(safe-area-inset-left, 0px));
-      padding-right: max(12px, env(safe-area-inset-right, 0px));
+      padding: 0 14px;
       padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
-      background: #000;
-      border-top: 1.5px solid rgba(255,255,255,0.1);
+      background: transparent;
       pointer-events: none;
     }
 
     .nav-inner {
       pointer-events: all;
-      height: 60px;
+      height: 64px;
       background: rgba(255,255,255,0.08);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 24px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      border: 1.5px solid rgba(245,158,11,0.2);
+      border-top: none;
+      border-bottom-left-radius: 28px;
+      border-bottom-right-radius: 28px;
+      box-shadow: none;
       display: flex;
       align-items: center;
       justify-content: space-around;
-      gap: 12px;
-      padding: 0 16px;
+      gap: 8px;
+      padding: 0 12px;
       position: relative;
     }
 
@@ -1117,15 +1113,14 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      padding: 10px 16px;
+      padding: 12px 20px;
       color: rgba(148,163,184,0.8);
       background: none;
       border: none;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 16px;
+      border-radius: 14px;
       flex: 1;
-      max-width: 90px;
       position: relative;
     }
 
@@ -1134,7 +1129,7 @@
       position: absolute;
       inset: 0;
       background: radial-gradient(circle at center, rgba(245,158,11,0.15), transparent 70%);
-      border-radius: 16px;
+      border-radius: 14px;
       opacity: 0;
       transition: opacity 0.3s;
     }
@@ -1145,7 +1140,6 @@
 
     .nav-item:hover {
       color: rgba(245,158,11,0.9);
-      transform: translateY(-2px);
     }
 
     .nav-item.active {
@@ -1154,11 +1148,16 @@
 
     .nav-item.active::before {
       opacity: 1;
+      background: radial-gradient(circle at center, rgba(245,158,11,0.2), transparent 70%);
+    }
+
+    .nav-item.active {
+      filter: drop-shadow(0 0 12px rgba(245,158,11,0.4));
     }
 
     .nav-item i {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       transition: all 0.3s;
     }
 
@@ -1168,7 +1167,7 @@
 
     .nav-label {
       font-size: 10px;
-      font-weight: 800;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -2041,7 +2040,7 @@
 
   <!-- CALENDAR TAB -->
   <div id="calendar-tab" class="tab-content active" style="padding-top: calc(82px + var(--safe-top));">
-    <div class="glass-panel" style="margin: 14px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="glass-panel" style="margin: 14px; margin-bottom: 0; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; border-bottom: 1.5px solid rgba(245,158,11,0.2);">
 
       <div style="padding: 0 20px 16px;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); border: 1px solid rgba(245,158,11,0.15); border-radius: 16px; padding: 12px 16px;">
@@ -2076,8 +2075,8 @@
   </div>
 
   <!-- DASHBOARD TAB -->
-  <div id="dashboard-tab" class="tab-content">
-    <div class="dashboard-container">
+  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); background: #000;">
+    <div class="dashboard-container" style="background: #000;">
       <!-- PROFIT CARD -->
       <div class="glass-panel" style="padding: 24px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -2495,26 +2494,36 @@
     // ==========================================
     // DATA
     // ==========================================
-    // Available icons for selection (verified lucide icons)
+    // Available icons for selection
     const AVAILABLE_ICONS = [
-      'sparkles', 'star', 'zap', 'flame', 'heart', 'music', 'mic', 'radio',
-      'play', 'trophy', 'award', 'crown', 'gift', 'cake', 'coffee', 'wine',
-      'glasses', 'smile', 'rocket', 'plane', 'car', 'train', 'ship', 'anchor',
-      'flag', 'target', 'eye', 'hand', 'thumbs-up', 'diamond', 'palette', 'brush',
-      'scissors', 'camera', 'video', 'film', 'tv', 'monitor', 'smartphone',
-      'tablet', 'laptop', 'keyboard', 'gamepad-2', 'puzzle', 'dice-1', 'clover',
-      'flower', 'tree', 'leaf', 'sun', 'moon', 'cloud', 'snowflake', 'droplet',
-      'shield', 'swords', 'wand', 'gem', 'key', 'lock', 'unlock', 'bell',
-      'lightbulb', 'book', 'bookmark', 'briefcase', 'shopping-bag', 'umbrella'
+      'rabbit', 'wand-2', 'spade', 'sparkles', 'mic', 'dice-5',
+      'baby', 'alert-circle', 'cylinder', 'users', 'briefcase',
+      'clock', 'wallet', 'drama', 'box', 'music',
+      'coins', 'brain', 'lock', 'user'
     ];
 
     // Default types
     const DEFAULT_TYPES = {
-      stage: { label: 'Сцена', color: '#f59e0b', icon: 'sparkles' },
-      closeup: { label: 'Микро', color: '#c084fc', icon: 'zap' },
-      kids: { label: 'Детское', color: '#34d399', icon: 'heart' },
-      concert: { label: 'Концерт', color: '#60a5fa', icon: 'music' },
-      rehearsal: { label: 'Репетиция', color: '#cbd5e1', icon: 'play' }
+      rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' },
+      wand: { label: 'Волшебство', color: '#c084fc', icon: 'wand-2' },
+      cards: { label: 'Карты', color: '#ef4444', icon: 'spade' },
+      wow: { label: 'Вау', color: '#fbbf24', icon: 'sparkles' },
+      microphone: { label: 'Микрофон', color: '#60a5fa', icon: 'mic' },
+      dice: { label: 'Игра', color: '#34d399', icon: 'dice-5' },
+      baby: { label: 'Детское', color: '#fb923c', icon: 'baby' },
+      alert: { label: 'Важно', color: '#ef4444', icon: 'alert-circle' },
+      hat: { label: 'Шляпа', color: '#a855f7', icon: 'cylinder' },
+      family: { label: 'Семья', color: '#22c55e', icon: 'users' },
+      tie: { label: 'Корпоратив', color: '#3b82f6', icon: 'briefcase' },
+      time: { label: 'Время', color: '#94a3b8', icon: 'clock' },
+      money: { label: 'Деньги', color: '#22c55e', icon: 'wallet' },
+      theater: { label: 'Театр', color: '#c084fc', icon: 'drama' },
+      package: { label: 'Коробка', color: '#f59e0b', icon: 'box' },
+      song: { label: 'Музыка', color: '#60a5fa', icon: 'music' },
+      coin: { label: 'Монеты', color: '#fbbf24', icon: 'coins' },
+      mind: { label: 'Мозг', color: '#c084fc', icon: 'brain' },
+      secure: { label: 'Замок', color: '#94a3b8', icon: 'lock' },
+      juggle: { label: 'Жонглер', color: '#f59e0b', icon: 'user' }
     };
 
     // Custom types storage
@@ -2682,51 +2691,21 @@
         if(dayEvents.length > 0) {
           const dotsContainer = document.createElement('div');
           dotsContainer.className = 'event-dots';
-          
+
           dayEvents.slice(0, 3).forEach(event => {
             const dot = document.createElement('div');
             dot.className = 'event-dot';
-            let dotColor = TYPES[event.type]?.color || '#f59e0b';
             if(event.status === 'pending') {
-              dotColor = 'rgba(148,163,184,0.4)';
+              dot.style.background = '#f59e0b';
             } else if(event.status === 'confirmed') {
-              dotColor = '#f59e0b';
-            } else if(event.status === 'completed') {
-              dotColor = '#22c55e';
+              dot.style.background = '#22c55e';
+            } else if(event.status === 'cancelled') {
+              dot.style.background = '#ef4444';
             }
-            dot.style.background = dotColor;
             dotsContainer.appendChild(dot);
           });
-          
+
           cell.appendChild(dotsContainer);
-          
-          const primaryEvent = dayEvents[0];
-          const typeInfo = TYPES[primaryEvent.type] || TYPES.stage;
-          
-          dayEvents.forEach((event, idx) => {
-            if(idx >= 2) return;
-            const label = document.createElement('div');
-            label.style.cssText = 'font-size: 9px; padding: 2px 4px; border-radius: 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; font-weight: 600;';
-
-            if(event.status === 'pending') {
-              label.style.background = 'rgba(148,163,184,0.15)';
-              label.style.color = 'rgba(148,163,184,0.9)';
-              label.style.border = '1px solid rgba(148,163,184,0.2)';
-            } else if(event.status === 'confirmed') {
-              label.style.background = 'rgba(245,158,11,0.15)';
-              label.style.color = 'rgba(245,158,11,1)';
-              label.style.border = '1px solid rgba(245,158,11,0.3)';
-            } else if(event.status === 'completed') {
-              label.style.background = 'rgba(34,197,94,0.15)';
-              label.style.color = 'rgba(34,197,94,1)';
-              label.style.border = '1px solid rgba(34,197,94,0.3)';
-            }
-
-            const typeInfo = TYPES[event.type] || TYPES.stage;
-            label.textContent = `${typeInfo.icon ? '' : ''}${event.title}`;
-            label.title = event.title;
-            cell.appendChild(label);
-          });
         }
         
         cell.onclick = () => selectDate(date);
@@ -2755,13 +2734,16 @@
       
       dayEvents.forEach(event => {
         const typeInfo = TYPES[event.type] || TYPES.stage;
-        
+        const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+
         const row = document.createElement('div');
         row.className = 'day-list-row';
         row.style.setProperty('--accent-color', typeInfo.color);
-        
+
         row.innerHTML = `
-          <div class="day-list-dot" style="background: ${typeInfo.color};"></div>
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
+          </div>
           <div class="day-list-info">
             <div class="day-list-title">${event.title}</div>
             <div class="day-list-subtitle">
@@ -2769,9 +2751,12 @@
               <span>${event.location || 'Не указано'}</span>
             </div>
           </div>
-          <div class="day-list-time">${event.time || '—'}</div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+            <div class="day-list-time">${event.time || '—'}</div>
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></div>
+          </div>
         `;
-        
+
         row.onclick = () => editEvent(event.id);
         container.appendChild(row);
       });
@@ -2807,7 +2792,7 @@
       document.getElementById('profit-amount').textContent = `${Math.round(profit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-income').textContent = `${Math.round(totalIncome).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-expense').textContent = `${Math.round(totalExpense).toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpi-shows').textContent = totalShows;
+      document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} вых.)`;
       document.getElementById('kpi-avg').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-prepay').textContent = `${Math.round(totalPrepay).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-balance').textContent = `${Math.round(netProfit).toLocaleString('ru-RU')} ₽`;
@@ -2954,13 +2939,16 @@
           const allTypes = getTypes();
           const typeInfo = allTypes[event.type] || allTypes[Object.keys(allTypes)[0]];
           const eventDate = new Date(event.date);
-          
+          const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+
           const row = document.createElement('div');
           row.className = 'day-list-row';
           row.style.setProperty('--accent-color', typeInfo.color);
-          
+
           row.innerHTML = `
-            <div class="day-list-dot" style="background: ${typeInfo.color};"></div>
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
+            </div>
             <div class="day-list-info">
               <div class="day-list-title">${event.title}</div>
               <div class="day-list-subtitle">
@@ -2968,9 +2956,12 @@
                 <span>${eventDate.getDate()} ${MONTH_NAMES[eventDate.getMonth()]}</span>
               </div>
             </div>
-            <div class="day-list-time">${event.time || '—'}</div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+              <div class="day-list-time">${event.time || '—'}</div>
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></div>
+            </div>
           `;
-          
+
           row.onclick = () => {
             switchTab('calendar');
             currentDate = new Date(event.date);
@@ -3619,19 +3610,15 @@
         showToast('Выберите дату');
         return;
       }
-      
-      if(schedule.length === 0) {
-        showToast('Добавьте хотя бы один выход');
-        return;
-      }
-      
-      const sortedSchedule = [...schedule].sort((a, b) => {
+
+      const sortedSchedule = schedule.length > 0 ? [...schedule].sort((a, b) => {
         return (a.time || '').localeCompare(b.time || '');
-      });
-      const mainTime = sortedSchedule[0].time;
-      
+      }) : [];
+      const mainTime = sortedSchedule.length > 0 ? sortedSchedule[0].time : '';
+      const mainType = sortedSchedule.length > 0 ? sortedSchedule[0].type : 'rabbit';
+
       const eventData = {
-        type: sortedSchedule[0].type,
+        type: mainType,
         title: title,
         date: date,
         time: mainTime,
