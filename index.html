@@ -1090,7 +1090,7 @@
       gap: 0;
       position: relative;
       width: 100%;
-      max-width: 400px;
+      max-width: 240px;
       margin: 0 auto;
     }
 
@@ -3688,7 +3688,7 @@
     // ==========================================
     // NAVIGATION
     // ==========================================
-    async function openNavigation(address, event) {
+    function openNavigation(address, event) {
       if(event) {
         event.stopPropagation();
         event.preventDefault();
@@ -3699,45 +3699,26 @@
         return;
       }
 
-      showToast('Поиск адреса...');
+      // Очищаем адрес от лишних пробелов
+      const cleanAddress = address.trim();
+      const encodedAddress = encodeURIComponent(cleanAddress);
 
-      try {
-        // Геокодирование через Яндекс API
-        const encodedAddress = encodeURIComponent(address);
-        const geocodeUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=&geocode=${encodedAddress}&format=json`;
+      // Открываем Яндекс.Навигатор с текстовым адресом
+      // Используем параметр text для поиска по адресу
+      const yandexNaviUrl = `yandexnavi://show_point_on_map?lat=0&lon=0&zoom=10&no-balloon=0&desc=${encodedAddress}`;
 
-        const response = await fetch(geocodeUrl);
-        const data = await response.json();
+      // Пытаемся открыть навигатор
+      window.location.href = yandexNaviUrl;
 
-        const geoObject = data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
-
-        if(geoObject) {
-          const coords = geoObject.Point.pos.split(' '); // lon lat
-          const lat = coords[1];
-          const lon = coords[0];
-
-          // Открываем Яндекс.Навигатор с координатами
-          const yandexNaviUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
-          window.location.href = yandexNaviUrl;
-
-          // Резервный вариант - Яндекс.Карты с координатами
-          setTimeout(() => {
-            if(document.hidden) return;
-            const yandexMapsUrl = `https://yandex.ru/maps/?rtext=~${lat},${lon}&rtt=auto`;
-            window.open(yandexMapsUrl, '_blank');
-          }, 1000);
-        } else {
-          throw new Error('Адрес не найден');
-        }
-      } catch(error) {
-        console.error('Geocoding error:', error);
-        showToast('Не удалось найти адрес');
-
-        // Запасной вариант - просто поиск по адресу
-        const encodedAddress = encodeURIComponent(address);
-        const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}`;
+      // Резервный вариант - Яндекс.Карты
+      setTimeout(() => {
+        if(document.hidden) return; // Если приложение ушло в фон, значит навигатор открылся
+        const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&mode=search`;
         window.open(yandexMapsUrl, '_blank');
-      }
+        showToast('Яндекс.Навигатор не установлен');
+      }, 1500);
+
+      showToast('Открываю навигатор...');
     }
 
     // ==========================================
