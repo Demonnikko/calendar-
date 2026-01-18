@@ -219,13 +219,14 @@
     /* CALENDAR CONTAINER */
     .calendar-container {
       padding: 8px;
-      padding-bottom: 120px;
+      padding-bottom: 20px;
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       min-height: 0;
+      position: relative;
     }
 
     .calendar-container::-webkit-scrollbar {
@@ -1074,91 +1075,83 @@
       border-color: rgba(239,68,68,0.5);
     }
 
-    /* BOTTOM NAV */
+    /* BOTTOM NAV - РАЗДЕЛЁННЫЕ КНОПКИ */
     #bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       z-index: 100;
-      padding: 0 14px;
-      padding-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+      padding: 0 20px;
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
     }
 
     .nav-inner {
       pointer-events: all;
-      height: 64px;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1.5px solid rgba(245,158,11,0.2);
-      border-top: none;
-      border-bottom-left-radius: 28px;
-      border-bottom-right-radius: 28px;
-      box-shadow: none;
       display: flex;
-      align-items: center;
-      justify-content: space-around;
-      gap: 8px;
-      padding: 0 12px;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 20px;
       position: relative;
     }
-
 
     .nav-item {
+      width: 56px;
+      height: 56px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 12px 20px;
+      background: transparent;
+      border: 1.5px solid rgba(245,158,11,0.2);
+      border-radius: 50%;
       color: rgba(148,163,184,0.8);
-      background: none;
-      border: none;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 14px;
-      flex: 1;
       position: relative;
-    }
-
-    .nav-item::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at center, rgba(245,158,11,0.15), transparent 70%);
-      border-radius: 14px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .nav-item:hover::before {
-      opacity: 1;
     }
 
     .nav-item:hover {
+      transform: translateY(-4px);
+      border-color: rgba(245,158,11,0.4);
       color: rgba(245,158,11,0.9);
     }
 
     .nav-item.active {
+      border-color: rgba(245,158,11,0.6);
       color: #f59e0b;
+      transform: translateY(-4px);
     }
 
-    .nav-item.active::before {
-      opacity: 1;
-      background: radial-gradient(circle at center, rgba(245,158,11,0.2), transparent 70%);
+    /* FAB - центральная кнопка */
+    .nav-item:nth-child(2) {
+      width: 68px;
+      height: 68px;
+      background: transparent;
+      border: 2px solid rgba(245,158,11,0.3);
+      margin-bottom: 8px;
     }
 
-    .nav-item.active {
-      filter: drop-shadow(0 0 12px rgba(245,158,11,0.4));
+    .nav-item:nth-child(2):hover {
+      transform: translateY(-6px) scale(1.05);
+      border-color: rgba(245,158,11,0.5);
+    }
+
+    .nav-item:nth-child(2).active {
+      background: transparent;
+      transform: translateY(-6px) scale(1.05);
     }
 
     .nav-item i {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       transition: all 0.3s;
+    }
+
+    .nav-item:nth-child(2) i {
+      width: 28px;
+      height: 28px;
     }
 
     .nav-item.active i {
@@ -1172,43 +1165,6 @@
       letter-spacing: 0.05em;
     }
 
-    /* FAB */
-    .fab {
-      position: fixed;
-      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-      right: max(20px, env(safe-area-inset-right, 0px));
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
-      border: none;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow:
-        0 8px 32px rgba(245,158,11,0.4),
-        0 0 40px rgba(245,158,11,0.3);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 99;
-      color: #000;
-    }
-
-    .fab:hover {
-      transform: translateY(-4px) scale(1.05);
-      box-shadow: 
-        0 12px 40px rgba(245,158,11,0.5),
-        0 0 60px rgba(245,158,11,0.4);
-    }
-
-    .fab:active {
-      transform: translateY(-2px) scale(1.02);
-    }
-
-    .fab i {
-      width: 28px;
-      height: 28px;
-    }
 
     /* TOAST */
     #toast {
@@ -1813,129 +1769,30 @@
     }
 
     .splash-icon {
-      width: 140px;
-      height: 140px;
-      border-radius: 32px;
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
       position: relative;
-      background:
-        radial-gradient(140% 140% at 25% 15%, rgba(245,158,11,.28) 0%, rgba(245,158,11,0) 50%),
-        radial-gradient(140% 140% at 75% 85%, rgba(168,85,247,.22) 0%, rgba(168,85,247,0) 50%),
-        radial-gradient(circle at 50% 50%, rgba(10,10,14,.95), rgba(5,5,7,1));
-      border: 2.5px solid rgba(245,158,11,.25);
+      background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06));
+      border: 2px solid rgba(245,158,11,0.2);
       box-shadow:
-        0 30px 80px rgba(0,0,0,.8),
-        0 10px 30px rgba(245,158,11,.15),
-        inset 0 1px 0 rgba(255,255,255,.08),
-        inset 0 -1px 0 rgba(0,0,0,.5);
-      overflow: hidden;
+        0 20px 60px rgba(0,0,0,0.6),
+        0 8px 20px rgba(245,158,11,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.1);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 40px;
-      animation: iconFloat 3s ease-in-out infinite;
     }
 
-    @keyframes iconFloat {
-      0%, 100% { 
-        transform: translateY(0px);
-        filter: drop-shadow(0 20px 40px rgba(0,0,0,.6));
-      }
-      50% { 
-        transform: translateY(-12px);
-        filter: drop-shadow(0 30px 50px rgba(0,0,0,.8));
-      }
-    }
-
-    .splash-icon::before {
-      content: "";
-      position: absolute;
-      inset: -50%;
-      background: conic-gradient(
-        from 0deg,
-        rgba(245,158,11,0) 0%,
-        rgba(245,158,11,.22) 15%,
-        rgba(168,85,247,.18) 35%,
-        rgba(245,158,11,.22) 50%,
-        rgba(168,85,247,.18) 65%,
-        rgba(245,158,11,.22) 85%,
-        rgba(245,158,11,0) 100%
-      );
-      filter: blur(20px);
-      opacity: .6;
-      animation: iconRotate 10s linear infinite;
-    }
-
-    .splash-icon::after {
-      content: "";
-      position: absolute;
-      inset: -30%;
-      background: conic-gradient(
-        from 180deg,
-        rgba(245,158,11,0) 0%,
-        rgba(245,158,11,.15) 25%,
-        rgba(245,158,11,0) 50%,
-        rgba(168,85,247,.12) 75%,
-        rgba(245,158,11,0) 100%
-      );
-      filter: blur(15px);
-      opacity: .5;
-      animation: iconRotate 8s linear infinite reverse;
-    }
-
-    @keyframes iconRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .splash-icon .inner {
-      position: absolute;
-      inset: 14px;
-      border-radius: 22px;
-      background: 
-        linear-gradient(135deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.01) 100%);
-      border: 1.5px solid rgba(255,255,255,.08);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,.3);
-    }
-
-    .splash-icon .inner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 20%;
-      width: 40%;
-      height: 50%;
-      background: linear-gradient(180deg, rgba(255,255,255,.12), transparent);
-      border-radius: 50%;
-      filter: blur(10px);
-    }
-
-    .splash-icon i {
+    .splash-icon i,
+    .splash-icon svg {
       position: relative;
       z-index: 10;
-      width: 90px;
-      height: 90px;
-      color: rgba(245,158,11,1);
-      filter:
-        drop-shadow(0 0 20px rgba(245,158,11,.4))
-        drop-shadow(0 8px 16px rgba(0,0,0,.6))
-        drop-shadow(0 0 40px rgba(245,158,11,.2));
-      stroke-width: 1.8;
-      animation: iconGlow 3s ease-in-out infinite;
-    }
-
-    @keyframes iconGlow {
-      0%, 100% {
-        filter: 
-          drop-shadow(0 0 20px rgba(245,158,11,.4))
-          drop-shadow(0 8px 16px rgba(0,0,0,.6))
-          drop-shadow(0 0 40px rgba(245,158,11,.2));
-      }
-      50% {
-        filter: 
-          drop-shadow(0 0 30px rgba(245,158,11,.6))
-          drop-shadow(0 8px 16px rgba(0,0,0,.6))
-          drop-shadow(0 0 60px rgba(245,158,11,.3));
-      }
+      width: 64px;
+      height: 64px;
+      color: #f59e0b;
+      filter: drop-shadow(0 4px 12px rgba(245,158,11,0.3));
     }
 
     .splash-title {
@@ -1996,8 +1853,18 @@
   <!-- SPLASH SCREEN -->
   <div id="splash-screen">
     <div class="splash-icon">
-      <div class="inner"></div>
-      <i data-lucide="calendar-days"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 64px; height: 64px;">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+        <circle cx="8" cy="14" r="0.8" fill="currentColor"></circle>
+        <circle cx="12" cy="14" r="0.8" fill="currentColor"></circle>
+        <circle cx="16" cy="14" r="0.8" fill="currentColor"></circle>
+        <circle cx="8" cy="18" r="0.8" fill="currentColor"></circle>
+        <circle cx="12" cy="18" r="0.8" fill="currentColor"></circle>
+        <circle cx="16" cy="18" r="0.8" fill="currentColor"></circle>
+      </svg>
     </div>
     <div class="splash-title">Illusionist OS</div>
     <div class="splash-subtitle">Календарь</div>
@@ -2039,23 +1906,22 @@
   </header>
 
   <!-- CALENDAR TAB -->
-  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(82px + var(--safe-top));">
-    <div class="glass-panel" style="margin: 14px; margin-bottom: 0; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; border-bottom: 1.5px solid rgba(245,158,11,0.2);">
+  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(68px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column;">
+    <div style="padding: 10px 18px; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); border-bottom: 1px solid rgba(245,158,11,0.15); flex-shrink: 0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <button class="header-btn" onclick="changeMonth(-1)" style="margin: 0;">
+          <i data-lucide="chevron-left"></i>
+        </button>
 
-      <div style="padding: 0 20px 16px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); border: 1px solid rgba(245,158,11,0.15); border-radius: 16px; padding: 12px 16px;">
-          <button class="header-btn" onclick="changeMonth(-1)" style="margin: 0;">
-            <i data-lucide="chevron-left"></i>
-          </button>
-          
-          <h1 class="month-title" id="month-title" onclick="openMonthPicker()" style="cursor: pointer; margin: 0;">Январь 2026</h1>
-          
-          <button class="header-btn" onclick="changeMonth(1)" style="margin: 0;">
-            <i data-lucide="chevron-right"></i>
-          </button>
-        </div>
+        <h1 class="month-title" id="month-title" onclick="openMonthPicker()" style="cursor: pointer; margin: 0;">Январь 2026</h1>
+
+        <button class="header-btn" onclick="changeMonth(1)" style="margin: 0;">
+          <i data-lucide="chevron-right"></i>
+        </button>
       </div>
+    </div>
 
+    <div style="margin: 12px; margin-top: 8px; margin-bottom: 4px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
       <div class="calendar-container">
         <div class="day-headers">
           <div class="day-header">Пн</div>
@@ -2069,7 +1935,7 @@
 
         <div class="calendar-grid" id="calendar-grid"></div>
 
-        <div class="day-list" id="day-list"></div>
+        <div class="day-list" id="day-list" style="padding-bottom: 20px;"></div>
       </div>
     </div>
   </div>
@@ -2184,20 +2050,17 @@
     <div class="nav-inner">
       <button class="nav-item active" onclick="switchTab('calendar')">
         <i data-lucide="calendar"></i>
-        <span class="nav-label">Календарь</span>
       </button>
-      
+
+      <button class="nav-item" onclick="openEventModal()">
+        <i data-lucide="plus"></i>
+      </button>
+
       <button class="nav-item" onclick="switchTab('dashboard')">
         <i data-lucide="bar-chart-3"></i>
-        <span class="nav-label">Статистика</span>
       </button>
     </div>
   </div>
-
-  <!-- FAB -->
-  <button class="fab" onclick="openEventModal()">
-    <i data-lucide="plus"></i>
-  </button>
 
   <!-- EVENT MODAL -->
   <div id="event-modal" class="modal-overlay">
@@ -2473,9 +2336,9 @@
           </div>
         </div>
 
-        <button onclick="saveCustomType()" class="btn-primary">Сохранить</button>
-        <button onclick="closeTypeEditor()" class="btn-secondary">Отмена</button>
-        <button id="delete-type-btn" onclick="deleteCustomType()" class="btn-danger" style="display: none;">Удалить тип</button>
+        <button onclick="saveCustomType()" class="btn-primary" style="margin-bottom: 12px;">Сохранить</button>
+        <button onclick="closeTypeEditor()" class="btn-secondary" style="margin-bottom: 12px;">Отмена</button>
+        <button id="delete-type-btn" onclick="deleteCustomType()" class="btn-danger" style="display: none; margin-top: 20px;">Удалить тип</button>
       </div>
     </div>
   </div>
@@ -2483,6 +2346,22 @@
   <!-- TOAST -->
   <div id="toast">
     <span id="toast-msg"></span>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="confirm-title">Подтверждение</h2>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message" style="color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.6;"></p>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button id="confirm-yes" class="btn-danger" style="flex: 1;">Удалить</button>
+          <button id="confirm-no" class="btn-secondary" style="flex: 1;">Отмена</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -2496,7 +2375,7 @@
     // ==========================================
     // Available icons for selection
     const AVAILABLE_ICONS = [
-      'rabbit', 'wand-2', 'spade', 'sparkles', 'mic', 'dice-5',
+      'rabbit', 'wand-2', 'spade', 'club', 'diamond', 'sparkles', 'mic', 'dice-5',
       'baby', 'alert-circle', 'cylinder', 'users', 'briefcase',
       'clock', 'wallet', 'drama', 'box', 'music',
       'coins', 'brain', 'lock', 'user'
@@ -2507,6 +2386,9 @@
       rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' },
       wand: { label: 'Волшебство', color: '#c084fc', icon: 'wand-2' },
       cards: { label: 'Карты', color: '#ef4444', icon: 'spade' },
+      spades: { label: 'Пики ♠', color: '#1e293b', icon: 'spade' },
+      clubs: { label: 'Крести ♣', color: '#0f172a', icon: 'club' },
+      diamonds: { label: 'Бубны ♦', color: '#ef4444', icon: 'diamond' },
       wow: { label: 'Вау', color: '#fbbf24', icon: 'sparkles' },
       microphone: { label: 'Микрофон', color: '#60a5fa', icon: 'mic' },
       dice: { label: 'Игра', color: '#34d399', icon: 'dice-5' },
@@ -2555,7 +2437,7 @@
     const TYPES = new Proxy({}, {
       get(target, prop) {
         const allTypes = getTypes();
-        return allTypes[prop] || DEFAULT_TYPES.stage;
+        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', icon: 'sparkles' };
       }
     });
 
@@ -2567,11 +2449,11 @@
     let currentDate = new Date();
     let selectedDate = new Date();
     let events = [];
-    let schedule = [{ type: 'stage', time: '19:00', duration: 60 }];
+    let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
     let editingEventId = null;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
-    let currentType = 'stage';
+    let currentType = 'rabbit';
     let monthlyGoal = 200000;
     let editingTypeKey = null;
     let selectedColor = '#f59e0b';
@@ -2607,6 +2489,30 @@
 
     function saveCustomTypes() {
       localStorage.setItem('illusionist_custom_types', JSON.stringify(customTypes));
+    }
+
+    // ==========================================
+    // CUSTOM CONFIRM
+    // ==========================================
+    function customConfirm(message, onYes) {
+      document.getElementById('confirm-message').textContent = message;
+      document.getElementById('confirm-modal').classList.add('show');
+
+      const yesBtn = document.getElementById('confirm-yes');
+      const noBtn = document.getElementById('confirm-no');
+
+      const cleanup = () => {
+        document.getElementById('confirm-modal').classList.remove('show');
+        yesBtn.onclick = null;
+        noBtn.onclick = null;
+      };
+
+      yesBtn.onclick = () => {
+        cleanup();
+        onYes();
+      };
+
+      noBtn.onclick = cleanup;
     }
 
     // ==========================================
@@ -2720,21 +2626,22 @@
       const container = document.getElementById('day-list');
       const dateStr = formatDate(selectedDate);
       const dayEvents = events.filter(e => e.date === dateStr);
-      
+
       if(dayEvents.length === 0) {
         container.innerHTML = '';
         return;
       }
-      
+
       container.innerHTML = `
         <div class="day-list-header">
           События на ${selectedDate.getDate()} ${MONTH_NAMES[selectedDate.getMonth()].toLowerCase()}
         </div>
       `;
-      
+
       dayEvents.forEach(event => {
-        const typeInfo = TYPES[event.type] || TYPES.stage;
+        const typeInfo = TYPES[event.type] || TYPES.rabbit;
         const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+        const eventDate = new Date(event.date);
 
         const row = document.createElement('div');
         row.className = 'day-list-row';
@@ -2851,7 +2758,7 @@
       monthEvents.forEach(event => {
         if(event.schedule) {
           event.schedule.forEach(show => {
-            const type = show.type || 'stage';
+            const type = show.type || 'rabbit';
             if(!typeStats[type]) {
               typeStats[type] = { count: 0, income: 0 };
             }
@@ -2859,7 +2766,7 @@
             typeStats[type].income += (event.income || 0) / event.schedule.length;
           });
         } else {
-          const type = event.type || 'stage';
+          const type = event.type || 'rabbit';
           if(!typeStats[type]) {
             typeStats[type] = { count: 0, income: 0 };
           }
@@ -3071,20 +2978,20 @@
     }
 
     function resetData() {
-      if(!confirm('Удалить все события и сбросить цель? Это действие нельзя отменить!')) return;
-      
-      events = [];
-      monthlyGoal = 200000;
-      localStorage.removeItem('illusionist_events');
-      localStorage.removeItem('illusionist_goal');
-      
-      renderCalendar();
-      if(currentView === 'dashboard') {
-        renderDashboard();
-      }
-      
-      closeSettingsModal();
-      showToast('Данные сброшены');
+      customConfirm('Удалить все события и сбросить цель? Это действие нельзя отменить!', () => {
+        events = [];
+        monthlyGoal = 200000;
+        localStorage.removeItem('illusionist_events');
+        localStorage.removeItem('illusionist_goal');
+
+        renderCalendar();
+        renderDayList();
+        if(currentView === 'dashboard') {
+          renderDashboard();
+        }
+        closeSettingsModal();
+        showToast('Данные сброшены');
+      });
     }
 
     function resetCelebrations() {
@@ -3194,59 +3101,66 @@
 
     function deleteCustomType() {
       if(!editingTypeKey) return;
-      
+
       const type = getTypes()[editingTypeKey];
-      if(!confirm(`Удалить тип "${type.label}"?`)) return;
-      
-      // Check if any events use this type
-      const eventsUsingType = events.filter(e => {
-        if(e.type === editingTypeKey) return true;
-        if(e.schedule) {
-          return e.schedule.some(s => s.type === editingTypeKey);
-        }
-        return false;
-      });
-      
-      if(eventsUsingType.length > 0) {
-        if(!confirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Сцена". Продолжить?`)) {
-          return;
-        }
-        
-        // Update events to use default type
-        events.forEach(event => {
-          if(event.type === editingTypeKey) {
-            event.type = 'stage';
+      const key = editingTypeKey;
+
+      customConfirm(`Удалить тип "${type.label}"?`, () => {
+        // Check if any events use this type
+        const eventsUsingType = events.filter(e => {
+          if(e.type === key) return true;
+          if(e.schedule) {
+            return e.schedule.some(s => s.type === key);
           }
-          if(event.schedule) {
-            event.schedule.forEach(s => {
-              if(s.type === editingTypeKey) {
-                s.type = 'stage';
+          return false;
+        });
+
+        const performDelete = () => {
+          if(eventsUsingType.length > 0) {
+            // Update events to use default type
+            events.forEach(event => {
+              if(event.type === key) {
+                event.type = 'rabbit';
+              }
+              if(event.schedule) {
+                event.schedule.forEach(s => {
+                  if(s.type === key) {
+                    s.type = 'rabbit';
+                  }
+                });
               }
             });
+            saveEvents();
           }
-        });
-        saveEvents();
-      }
-      
-      // Remove from custom types or hide default
-      if(DEFAULT_TYPES[editingTypeKey]) {
-        if(!customTypes._hidden) customTypes._hidden = [];
-        if(!customTypes._hidden.includes(editingTypeKey)) {
-          customTypes._hidden.push(editingTypeKey);
+
+          // Remove from custom types or hide default
+          if(DEFAULT_TYPES[key]) {
+            if(!customTypes._hidden) customTypes._hidden = [];
+            if(!customTypes._hidden.includes(key)) {
+              customTypes._hidden.push(key);
+            }
+          } else {
+            delete customTypes[key];
+          }
+
+          saveCustomTypes();
+          closeTypeEditor();
+          renderCustomTypesList();
+          renderCalendar();
+          renderDayList();
+          if(currentView === 'dashboard') {
+            renderDashboard();
+          }
+          showToast('Тип удалён');
+          lucide.createIcons();
+        };
+
+        if(eventsUsingType.length > 0) {
+          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Кролик". Продолжить?`, performDelete);
+        } else {
+          performDelete();
         }
-      } else {
-        delete customTypes[editingTypeKey];
-      }
-      
-      saveCustomTypes();
-      closeTypeEditor();
-      renderCustomTypesList();
-      renderCalendar();
-      if(currentView === 'dashboard') {
-        renderDashboard();
-      }
-      showToast('Тип удалён');
-      lucide.createIcons();
+      });
     }
 
     function renderCustomTypesList() {
@@ -3271,7 +3185,7 @@
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-top: 2px;">${isDefault ? 'По умолчанию' : 'Пользовательский'}</div>
           </div>
           <div style="width: 24px; height: 24px; border-radius: 6px; background: ${type.color}; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
-          <button onclick="deleteTypeFromList('${key}', event)" style="width: 36px; height: 36px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.3s; flex-shrink: 0;" onmouseenter="this.style.background='rgba(239,68,68,0.2)'; this.style.transform='scale(1.05)';" onmouseleave="this.style.background='rgba(239,68,68,0.1)'; this.style.transform='scale(1)';">
+          <button onclick="event.stopPropagation(); deleteTypeFromList('${key}')" style="width: 36px; height: 36px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.3s; flex-shrink: 0;" onmouseenter="this.style.background='rgba(239,68,68,0.2)'; this.style.transform='scale(1.05)';" onmouseleave="this.style.background='rgba(239,68,68,0.1)'; this.style.transform='scale(1)';">
             <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
           </button>
         `;
@@ -3282,61 +3196,65 @@
       lucide.createIcons();
     }
 
-    function deleteTypeFromList(key, event) {
-      event.stopPropagation();
-      
+    function deleteTypeFromList(key) {
       const type = getTypes()[key];
-      if(!confirm(`Удалить тип "${type.label}"?`)) return;
-      
-      // Check if any events use this type
-      const eventsUsingType = events.filter(e => {
-        if(e.type === key) return true;
-        if(e.schedule) {
-          return e.schedule.some(s => s.type === key);
-        }
-        return false;
-      });
-      
-      if(eventsUsingType.length > 0) {
-        if(!confirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Сцена". Продолжить?`)) {
-          return;
-        }
-        
-        // Update events to use default type
-        events.forEach(event => {
-          if(event.type === key) {
-            event.type = 'stage';
+
+      customConfirm(`Удалить тип "${type.label}"?`, () => {
+        // Check if any events use this type
+        const eventsUsingType = events.filter(e => {
+          if(e.type === key) return true;
+          if(e.schedule) {
+            return e.schedule.some(s => s.type === key);
           }
-          if(event.schedule) {
-            event.schedule.forEach(s => {
-              if(s.type === key) {
-                s.type = 'stage';
+          return false;
+        });
+
+        const performDelete = () => {
+          if(eventsUsingType.length > 0) {
+            // Update events to use default type
+            events.forEach(event => {
+              if(event.type === key) {
+                event.type = 'rabbit';
+              }
+              if(event.schedule) {
+                event.schedule.forEach(s => {
+                  if(s.type === key) {
+                    s.type = 'rabbit';
+                  }
+                });
               }
             });
+            saveEvents();
           }
-        });
-        saveEvents();
-      }
-      
-      // Remove from custom types or hide default
-      if(DEFAULT_TYPES[key]) {
-        // For default types, we'll hide them by overriding in customTypes
-        if(!customTypes._hidden) customTypes._hidden = [];
-        if(!customTypes._hidden.includes(key)) {
-          customTypes._hidden.push(key);
+
+          // Remove from custom types or hide default
+          if(DEFAULT_TYPES[key]) {
+            // For default types, we'll hide them by overriding in customTypes
+            if(!customTypes._hidden) customTypes._hidden = [];
+            if(!customTypes._hidden.includes(key)) {
+              customTypes._hidden.push(key);
+            }
+          } else {
+            delete customTypes[key];
+          }
+
+          saveCustomTypes();
+          renderCustomTypesList();
+          renderCalendar();
+          renderDayList();
+          if(currentView === 'dashboard') {
+            renderDashboard();
+          }
+          showToast('Тип удалён');
+          lucide.createIcons();
+        };
+
+        if(eventsUsingType.length > 0) {
+          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Кролик". Продолжить?`, performDelete);
+        } else {
+          performDelete();
         }
-      } else {
-        delete customTypes[key];
-      }
-      
-      saveCustomTypes();
-      renderCustomTypesList();
-      renderCalendar();
-      if(currentView === 'dashboard') {
-        renderDashboard();
-      }
-      showToast('Тип удалён');
-      lucide.createIcons();
+      });
     }
 
     // ==========================================
@@ -3426,7 +3344,7 @@
       document.getElementById('event-tax').value = event.tax || '';
       document.getElementById('event-notes').value = event.notes || '';
       
-      schedule = event.schedule || [{ type: 'stage', time: '19:00', duration: 60 }];
+      schedule = event.schedule || [{ type: 'rabbit', time: '19:00', duration: 60 }];
       renderSchedule();
       calculateBalance();
       
@@ -3455,7 +3373,7 @@
       document.getElementById('event-notes').value = '';
       document.getElementById('balance-display').textContent = '0 ₽';
       
-      schedule = [{ type: 'stage', time: '19:00', duration: 60 }];
+      schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
       renderSchedule();
       
       const firstTab = document.querySelector('.modal-tab');
@@ -3467,7 +3385,7 @@
     // ==========================================
     function addScheduleItem() {
       schedule.push({
-        type: currentType || 'stage',
+        type: currentType || 'rabbit',
         time: '19:00',
         duration: 60
       });
@@ -3661,19 +3579,20 @@
 
     function deleteEvent() {
       if(!editingEventId) return;
-      
-      if(!confirm('Удалить это событие?')) return;
-      
-      events = events.filter(e => e.id !== editingEventId);
-      saveEvents();
-      closeEventModal();
-      renderCalendar();
-      
-      if(currentView === 'dashboard') {
-        renderDashboard();
-      }
-      
-      showToast('Событие удалено');
+
+      customConfirm('Удалить это событие?', () => {
+        events = events.filter(e => e.id !== editingEventId);
+        saveEvents();
+        closeEventModal();
+        renderCalendar();
+        renderDayList();
+
+        if(currentView === 'dashboard') {
+          renderDashboard();
+        }
+
+        showToast('Событие удалено');
+      });
     }
 
     // ==========================================
