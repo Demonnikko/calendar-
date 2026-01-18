@@ -2708,6 +2708,10 @@
         `;
 
         row.querySelector('.day-list-info')?.addEventListener('click', () => editEvent(event.id));
+
+        // Добавляем swipe для звонка
+        addSwipeToCall(row, event);
+
         container.appendChild(row);
       });
       
@@ -3684,7 +3688,7 @@
     // ==========================================
     // NAVIGATION
     // ==========================================
-    function openNavigation(address, event) {
+    async function openNavigation(address, event) {
       if(event) {
         event.stopPropagation();
         event.preventDefault();
@@ -3695,23 +3699,157 @@
         return;
       }
 
-      // Кодируем адрес для URL
-      const encodedAddress = encodeURIComponent(address);
+      showToast('Поиск адреса...');
 
-      // Пробуем открыть Яндекс.Навигатор
-      const yandexNaviUrl = `yandexnavi://build_route_on_map?addr_to=${encodedAddress}`;
+      try {
+        // Геокодирование через Яндекс API
+        const encodedAddress = encodeURIComponent(address);
+        const geocodeUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=&geocode=${encodedAddress}&format=json`;
 
-      // Резервный вариант - Яндекс.Карты
-      const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&mode=routes`;
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
 
-      // Пытаемся открыть навигатор
-      window.location.href = yandexNaviUrl;
+        const geoObject = data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
 
-      // Если навигатор не установлен, через 1 секунду откроем Яндекс.Карты
-      setTimeout(() => {
-        if(document.hidden) return; // Если приложение ушло в фон, значит навигатор открылся
+        if(geoObject) {
+          const coords = geoObject.Point.pos.split(' '); // lon lat
+          const lat = coords[1];
+          const lon = coords[0];
+
+          // Открываем Яндекс.Навигатор с координатами
+          const yandexNaviUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
+          window.location.href = yandexNaviUrl;
+
+          // Резервный вариант - Яндекс.Карты с координатами
+          setTimeout(() => {
+            if(document.hidden) return;
+            const yandexMapsUrl = `https://yandex.ru/maps/?rtext=~${lat},${lon}&rtt=auto`;
+            window.open(yandexMapsUrl, '_blank');
+          }, 1000);
+        } else {
+          throw new Error('Адрес не найден');
+        }
+      } catch(error) {
+        console.error('Geocoding error:', error);
+        showToast('Не удалось найти адрес');
+
+        // Запасной вариант - просто поиск по адресу
+        const encodedAddress = encodeURIComponent(address);
+        const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}`;
         window.open(yandexMapsUrl, '_blank');
-      }, 1000);
+      }
+    }
+
+    // ==========================================
+    // SWIPE TO CALL
+    // ==========================================
+    function addSwipeToCall(element, event) {
+      let startX = 0;
+      let currentX = 0;
+      let isSwiping = false;
+      let callIcon = null;
+
+      element.style.position = 'relative';
+      element.style.transition = 'transform 0.3s ease';
+
+      const handleTouchStart = (e) => {
+        if(!event.phone || event.phone.trim() === '') return;
+
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+        element.style.transition = 'none';
+
+        // Создаём иконку звонка
+        if(!callIcon) {
+          callIcon = document.createElement('div');
+          callIcon.style.cssText = `
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1;
+            pointer-events: none;
+          `;
+          callIcon.innerHTML = '<i data-lucide="phone" style="width: 28px; height: 28px; color: white;"></i>';
+          element.parentElement.appendChild(callIcon);
+          lucide.createIcons();
+        }
+      };
+
+      const handleTouchMove = (e) => {
+        if(!isSwiping) return;
+
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+
+        if(diff > 0) {
+          element.style.transform = `translateX(${Math.min(diff, 120)}px)`;
+
+          // Показываем иконку звонка
+          if(callIcon) {
+            callIcon.style.opacity = Math.min(diff / 80, 1);
+            callIcon.style.left = `${Math.min(diff / 2, 30)}px`;
+          }
+        }
+      };
+
+      const handleTouchEnd = () => {
+        if(!isSwiping) return;
+
+        const diff = currentX - startX;
+        element.style.transition = 'transform 0.3s ease';
+
+        if(diff > 100) {
+          // Свайп достаточно длинный - совершаем звонок
+          makeCall(event.phone);
+          element.style.transform = 'translateX(0)';
+        } else {
+          // Возвращаем на место
+          element.style.transform = 'translateX(0)';
+        }
+
+        // Скрываем иконку
+        if(callIcon) {
+          callIcon.style.opacity = '0';
+          setTimeout(() => {
+            if(callIcon && callIcon.parentElement) {
+              callIcon.remove();
+            }
+            callIcon = null;
+          }, 300);
+        }
+
+        isSwiping = false;
+        currentX = 0;
+      };
+
+      element.addEventListener('touchstart', handleTouchStart);
+      element.addEventListener('touchmove', handleTouchMove);
+      element.addEventListener('touchend', handleTouchEnd);
+      element.addEventListener('touchcancel', handleTouchEnd);
+    }
+
+    function makeCall(phoneNumber) {
+      if(!phoneNumber || phoneNumber.trim() === '') {
+        showToast('Номер телефона не указан');
+        return;
+      }
+
+      // Очищаем номер от всех символов кроме цифр и +
+      const cleanPhone = phoneNumber.replace(/[^\d+]/g, '');
+
+      // Открываем приложение для звонка
+      window.location.href = `tel:${cleanPhone}`;
+      showToast('Звонок...');
     }
 
     // ==========================================
