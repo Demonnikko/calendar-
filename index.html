@@ -1041,7 +1041,7 @@
       min-height: 52px;
       cursor: pointer;
       transition: all 0.2s;
-      margin-bottom: 12px;
+      margin: 0;
     }
 
     .btn-secondary:hover {
@@ -1064,7 +1064,7 @@
       letter-spacing: 0.08em;
       cursor: pointer;
       transition: all 0.3s;
-      margin-top: 12px;
+      margin: 0;
     }
 
     .btn-danger:hover {
@@ -2716,7 +2716,7 @@
             </div>
           </div>
           ${event.address ? `
-          <button class="nav-btn" onclick="openNavigation('${event.address}', event)" style="width: 40px; height: 40px; padding: 0; margin-right: 8px; flex-shrink: 0;" title="Построить маршрут">
+          <button class="nav-btn event-nav-btn" style="width: 40px; height: 40px; padding: 0; margin-right: 8px; flex-shrink: 0;" title="Построить маршрут">
             <i data-lucide="navigation" style="width: 20px; height: 20px;"></i>
           </button>
           ` : ''}
@@ -2726,8 +2726,21 @@
           </div>
         `;
 
-        // Тап на карточку → предпросмотр
-        row.querySelector('.day-list-info')?.addEventListener('click', () => showEventPreview(event));
+        // Тап на карточку → предпросмотр (кроме кнопки навигации)
+        row.addEventListener('click', (e) => {
+          if(!e.target.closest('.event-nav-btn')) {
+            showEventPreview(event);
+          }
+        });
+
+        // Кнопка навигации → только навигатор
+        const navBtn = row.querySelector('.event-nav-btn');
+        if(navBtn) {
+          navBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openNavigation(event.address, e);
+          });
+        }
 
         // Добавляем swipe (вправо - звонок, влево - редактирование)
         addSwipeToCall(row, event);
