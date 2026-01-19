@@ -3688,7 +3688,7 @@
     // ==========================================
     // NAVIGATION
     // ==========================================
-    function openNavigation(address, event) {
+    async function openNavigation(address, event) {
       if(event) {
         event.stopPropagation();
         event.preventDefault();
@@ -3699,26 +3699,48 @@
         return;
       }
 
-      // Очищаем адрес от лишних пробелов
+      showToast('Поиск координат...');
+
       const cleanAddress = address.trim();
       const encodedAddress = encodeURIComponent(cleanAddress);
 
-      // Открываем Яндекс.Навигатор с текстовым адресом
-      // Используем параметр text для поиска по адресу
-      const yandexNaviUrl = `yandexnavi://show_point_on_map?lat=0&lon=0&zoom=10&no-balloon=0&desc=${encodedAddress}`;
+      try {
+        // Геокодирование через Nominatim (бесплатно, без ключа)
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&accept-language=ru`;
 
-      // Пытаемся открыть навигатор
-      window.location.href = yandexNaviUrl;
+        const response = await fetch(geocodeUrl, {
+          headers: {
+            'User-Agent': 'CalendarApp/1.0'
+          }
+        });
 
-      // Резервный вариант - Яндекс.Карты
-      setTimeout(() => {
-        if(document.hidden) return; // Если приложение ушло в фон, значит навигатор открылся
-        const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&mode=search`;
-        window.open(yandexMapsUrl, '_blank');
-        showToast('Яндекс.Навигатор не установлен');
-      }, 1500);
+        const data = await response.json();
 
-      showToast('Открываю навигатор...');
+        if(data && data.length > 0) {
+          const lat = data[0].lat;
+          const lon = data[0].lon;
+
+          // Открываем Яндекс.Навигатор с координатами
+          const yandexNaviUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
+
+          window.location.href = yandexNaviUrl;
+          showToast('Открываю навигатор...');
+
+          // Если навигатор не открылся за 2 секунды - показываем ошибку
+          setTimeout(() => {
+            if(!document.hidden) {
+              showToast('Яндекс.Навигатор не установлен');
+            }
+          }, 2000);
+
+        } else {
+          throw new Error('Адрес не найден');
+        }
+
+      } catch(error) {
+        console.error('Geocoding error:', error);
+        showToast('Не удалось найти адрес');
+      }
     }
 
     // ==========================================
@@ -3745,23 +3767,24 @@
           callIcon = document.createElement('div');
           callIcon.style.cssText = `
             position: absolute;
-            left: 0;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            width: 60px;
-            height: 60px;
+            width: 52px;
+            height: 52px;
             background: linear-gradient(135deg, #22c55e, #16a34a);
-            border-radius: 50%;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 0;
             pointer-events: none;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
           `;
-          callIcon.innerHTML = '<i data-lucide="phone" style="width: 28px; height: 28px; color: white;"></i>';
-          element.parentElement.appendChild(callIcon);
+          callIcon.innerHTML = '<i data-lucide="phone" style="width: 24px; height: 24px; color: white;"></i>';
+          element.appendChild(callIcon);
           lucide.createIcons();
         }
       };
@@ -3778,7 +3801,6 @@
           // Показываем иконку звонка
           if(callIcon) {
             callIcon.style.opacity = Math.min(diff / 80, 1);
-            callIcon.style.left = `${Math.min(diff / 2, 30)}px`;
           }
         }
       };
