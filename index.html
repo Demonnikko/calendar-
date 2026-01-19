@@ -15,6 +15,38 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+  // ============================================
+  // FIREBASE CONFIGURATION
+  // ============================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
+    authDomain: "calc76.firebaseapp.com",
+    databaseURL: "https://calc76-default-rtdb.firebaseio.com",
+    projectId: "calc76",
+    storageBucket: "calc76.firebasestorage.app",
+    messagingSenderId: "972929668805",
+    appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
+  };
+
+  window.firebaseDB = null;
+  window.firebaseEnabled = false;
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    window.firebaseDB = firebase.database();
+    window.firebaseEnabled = true;
+    console.log("✅ Firebase initialized");
+  } catch (error) {
+    console.error("❌ Firebase error:", error);
+    window.firebaseEnabled = false;
+  }
+  </script>
+
   <style>
     :root {
       --bg: #050507;
@@ -1847,7 +1879,373 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    @keyframes magic-spin {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+    }
+
+    @keyframes wand-spin {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(360deg); opacity: 1; }
+      100% { transform: scale(1) rotate(720deg); opacity: 1; }
+    }
+
+    @keyframes sparkle-pulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
   </style>
+
+  <script>
+  // ============================================
+  // LICENSE SYSTEM
+  // ============================================
+  const DEMO_MODE = false;
+
+  function getDeviceId() {
+    let id = localStorage.getItem('illusionist_device_id');
+    if (!id) {
+      id = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('illusionist_device_id', id);
+    }
+    return id;
+  }
+
+  function getInstallationId() {
+    let id = localStorage.getItem('illusionist_install_id');
+    if (!id) {
+      id = 'install_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('illusionist_install_id', id);
+    }
+    return id;
+  }
+
+  function validateLicense(key) {
+    return /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
+  }
+
+  async function checkActivation() {
+    if (DEMO_MODE) return false;
+
+    const stored = localStorage.getItem('illusionist_calendar_license');
+    if (stored) {
+      try {
+        const data = JSON.parse(atob(stored));
+
+        if (!validateLicense(data.key)) {
+          console.log('❌ Invalid license format');
+          return false;
+        }
+
+        if (window.firebaseEnabled && window.firebaseDB) {
+          try {
+            const keyRef = window.firebaseDB.ref('licenses/' + data.key.replace(/[\.#$\[\]]/g, '-'));
+            const snapshot = await keyRef.once('value');
+            const firebaseData = snapshot.val();
+
+            if (!firebaseData || !firebaseData.activated) {
+              console.log('❌ License not activated');
+              return false;
+            }
+
+            const currentDevice = getDeviceId();
+            if (firebaseData.deviceId !== currentDevice) {
+              console.log('❌ Device ID mismatch');
+              return false;
+            }
+
+            if (firebaseData.expiresAt) {
+              const expiryDate = new Date(firebaseData.expiresAt);
+              const now = new Date();
+              if (now > expiryDate) {
+                console.log('⏰ License expired');
+                return 'expired';
+              }
+            }
+
+            console.log('✅ License valid (Firebase)');
+            return true;
+          } catch (firebaseError) {
+            console.error('⚠️ Firebase check failed:', firebaseError);
+          }
+        }
+
+        const currentDevice = getDeviceId();
+        if (data.device !== currentDevice) {
+          console.log('❌ Device ID mismatch (local)');
+          return false;
+        }
+
+        if (data.expiresAt) {
+          const expiryDate = new Date(data.expiresAt);
+          const now = new Date();
+          if (now > expiryDate) {
+            console.log('⏰ License expired (local)');
+            return 'expired';
+          }
+        }
+
+        console.log('✅ License valid (local)');
+        return true;
+      } catch (e) {
+        console.error('❌ Error checking activation:', e);
+        return false;
+      }
+    }
+
+    console.log('⚠️ No license found');
+    return false;
+  }
+
+  async function activateLicense(key) {
+    if (!validateLicense(key)) {
+      return { success: false, error: 'Неверный формат ключа' };
+    }
+
+    const deviceId = getDeviceId();
+    const installId = getInstallationId();
+
+    if (window.firebaseEnabled && window.firebaseDB) {
+      try {
+        const keyRef = window.firebaseDB.ref('licenses/' + key.replace(/[\.#$\[\]]/g, '-'));
+        const snapshot = await keyRef.once('value');
+        const existingData = snapshot.val();
+
+        if (!existingData) {
+          return {
+            success: false,
+            error: 'Ключ не найден в базе данных.\nПроверьте правильность ключа или обратитесь к продавцу.'
+          };
+        }
+
+        if (existingData.activated) {
+          if (existingData.deviceId === deviceId) {
+            console.log('✅ Re-activation on same device');
+          } else {
+            return {
+              success: false,
+              error: 'Этот ключ уже активирован на другом устройстве!\n\nКаждый ключ работает только на одном устройстве.'
+            };
+          }
+        }
+
+        await keyRef.update({
+          activated: true,
+          deviceId: deviceId,
+          installId: installId,
+          activatedDate: new Date().toISOString(),
+          lastCheck: new Date().toISOString()
+        });
+
+        console.log('✅ License activated in Firebase');
+      } catch (firebaseError) {
+        console.error('⚠️ Firebase activation failed:', firebaseError);
+        return {
+          success: false,
+          error: 'Ошибка подключения к серверу.\nПроверьте интернет-соединение.'
+        };
+      }
+    }
+
+    const data = {
+      key: key,
+      device: deviceId,
+      install: installId,
+      activated: new Date().toISOString()
+    };
+
+    const encoded = btoa(JSON.stringify(data));
+    localStorage.setItem('illusionist_calendar_license', encoded);
+
+    console.log('✅ License activated locally');
+    return { success: true };
+  }
+
+  function showLicensePrompt(reason) {
+    const overlay = document.createElement('div');
+    overlay.id = 'license-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background: linear-gradient(135deg, rgba(26,26,46,0.98), rgba(15,15,25,0.98));
+      border: 2px solid rgba(245,158,11,0.5);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = reason === 'expired' ? 'Продление лицензии' : 'Активация приложения';
+    title.style.cssText = `
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    `;
+
+    const subtitle = document.createElement('p');
+    subtitle.textContent = reason === 'expired'
+      ? 'Ваша лицензия истекла. Введите новый ключ.'
+      : 'Введите лицензионный ключ для активации';
+    subtitle.style.cssText = `
+      color: rgba(148,163,184,0.8);
+      margin-bottom: 24px;
+      font-size: 14px;
+    `;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'XXXX-XXXX-XXXX-XXXX';
+    input.maxLength = 19;
+    input.style.cssText = `
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid rgba(245,158,11,0.3);
+      background: rgba(0,0,0,0.3);
+      color: #f8fafc;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: monospace;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    `;
+
+    input.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      let formatted = '';
+      for (let i = 0; i < value.length && i < 16; i++) {
+        if (i > 0 && i % 4 === 0) formatted += '-';
+        formatted += value[i];
+      }
+      e.target.value = formatted;
+    });
+
+    const button = document.createElement('button');
+    button.textContent = 'Активировать';
+    button.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      border: none;
+      border-radius: 8px;
+      color: #0a0a0f;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    `;
+
+    const error = document.createElement('div');
+    error.style.cssText = `
+      color: #ef4444;
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 20px;
+      white-space: pre-line;
+    `;
+
+    button.addEventListener('click', async () => {
+      const key = input.value.trim();
+      button.textContent = '⏳ Проверка...';
+      button.disabled = true;
+      input.disabled = true;
+      error.textContent = '';
+
+      try {
+        const result = await activateLicense(key);
+
+        if (result.success) {
+          button.textContent = '✅ Активировано!';
+          overlay.style.transition = 'opacity 0.5s';
+          overlay.style.opacity = '0';
+
+          setTimeout(() => {
+            document.body.removeChild(overlay);
+            showMagicWelcome();
+          }, 500);
+        } else {
+          button.textContent = 'Активировать';
+          button.disabled = false;
+          input.disabled = false;
+          error.textContent = result.error || 'Ошибка активации';
+        }
+      } catch (err) {
+        button.textContent = 'Активировать';
+        button.disabled = false;
+        input.disabled = false;
+        error.textContent = 'Произошла ошибка. Попробуйте снова.';
+      }
+    });
+
+    box.appendChild(title);
+    box.appendChild(subtitle);
+    box.appendChild(input);
+    box.appendChild(button);
+    box.appendChild(error);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    setTimeout(() => input.focus(), 100);
+  }
+
+  function showMagicWelcome() {
+    const magic = document.createElement('div');
+    magic.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(10,10,15,0.98), rgba(5,5,7,0.98));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999998;
+      opacity: 0;
+      transition: opacity 0.5s;
+    `;
+
+    magic.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 120px; margin-bottom: 30px; animation: wand-spin 1.5s ease-out;">🪄</div>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 36px; background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0; letter-spacing: 2px;">Твори магию</h2>
+        <p style="font-family: 'Cinzel', serif; font-size: 22px; color: #f59e0b; letter-spacing: 1px;">Считай прибыль</p>
+        <div style="margin-top: 30px; font-size: 24px; animation: sparkle-pulse 1.5s ease-in-out infinite;">✨</div>
+      </div>
+    `;
+
+    document.body.appendChild(magic);
+
+    setTimeout(() => {
+      magic.style.opacity = '1';
+    }, 50);
+
+    setTimeout(() => {
+      magic.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(magic);
+      }, 500);
+    }, 3500);
+  }
+
+  window.showLicensePrompt = showLicensePrompt;
+  window.checkActivation = checkActivation;
+  </script>
 </head>
 <body>
   <!-- PARTICLES CANVAS -->
@@ -2225,6 +2623,23 @@
       </div>
 
       <div class="modal-body">
+        <!-- LICENSE STATUS -->
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <i data-lucide="key" style="width: 20px; height: 20px; color: #34d399;"></i>
+            <div style="font-size: 12px; color: rgba(52,211,153,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Активация</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; margin-bottom: 12px;">
+            <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 6px;">Статус лицензии</div>
+            <div id="license-status-badge" style="font-size: 13px; font-weight: 700; color: #34d399;">Активирована ✓</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; margin-bottom: 12px;">
+            <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 6px;">Ключ активации</div>
+            <div id="license-key-display" style="font-family: monospace; font-size: 12px; color: rgba(148,163,184,0.9);">****-****-****-****</div>
+          </div>
+          <button id="btn-reset-license" onclick="resetLicense()" style="width: 100%; padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; color: #ef4444; font-weight: 700; cursor: pointer; font-size: 13px;">Сбросить активацию</button>
+        </div>
+
         <!-- GOAL SETTING -->
         <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
@@ -3141,8 +3556,41 @@
     function openSettingsModal() {
       document.getElementById('goal-input').value = monthlyGoal;
       renderCustomTypesList();
+      updateLicenseDisplay();
       document.getElementById('settings-modal').classList.add('show');
       lucide.createIcons();
+    }
+
+    function updateLicenseDisplay() {
+      const stored = localStorage.getItem('illusionist_calendar_license');
+      if (stored) {
+        try {
+          const data = JSON.parse(atob(stored));
+          document.getElementById('license-key-display').textContent = data.key || '****-****-****-****';
+          document.getElementById('license-status-badge').textContent = 'Активирована ✓';
+          document.getElementById('license-status-badge').style.color = '#34d399';
+        } catch(e) {
+          document.getElementById('license-key-display').textContent = '****-****-****-****';
+          document.getElementById('license-status-badge').textContent = 'Не активирована';
+          document.getElementById('license-status-badge').style.color = '#ef4444';
+        }
+      } else {
+        document.getElementById('license-key-display').textContent = '****-****-****-****';
+        document.getElementById('license-status-badge').textContent = 'Не активирована';
+        document.getElementById('license-status-badge').style.color = '#ef4444';
+      }
+    }
+
+    function resetLicense() {
+      customConfirm('Сбросить активацию приложения?\n\nПосле сброса потребуется повторная активация.', () => {
+        localStorage.removeItem('illusionist_calendar_license');
+        showToast('Активация сброшена');
+        updateLicenseDisplay();
+
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      });
     }
 
     function closeSettingsModal() {
@@ -3165,10 +3613,12 @@
       const data = {
         events: events,
         goal: monthlyGoal,
-        version: 'v3.0',
+        customTypes: customTypes,
+        expenseCategories: EXPENSE_CATEGORIES,
+        version: 'v3.1',
         date: new Date().toISOString()
       };
-      
+
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -3178,34 +3628,44 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       showToast('Данные экспортированы!');
     }
 
     function importData(input) {
       const file = input.files[0];
       if(!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          
+
           if(data.events) {
             events = data.events;
             saveEvents();
           }
-          
+
           if(data.goal) {
             monthlyGoal = parseFloat(data.goal) || 200000;
             saveGoalToStorage();
           }
-          
+
+          if(data.customTypes) {
+            customTypes = data.customTypes;
+            saveCustomTypes();
+          }
+
+          if(data.expenseCategories) {
+            EXPENSE_CATEGORIES = data.expenseCategories;
+            saveCustomExpenseCategories();
+          }
+
           renderCalendar();
           if(currentView === 'dashboard') {
             renderDashboard();
           }
-          
+
           closeSettingsModal();
           showToast('Данные импортированы!');
         } catch(err) {
@@ -4781,14 +5241,29 @@
     // ==========================================
     // INIT
     // ==========================================
-    document.addEventListener('DOMContentLoaded', () => {
-      loadEvents();
-      renderCalendar();
-      renderSchedule();
-      lucide.createIcons();
-      
-      // Show splash screen
-      showSplashScreen();
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check license first
+      try {
+        const hasLicense = await checkActivation();
+
+        if (!hasLicense || hasLicense === 'expired') {
+          const splash = document.getElementById('splash-screen');
+          if (splash) splash.style.display = 'none';
+
+          showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
+          return;
+        }
+
+        loadEvents();
+        renderCalendar();
+        renderSchedule();
+         lucide.createIcons();
+
+        showSplashScreen();
+      } catch (error) {
+        console.error("License check error:", error);
+        showLicensePrompt("first");
+      }
     });
   </script>
 </body>
