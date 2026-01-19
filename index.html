@@ -2162,6 +2162,21 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Категория расхода</label>
+            <select id="event-expense-category" class="form-input" style="appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23f59e0b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px;">
+              <option value="">Не выбрано</option>
+              <option value="fuel">🛢️ Топливо</option>
+              <option value="props">🪄 Реквизит</option>
+              <option value="rent">🏠 Аренда</option>
+              <option value="food">🍽️ Питание</option>
+              <option value="transport">🚗 Транспорт</option>
+              <option value="equipment">📦 Оборудование</option>
+              <option value="advertising">📢 Реклама</option>
+              <option value="other">➕ Другое</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Налог (%)</label>
             <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
           </div>
@@ -2464,6 +2479,17 @@
       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
     ];
 
+    const EXPENSE_CATEGORIES = {
+      fuel: { label: 'Топливо', icon: 'fuel', color: '#ef4444' },
+      props: { label: 'Реквизит', icon: 'wand-2', color: '#f59e0b' },
+      rent: { label: 'Аренда', icon: 'home', color: '#8b5cf6' },
+      food: { label: 'Питание', icon: 'utensils', color: '#22c55e' },
+      transport: { label: 'Транспорт', icon: 'car', color: '#3b82f6' },
+      equipment: { label: 'Оборудование', icon: 'box', color: '#ec4899' },
+      advertising: { label: 'Реклама', icon: 'megaphone', color: '#f97316' },
+      other: { label: 'Другое', icon: 'more-horizontal', color: '#64748b' }
+    };
+
     let currentDate = new Date();
     let selectedDate = new Date();
     let events = [];
@@ -2747,50 +2773,48 @@
         container.appendChild(row);
       });
 
-      // Добавляем итоговую карточку за месяц (только на последний день месяца)
+      // Добавляем итоговую карточку за месяц (только в последний день месяца)
       const year = selectedDate.getFullYear();
       const month = selectedDate.getMonth();
-      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
       const selectedDay = selectedDate.getDate();
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
 
-      // Показываем карточку только на последний день месяца
+      // Показываем итоги месяца только в последний день месяца (31, 30, 28/29)
       if(selectedDay === lastDayOfMonth) {
         const monthEvents = events.filter(e => {
           const eventDate = new Date(e.date);
           return eventDate.getFullYear() === year && eventDate.getMonth() === month;
         });
 
-        if(monthEvents.length > 0) {
-          const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-          const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-          const profit = totalIncome - totalExpense;
+        const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+        const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+        const profit = totalIncome - totalExpense;
 
-          const summaryCard = document.createElement('div');
-          summaryCard.className = 'day-list-row';
-          summaryCard.style.cssText = `
-            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
-            border: 1.5px solid rgba(245,158,11,0.3);
-            margin-top: 16px;
-            cursor: pointer;
-          `;
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'day-list-row';
+        summaryCard.style.cssText = `
+          background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+          border: 1.5px solid rgba(245,158,11,0.3);
+          margin-top: 16px;
+          cursor: pointer;
+        `;
 
-          summaryCard.innerHTML = `
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <i data-lucide="bar-chart-3" style="width: 22px; height: 22px; color: white;"></i>
-            </div>
-            <div style="flex: 1;">
-              <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${MONTH_NAMES[month]}</div>
-              <div style="font-size: 13px; color: rgba(245,158,11,0.9); margin-top: 2px;">Нажми для подробной статистики</div>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-              <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
-              <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${monthEvents.length} событий</div>
-            </div>
-          `;
+        summaryCard.innerHTML = `
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="bar-chart-3" style="width: 22px; height: 22px; color: white;"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${MONTH_NAMES[month]}</div>
+            <div style="font-size: 13px; color: rgba(245,158,11,0.9); margin-top: 2px;">Нажми для подробной статистики</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
+            <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${monthEvents.length} событий</div>
+          </div>
+        `;
 
-          summaryCard.addEventListener('click', () => showMonthSummary(year, month));
-          container.appendChild(summaryCard);
-        }
+        summaryCard.addEventListener('click', () => showMonthSummary(year, month));
+        container.appendChild(summaryCard);
       }
 
       // Добавляем итоговую карточку за год (только 31 декабря)
@@ -2800,37 +2824,35 @@
           return eventDate.getFullYear() === year;
         });
 
-        if(yearEvents.length > 0) {
-          const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-          const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-          const profit = totalIncome - totalExpense;
+        const yearIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+        const yearExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+        const yearProfit = yearIncome - yearExpense;
 
-          const yearCard = document.createElement('div');
-          yearCard.className = 'day-list-row';
-          yearCard.style.cssText = `
-            background: linear-gradient(135deg, rgba(147,51,234,0.15), rgba(147,51,234,0.08));
-            border: 1.5px solid rgba(147,51,234,0.4);
-            margin-top: 12px;
-            cursor: pointer;
-          `;
+        const yearCard = document.createElement('div');
+        yearCard.className = 'day-list-row';
+        yearCard.style.cssText = `
+          background: linear-gradient(135deg, rgba(147,51,234,0.15), rgba(147,51,234,0.08));
+          border: 1.5px solid rgba(147,51,234,0.4);
+          margin-top: 12px;
+          cursor: pointer;
+        `;
 
-          yearCard.innerHTML = `
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #9333ea, #7e22ce); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <i data-lucide="trophy" style="width: 22px; height: 22px; color: white;"></i>
-            </div>
-            <div style="flex: 1;">
-              <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${year} год</div>
-              <div style="font-size: 13px; color: rgba(147,51,234,0.9); margin-top: 2px;">Нажми для полной статистики</div>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-              <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
-              <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${yearEvents.length} событий</div>
-            </div>
-          `;
+        yearCard.innerHTML = `
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #9333ea, #7e22ce); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="trophy" style="width: 22px; height: 22px; color: white;"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${year} год</div>
+            <div style="font-size: 13px; color: rgba(147,51,234,0.9); margin-top: 2px;">Нажми для полной статистики</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${yearProfit >= 0 ? '#22c55e' : '#ef4444'};">${yearProfit.toLocaleString('ru-RU')} ₽</div>
+            <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${yearEvents.length} событий</div>
+          </div>
+        `;
 
-          yearCard.addEventListener('click', () => showYearSummary(year));
-          container.appendChild(yearCard);
-        }
+        yearCard.addEventListener('click', () => showYearSummary(year));
+        container.appendChild(yearCard);
       }
 
       lucide.createIcons();
@@ -3511,6 +3533,7 @@
       document.getElementById('event-income').value = event.income || '';
       document.getElementById('event-prepay').value = event.prepay || '';
       document.getElementById('event-expense').value = event.expense || '';
+      document.getElementById('event-expense-category').value = event.expenseCategory || '';
       document.getElementById('event-tax').value = event.tax || '';
       document.getElementById('event-notes').value = event.notes || '';
       
@@ -3725,6 +3748,7 @@
         income: parseFloat(document.getElementById('event-income').value) || 0,
         prepay: parseFloat(document.getElementById('event-prepay').value) || 0,
         expense: parseFloat(document.getElementById('event-expense').value) || 0,
+        expenseCategory: document.getElementById('event-expense-category').value || '',
         tax: parseFloat(document.getElementById('event-tax').value) || 0,
         notes: document.getElementById('event-notes').value
       };
@@ -4214,6 +4238,47 @@
             <div style="font-size: 18px; font-weight: 700; color: #f59e0b;">${totalTax.toLocaleString('ru-RU')} ₽</div>
           </div>
           ` : ''}
+
+          ${(() => {
+            const expenseByCategory = {};
+            monthEvents.forEach(e => {
+              if(e.expense > 0 && e.expenseCategory) {
+                if(!expenseByCategory[e.expenseCategory]) {
+                  expenseByCategory[e.expenseCategory] = 0;
+                }
+                expenseByCategory[e.expenseCategory] += e.expense;
+              }
+            });
+
+            if(Object.keys(expenseByCategory).length > 0) {
+              const expenseHTML = Object.entries(expenseByCategory)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, amount]) => {
+                  const catInfo = EXPENSE_CATEGORIES[cat] || EXPENSE_CATEGORIES.other;
+                  return `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); border-radius: 10px;">
+                      <div style="width: 32px; height: 32px; border-radius: 8px; background: ${catInfo.color}20; border: 1px solid ${catInfo.color}40; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="${catInfo.icon}" style="width: 16px; height: 16px; color: ${catInfo.color};"></i>
+                      </div>
+                      <div style="flex: 1;">
+                        <div style="font-size: 13px; color: #fff; font-weight: 600;">${catInfo.label}</div>
+                      </div>
+                      <div style="font-size: 14px; font-weight: 700; color: #ef4444;">${amount.toLocaleString('ru-RU')} ₽</div>
+                    </div>
+                  `;
+                }).join('');
+
+              return `
+                <div style="margin-top: 8px;">
+                  <div style="font-size: 13px; color: rgba(239,68,68,0.9); font-weight: 700; margin-bottom: 12px;">💸 Расходы по категориям</div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    ${expenseHTML}
+                  </div>
+                </div>
+              `;
+            }
+            return '';
+          })()}
 
           <div style="margin-top: 8px;">
             <div style="font-size: 13px; color: rgba(245,158,11,0.9); font-weight: 700; margin-bottom: 12px;">📊 По типам событий</div>
