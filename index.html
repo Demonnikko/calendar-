@@ -2358,9 +2358,9 @@
       </div>
       <div class="modal-body" style="padding: 16px 20px 20px;">
         <p id="confirm-message" style="color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.6;"></p>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button id="confirm-yes" class="btn-danger" style="flex: 1; padding: 12px; font-size: 14px;">Удалить</button>
-          <button id="confirm-no" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 14px;">Отмена</button>
+        <div style="display: flex; gap: 10px; margin-top: 20px; align-items: center;">
+          <button id="confirm-yes" class="btn-danger" style="flex: 1; padding: 12px; font-size: 14px; height: 44px; display: flex; align-items: center; justify-content: center;">Удалить</button>
+          <button id="confirm-no" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 14px; height: 44px; display: flex; align-items: center; justify-content: center;">Отмена</button>
         </div>
       </div>
     </div>
@@ -2726,9 +2726,10 @@
           </div>
         `;
 
-        row.querySelector('.day-list-info')?.addEventListener('click', () => editEvent(event.id));
+        // Тап на карточку → предпросмотр
+        row.querySelector('.day-list-info')?.addEventListener('click', () => showEventPreview(event));
 
-        // Добавляем swipe для звонка
+        // Добавляем swipe (вправо - звонок, влево - редактирование)
         addSwipeToCall(row, event);
 
         container.appendChild(row);
@@ -3801,7 +3802,7 @@
           if(callIcon) callIcon.style.opacity = Math.min(diff / 80, 1);
         }
 
-        // Свайп влево - предпросмотр
+        // Свайп влево - редактирование
         if(diff < 0) {
           element.style.transform = `translateX(${Math.max(diff, -120)}px)`;
 
@@ -3825,7 +3826,7 @@
               pointer-events: none;
               box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
             `;
-            previewIcon.innerHTML = '<i data-lucide="eye" style="width: 24px; height: 24px; color: white;"></i>';
+            previewIcon.innerHTML = '<i data-lucide="edit-3" style="width: 24px; height: 24px; color: white;"></i>';
             element.appendChild(previewIcon);
             lucide.createIcons();
           }
@@ -3843,7 +3844,7 @@
           makeCall(event.phone);
           element.style.transform = 'translateX(0)';
         } else if(diff < -100) {
-          showEventPreview(event);
+          editEvent(event.id);
           element.style.transform = 'translateX(0)';
         } else {
           element.style.transform = 'translateX(0)';
