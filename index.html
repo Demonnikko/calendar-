@@ -593,12 +593,13 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       visibility: hidden;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 20px 0;
     }
 
     .modal-overlay.show {
@@ -609,22 +610,22 @@
     .modal-content {
       width: 100%;
       max-width: 600px;
-      max-height: 90vh;
+      max-height: 85vh;
       background: #000;
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
       border: 1px solid rgba(245,158,11,0.2);
-      border-radius: 32px 32px 0 0;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.8);
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(var(--safe-bottom) + 20px);
+      overflow: hidden;
     }
 
     .modal-overlay.show .modal-content {
-      transform: translateY(0);
+      transform: scale(1);
     }
 
     #confirm-modal.show .modal-content {
@@ -674,7 +675,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 24px;
+      padding: 16px 24px 24px;
       padding-left: max(24px, env(safe-area-inset-left)) !important;
       padding-right: max(24px, env(safe-area-inset-right)) !important;
       -webkit-overflow-scrolling: touch;
@@ -2195,7 +2196,7 @@
 
       <div class="modal-body">
         <!-- GOAL SETTING -->
-        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
             <i data-lucide="target" style="width: 20px; height: 20px; color: #f59e0b;"></i>
             <div style="font-size: 12px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Цель месяца</div>
@@ -2205,8 +2206,8 @@
         </div>
 
         <!-- CUSTOM TYPES -->
-        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <i data-lucide="shapes" style="width: 20px; height: 20px; color: #f59e0b;"></i>
               <div style="font-size: 12px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Типы событий</div>
@@ -2223,8 +2224,8 @@
         </div>
 
         <!-- EXPORT/IMPORT -->
-        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
             <i data-lucide="database" style="width: 20px; height: 20px; color: #f59e0b;"></i>
             <div style="font-size: 12px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Резервные копии</div>
           </div>
@@ -2240,8 +2241,8 @@
         </div>
 
         <!-- RESET -->
-        <div class="glass-panel" style="padding: 20px;">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <div class="glass-panel" style="padding: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
             <i data-lucide="trash-2" style="width: 20px; height: 20px; color: #ef4444;"></i>
             <div style="font-size: 12px; color: rgba(239,68,68,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Опасная зона</div>
           </div>
@@ -2746,44 +2747,90 @@
         container.appendChild(row);
       });
 
-      // Добавляем итоговую карточку за месяц
+      // Добавляем итоговую карточку за месяц (только на последний день месяца)
       const year = selectedDate.getFullYear();
       const month = selectedDate.getMonth();
-      const monthEvents = events.filter(e => {
-        const eventDate = new Date(e.date);
-        return eventDate.getFullYear() === year && eventDate.getMonth() === month;
-      });
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+      const selectedDay = selectedDate.getDate();
 
-      if(monthEvents.length > 0) {
-        const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-        const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-        const profit = totalIncome - totalExpense;
+      // Показываем карточку только на последний день месяца
+      if(selectedDay === lastDayOfMonth) {
+        const monthEvents = events.filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate.getFullYear() === year && eventDate.getMonth() === month;
+        });
 
-        const summaryCard = document.createElement('div');
-        summaryCard.className = 'day-list-row';
-        summaryCard.style.cssText = `
-          background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
-          border: 1.5px solid rgba(245,158,11,0.3);
-          margin-top: 16px;
-          cursor: pointer;
-        `;
+        if(monthEvents.length > 0) {
+          const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+          const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+          const profit = totalIncome - totalExpense;
 
-        summaryCard.innerHTML = `
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i data-lucide="bar-chart-3" style="width: 22px; height: 22px; color: white;"></i>
-          </div>
-          <div style="flex: 1;">
-            <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${MONTH_NAMES[month]}</div>
-            <div style="font-size: 13px; color: rgba(245,158,11,0.9); margin-top: 2px;">Нажми для подробной статистики</div>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-            <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
-            <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${monthEvents.length} событий</div>
-          </div>
-        `;
+          const summaryCard = document.createElement('div');
+          summaryCard.className = 'day-list-row';
+          summaryCard.style.cssText = `
+            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+            border: 1.5px solid rgba(245,158,11,0.3);
+            margin-top: 16px;
+            cursor: pointer;
+          `;
 
-        summaryCard.addEventListener('click', () => showMonthSummary(year, month));
-        container.appendChild(summaryCard);
+          summaryCard.innerHTML = `
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i data-lucide="bar-chart-3" style="width: 22px; height: 22px; color: white;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${MONTH_NAMES[month]}</div>
+              <div style="font-size: 13px; color: rgba(245,158,11,0.9); margin-top: 2px;">Нажми для подробной статистики</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${monthEvents.length} событий</div>
+            </div>
+          `;
+
+          summaryCard.addEventListener('click', () => showMonthSummary(year, month));
+          container.appendChild(summaryCard);
+        }
+      }
+
+      // Добавляем итоговую карточку за год (только 31 декабря)
+      if(selectedDay === 31 && month === 11) {
+        const yearEvents = events.filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate.getFullYear() === year;
+        });
+
+        if(yearEvents.length > 0) {
+          const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+          const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+          const profit = totalIncome - totalExpense;
+
+          const yearCard = document.createElement('div');
+          yearCard.className = 'day-list-row';
+          yearCard.style.cssText = `
+            background: linear-gradient(135deg, rgba(147,51,234,0.15), rgba(147,51,234,0.08));
+            border: 1.5px solid rgba(147,51,234,0.4);
+            margin-top: 12px;
+            cursor: pointer;
+          `;
+
+          yearCard.innerHTML = `
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #9333ea, #7e22ce); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i data-lucide="trophy" style="width: 22px; height: 22px; color: white;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоги за ${year} год</div>
+              <div style="font-size: 13px; color: rgba(147,51,234,0.9); margin-top: 2px;">Нажми для полной статистики</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <div style="font-size: 16px; font-weight: 800; color: ${profit >= 0 ? '#22c55e' : '#ef4444'};">${profit.toLocaleString('ru-RU')} ₽</div>
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${yearEvents.length} событий</div>
+            </div>
+          `;
+
+          yearCard.addEventListener('click', () => showYearSummary(year));
+          container.appendChild(yearCard);
+        }
       }
 
       lucide.createIcons();
@@ -3808,10 +3855,10 @@
       let swipeDirection = null;
       let callIcon = null;
       let previewIcon = null;
-      const SWIPE_THRESHOLD = 10; // Порог для определения горизонтального свайпа
+      const SWIPE_THRESHOLD = 5; // Уменьшен порог для более быстрой реакции
 
       element.style.position = 'relative';
-      element.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      element.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
       const handleTouchStart = (e) => {
         // Игнорируем если тап на иконку типа
@@ -3834,9 +3881,9 @@
         const diffY = currentY - startY;
 
         // Определяем направление свайпа только один раз
-        if(!isSwiping && (Math.abs(diffX) > SWIPE_THRESHOLD || Math.abs(diffY) > SWIPE_THRESHOLD)) {
-          // Если больше вертикальный свайп - игнорируем
-          if(Math.abs(diffY) > Math.abs(diffX)) {
+        if(!isSwiping && Math.abs(diffX) > SWIPE_THRESHOLD) {
+          // Если вертикальный свайп больше чем горизонтальный в 1.5 раза - игнорируем
+          if(Math.abs(diffY) > Math.abs(diffX) * 1.5) {
             startX = 0;
             return;
           }
@@ -3847,13 +3894,15 @@
         if(!isSwiping) return;
 
         // Предотвращаем скролл при свайпе
-        e.preventDefault();
+        if(Math.abs(diffX) > Math.abs(diffY)) {
+          e.preventDefault();
+        }
 
         const diff = currentX - startX;
 
         // Свайп вправо - звонок
         if(swipeDirection === 'right' && event.phone && event.phone.trim() !== '') {
-          element.style.transform = `translateX(${Math.min(diff, 100)}px)`;
+          element.style.transform = `translateX(${Math.min(diff, 110)}px)`;
 
           if(!callIcon) {
             callIcon = document.createElement('div');
@@ -3862,24 +3911,29 @@
               left: 8px;
               top: 50%;
               transform: translateY(-50%);
-              width: 56px;
-              height: 56px;
+              width: 60px;
+              height: 60px;
               background: linear-gradient(135deg, #22c55e, #16a34a);
               border-radius: 16px;
               display: flex;
               align-items: center;
               justify-content: center;
               opacity: 0;
-              transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              transition: opacity 0.2s ease-out;
               z-index: 0;
               pointer-events: none;
-              box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+              box-shadow: 0 8px 24px rgba(34, 197, 94, 0.6);
             `;
-            callIcon.innerHTML = '<i data-lucide="phone" style="width: 26px; height: 26px; color: white;"></i>';
+            callIcon.innerHTML = '<i data-lucide="phone" style="width: 28px; height: 28px; color: white;"></i>';
             element.insertBefore(callIcon, element.firstChild);
             lucide.createIcons();
           }
-          if(callIcon) callIcon.style.opacity = Math.min(diff / 60, 1);
+          if(callIcon) callIcon.style.opacity = Math.min(diff / 50, 1);
+        }
+
+        // Свайп вправо без телефона - показываем элемент
+        if(swipeDirection === 'right' && (!event.phone || event.phone.trim() === '')) {
+          element.style.transform = `translateX(${Math.min(diff * 0.3, 30)}px)`;
         }
 
         // Свайп влево - редактирование
@@ -3921,11 +3975,12 @@
         }
 
         const diff = currentX - startX;
-        element.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        element.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
-        if(diff > 80 && event.phone && swipeDirection === 'right') {
+        // Уменьшен порог для свайпа вправо (звонок)
+        if(diff > 60 && event.phone && swipeDirection === 'right') {
           makeCall(event.phone);
-        } else if(diff < -80 && swipeDirection === 'left') {
+        } else if(diff < -70 && swipeDirection === 'left') {
           editEvent(event.id);
         }
 
@@ -4153,13 +4208,6 @@
             </div>
           </div>
 
-          ${totalPrepay > 0 ? `
-          <div style="padding: 14px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.2); border-radius: 12px;">
-            <div style="font-size: 11px; color: rgba(96,165,250,0.8); margin-bottom: 4px;">💳 Предоплаты</div>
-            <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">${totalPrepay.toLocaleString('ru-RU')} ₽</div>
-          </div>
-          ` : ''}
-
           ${totalTax > 0 ? `
           <div style="padding: 14px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px;">
             <div style="font-size: 11px; color: rgba(245,158,11,0.8); margin-bottom: 4px;">📊 Налоги</div>
@@ -4169,6 +4217,147 @@
 
           <div style="margin-top: 8px;">
             <div style="font-size: 13px; color: rgba(245,158,11,0.9); font-weight: 700; margin-bottom: 12px;">📊 По типам событий</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${typeStatsHTML}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('preview-content').innerHTML = content;
+      document.getElementById('preview-modal').classList.add('show');
+      lucide.createIcons();
+    }
+
+    // ==========================================
+    // YEAR SUMMARY
+    // ==========================================
+    function showYearSummary(year) {
+      const yearEvents = events.filter(e => {
+        const eventDate = new Date(e.date);
+        return eventDate.getFullYear() === year;
+      });
+
+      const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+      const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+      const totalShows = yearEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      const totalTax = yearEvents.reduce((sum, e) => {
+        const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
+        return sum + taxAmount;
+      }, 0);
+      const profit = totalIncome - totalExpense;
+      const netProfit = totalIncome - totalExpense - totalTax;
+      const avgCheck = yearEvents.length > 0 ? Math.round(totalIncome / yearEvents.length) : 0;
+
+      // Статистика по месяцам
+      const monthStats = {};
+      for(let m = 0; m < 12; m++) {
+        const monthEvents = yearEvents.filter(e => new Date(e.date).getMonth() === m);
+        const income = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
+        if(monthEvents.length > 0 || income > 0) {
+          monthStats[m] = { count: monthEvents.length, income };
+        }
+      }
+
+      const monthStatsHTML = Object.keys(monthStats).length > 0
+        ? Object.entries(monthStats)
+            .sort((a, b) => b[1].income - a[1].income)
+            .map(([m, stats]) => `
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(147,51,234,0.2); border-radius: 10px;">
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; color: #fff; font-weight: 600;">${MONTH_NAMES[parseInt(m)]}</div>
+                  <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${stats.count} событий</div>
+                </div>
+                <div style="font-size: 15px; font-weight: 700; color: #9333ea;">${stats.income.toLocaleString('ru-RU')} ₽</div>
+              </div>
+            `).join('')
+        : '<div style="color: rgba(148,163,184,0.5); text-align: center; padding: 20px;">Нет данных</div>';
+
+      // Статистика по типам
+      const typeStats = {};
+      yearEvents.forEach(event => {
+        let mainType = 'rabbit';
+        if(event.schedule && event.schedule.length > 0) {
+          mainType = event.schedule[0].type || 'rabbit';
+        } else {
+          mainType = event.type || 'rabbit';
+        }
+        if(!typeStats[mainType]) {
+          typeStats[mainType] = { count: 0, income: 0 };
+        }
+        typeStats[mainType].count++;
+        typeStats[mainType].income += event.income || 0;
+      });
+
+      const typeStatsHTML = Object.entries(typeStats)
+        .sort((a, b) => b[1].income - a[1].income)
+        .slice(0, 5)
+        .map(([type, stats]) => {
+          const typeInfo = TYPES[type] || TYPES.rabbit;
+          return `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid ${typeInfo.color}30; border-radius: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: ${typeInfo.color}20; border: 1px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="${typeInfo.icon}" style="width: 18px; height: 18px; color: ${typeInfo.color};"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 13px; color: #fff; font-weight: 600;">${typeInfo.label}</div>
+                <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${stats.count} событий</div>
+              </div>
+              <div style="font-size: 15px; font-weight: 700; color: ${typeInfo.color};">${stats.income.toLocaleString('ru-RU')} ₽</div>
+            </div>
+          `;
+        }).join('');
+
+      const content = `
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="text-align: center; padding: 24px; background: linear-gradient(135deg, rgba(147,51,234,0.2), rgba(147,51,234,0.1)); border: 1px solid rgba(147,51,234,0.4); border-radius: 16px;">
+            <div style="font-size: 16px; color: rgba(147,51,234,0.9); margin-bottom: 8px;">🏆 Итоги за ${year} год</div>
+            <div style="font-size: 36px; font-weight: 900; color: ${netProfit >= 0 ? '#22c55e' : '#ef4444'};">${netProfit.toLocaleString('ru-RU')} ₽</div>
+            <div style="font-size: 12px; color: rgba(148,163,184,0.7); margin-top: 4px;">Чистая прибыль</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="padding: 14px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px;">
+              <div style="font-size: 11px; color: rgba(34,197,94,0.8); margin-bottom: 4px;">💰 Доход</div>
+              <div style="font-size: 18px; font-weight: 700; color: #22c55e;">${totalIncome.toLocaleString('ru-RU')} ₽</div>
+            </div>
+            <div style="padding: 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px;">
+              <div style="font-size: 11px; color: rgba(239,68,68,0.8); margin-bottom: 4px;">💸 Расход</div>
+              <div style="font-size: 18px; font-weight: 700; color: #ef4444;">${totalExpense.toLocaleString('ru-RU')} ₽</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(147,51,234,0.2); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">События</div>
+              <div style="font-size: 16px; font-weight: 700; color: #fff;">${yearEvents.length}</div>
+            </div>
+            <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(147,51,234,0.2); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">Показы</div>
+              <div style="font-size: 16px; font-weight: 700; color: #fff;">${totalShows}</div>
+            </div>
+            <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(147,51,234,0.2); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">Средний чек</div>
+              <div style="font-size: 16px; font-weight: 700; color: #fff;">${avgCheck.toLocaleString('ru-RU')} ₽</div>
+            </div>
+          </div>
+
+          ${totalTax > 0 ? `
+          <div style="padding: 14px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px;">
+            <div style="font-size: 11px; color: rgba(245,158,11,0.8); margin-bottom: 4px;">📊 Налоги за год</div>
+            <div style="font-size: 18px; font-weight: 700; color: #f59e0b;">${totalTax.toLocaleString('ru-RU')} ₽</div>
+          </div>
+          ` : ''}
+
+          <div style="margin-top: 8px;">
+            <div style="font-size: 13px; color: rgba(147,51,234,0.9); font-weight: 700; margin-bottom: 12px;">📅 По месяцам</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${monthStatsHTML}
+            </div>
+          </div>
+
+          <div style="margin-top: 8px;">
+            <div style="font-size: 13px; color: rgba(147,51,234,0.9); font-weight: 700; margin-bottom: 12px;">🎭 Топ-5 типов событий</div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               ${typeStatsHTML}
             </div>
