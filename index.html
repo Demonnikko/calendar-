@@ -2163,7 +2163,7 @@
 
           <div class="form-group">
             <label class="form-label">Категория расхода</label>
-            <select id="event-expense-category" class="form-input" style="appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23f59e0b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px;">
+            <select id="event-expense-category" class="form-input" onchange="handleExpenseCategoryChange()" style="appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23f59e0b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px;">
               <option value="">Не выбрано</option>
               <option value="fuel">🛢️ Топливо</option>
               <option value="props">🪄 Реквизит</option>
@@ -2172,8 +2172,20 @@
               <option value="transport">🚗 Транспорт</option>
               <option value="equipment">📦 Оборудование</option>
               <option value="advertising">📢 Реклама</option>
-              <option value="other">➕ Другое</option>
+              <option value="custom">➕ Создать свою</option>
             </select>
+          </div>
+
+          <div id="custom-expense-form" style="display: none; margin-top: -8px;">
+            <div class="form-group">
+              <label class="form-label">Название категории</label>
+              <input type="text" id="custom-expense-name" class="form-input" placeholder="Например: Костюмы">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Эмодзи</label>
+              <input type="text" id="custom-expense-emoji" class="form-input" placeholder="🎭" maxlength="2" style="font-size: 24px; text-align: center;">
+            </div>
+            <button type="button" onclick="saveCustomExpenseCategory()" class="btn-primary" style="margin-bottom: 16px;">Сохранить категорию</button>
           </div>
 
           <div class="form-group">
@@ -2479,16 +2491,39 @@
       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
     ];
 
-    const EXPENSE_CATEGORIES = {
-      fuel: { label: 'Топливо', icon: 'fuel', color: '#ef4444' },
-      props: { label: 'Реквизит', icon: 'wand-2', color: '#f59e0b' },
-      rent: { label: 'Аренда', icon: 'home', color: '#8b5cf6' },
-      food: { label: 'Питание', icon: 'utensils', color: '#22c55e' },
-      transport: { label: 'Транспорт', icon: 'car', color: '#3b82f6' },
-      equipment: { label: 'Оборудование', icon: 'box', color: '#ec4899' },
-      advertising: { label: 'Реклама', icon: 'megaphone', color: '#f97316' },
-      other: { label: 'Другое', icon: 'more-horizontal', color: '#64748b' }
+    let EXPENSE_CATEGORIES = {
+      fuel: { label: 'Топливо', emoji: '🛢️', color: '#ef4444' },
+      props: { label: 'Реквизит', emoji: '🪄', color: '#f59e0b' },
+      rent: { label: 'Аренда', emoji: '🏠', color: '#8b5cf6' },
+      food: { label: 'Питание', emoji: '🍽️', color: '#22c55e' },
+      transport: { label: 'Транспорт', emoji: '🚗', color: '#3b82f6' },
+      equipment: { label: 'Оборудование', emoji: '📦', color: '#ec4899' },
+      advertising: { label: 'Реклама', emoji: '📢', color: '#f97316' },
+      other: { label: 'Другое', emoji: '📌', color: '#64748b' }
     };
+
+    function loadCustomExpenseCategories() {
+      const stored = localStorage.getItem('illusionist_expense_categories');
+      if(stored) {
+        try {
+          const custom = JSON.parse(stored);
+          EXPENSE_CATEGORIES = { ...EXPENSE_CATEGORIES, ...custom };
+        } catch(e) {
+          console.error('Failed to load custom expense categories', e);
+        }
+      }
+    }
+
+    function saveCustomExpenseCategories() {
+      const defaultKeys = ['fuel', 'props', 'rent', 'food', 'transport', 'equipment', 'advertising', 'other'];
+      const custom = {};
+      Object.keys(EXPENSE_CATEGORIES).forEach(key => {
+        if(!defaultKeys.includes(key)) {
+          custom[key] = EXPENSE_CATEGORIES[key];
+        }
+      });
+      localStorage.setItem('illusionist_expense_categories', JSON.stringify(custom));
+    }
 
     let currentDate = new Date();
     let selectedDate = new Date();
@@ -2515,7 +2550,7 @@
       if(stored) {
         events = JSON.parse(stored);
       }
-      
+
       const savedGoal = localStorage.getItem('illusionist_goal');
       if(savedGoal) {
         monthlyGoal = parseFloat(savedGoal) || 200000;
@@ -2525,6 +2560,8 @@
       if(savedTypes) {
         customTypes = JSON.parse(savedTypes);
       }
+
+      loadCustomExpenseCategories();
     }
 
     function saveGoalToStorage() {
@@ -3500,16 +3537,17 @@
       editingEventId = null;
       document.getElementById('modal-title').textContent = 'Новое событие';
       document.getElementById('delete-btn').style.display = 'none';
-      
+
       resetForm();
-      
+      updateExpenseCategorySelect();
+
       const dateInput = document.getElementById('event-date');
       if(date) {
         dateInput.value = formatDateInput(date);
       } else {
         dateInput.value = formatDateInput(selectedDate);
       }
-      
+
       document.getElementById('event-modal').classList.add('show');
       lucide.createIcons();
     }
@@ -3517,11 +3555,13 @@
     function editEvent(eventId) {
       const event = events.find(e => e.id === eventId);
       if(!event) return;
-      
+
       editingEventId = eventId;
       document.getElementById('modal-title').textContent = 'Редактировать';
       document.getElementById('delete-btn').style.display = 'block';
-      
+
+      updateExpenseCategorySelect();
+
       document.getElementById('event-title').value = event.title || '';
       document.getElementById('event-date').value = event.date || '';
       document.getElementById('event-status').value = event.status || 'pending';
@@ -3536,14 +3576,14 @@
       document.getElementById('event-expense-category').value = event.expenseCategory || '';
       document.getElementById('event-tax').value = event.tax || '';
       document.getElementById('event-notes').value = event.notes || '';
-      
+
       schedule = event.schedule || [{ type: 'rabbit', time: '19:00', duration: 60 }];
       renderSchedule();
       calculateBalance();
-      
+
       const firstTab = document.querySelector('.modal-tab');
       if(firstTab) firstTab.click();
-      
+
       document.getElementById('event-modal').classList.add('show');
       lucide.createIcons();
     }
@@ -3612,6 +3652,75 @@
 
     function updateScheduleDuration(index, duration) {
       schedule[index].duration = parseInt(duration) || 60;
+    }
+
+    // ==========================================
+    // EXPENSE CATEGORIES
+    // ==========================================
+    function handleExpenseCategoryChange() {
+      const select = document.getElementById('event-expense-category');
+      const customForm = document.getElementById('custom-expense-form');
+
+      if(select.value === 'custom') {
+        customForm.style.display = 'block';
+      } else {
+        customForm.style.display = 'none';
+      }
+    }
+
+    function saveCustomExpenseCategory() {
+      const name = document.getElementById('custom-expense-name').value.trim();
+      const emoji = document.getElementById('custom-expense-emoji').value.trim();
+
+      if(!name) {
+        showToast('Введите название категории');
+        return;
+      }
+
+      if(!emoji) {
+        showToast('Выберите эмодзи');
+        return;
+      }
+
+      const key = 'custom_' + Date.now();
+      EXPENSE_CATEGORIES[key] = {
+        label: name,
+        emoji: emoji,
+        color: '#64748b'
+      };
+
+      saveCustomExpenseCategories();
+      updateExpenseCategorySelect();
+
+      document.getElementById('event-expense-category').value = key;
+      document.getElementById('custom-expense-form').style.display = 'none';
+      document.getElementById('custom-expense-name').value = '';
+      document.getElementById('custom-expense-emoji').value = '';
+
+      showToast('Категория создана!');
+    }
+
+    function updateExpenseCategorySelect() {
+      const select = document.getElementById('event-expense-category');
+      const currentValue = select.value;
+
+      select.innerHTML = '<option value="">Не выбрано</option>';
+
+      Object.entries(EXPENSE_CATEGORIES).forEach(([key, cat]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = `${cat.emoji} ${cat.label}`;
+        select.appendChild(option);
+      });
+
+      const customOption = document.createElement('option');
+      customOption.value = 'custom';
+      customOption.textContent = '➕ Создать свою';
+      select.appendChild(customOption);
+
+      if(currentValue && currentValue !== 'custom') {
+        select.value = currentValue;
+      }
     }
 
     function renderSchedule() {
@@ -4257,8 +4366,8 @@
                   const catInfo = EXPENSE_CATEGORIES[cat] || EXPENSE_CATEGORIES.other;
                   return `
                     <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); border-radius: 10px;">
-                      <div style="width: 32px; height: 32px; border-radius: 8px; background: ${catInfo.color}20; border: 1px solid ${catInfo.color}40; display: flex; align-items: center; justify-content: center;">
-                        <i data-lucide="${catInfo.icon}" style="width: 16px; height: 16px; color: ${catInfo.color};"></i>
+                      <div style="width: 32px; height: 32px; border-radius: 8px; background: ${catInfo.color}20; border: 1px solid ${catInfo.color}40; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        ${catInfo.emoji}
                       </div>
                       <div style="flex: 1;">
                         <div style="font-size: 13px; color: #fff; font-weight: 600;">${catInfo.label}</div>
