@@ -2358,9 +2358,9 @@
       </div>
       <div class="modal-body" style="padding: 16px 20px 20px;">
         <p id="confirm-message" style="color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.6;"></p>
-        <div style="display: flex; gap: 10px; margin-top: 20px; align-items: center;">
-          <button id="confirm-yes" class="btn-danger" style="flex: 1; padding: 12px; font-size: 14px; height: 44px; display: flex; align-items: center; justify-content: center;">Удалить</button>
-          <button id="confirm-no" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 14px; height: 44px; display: flex; align-items: center; justify-content: center;">Отмена</button>
+        <div style="display: flex; gap: 10px; margin-top: 20px; align-items: stretch;">
+          <button id="confirm-yes" class="btn-danger" style="flex: 1; padding: 0; font-size: 14px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">Удалить</button>
+          <button id="confirm-no" class="btn-secondary" style="flex: 1; padding: 0; font-size: 14px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">Отмена</button>
         </div>
       </div>
     </div>
@@ -2705,7 +2705,7 @@
         row.style.setProperty('--accent-color', typeInfo.color);
 
         row.innerHTML = `
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <div class="event-type-icon" style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
             <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
           </div>
           <div class="day-list-info" style="flex: 1;">
@@ -2716,7 +2716,7 @@
             </div>
           </div>
           ${event.address ? `
-          <button class="nav-btn event-nav-btn" style="width: 40px; height: 40px; padding: 0; margin-right: 8px; flex-shrink: 0;" title="Построить маршрут">
+          <button class="nav-btn event-nav-btn" style="width: 40px; height: 40px; padding: 0; margin-right: 8px; flex-shrink: 0; pointer-events: none; opacity: 0;" title="Построить маршрут">
             <i data-lucide="navigation" style="width: 20px; height: 20px;"></i>
           </button>
           ` : ''}
@@ -2726,21 +2726,19 @@
           </div>
         `;
 
-        // Тап на карточку → предпросмотр (кроме кнопки навигации)
-        row.addEventListener('click', (e) => {
-          if(!e.target.closest('.event-nav-btn')) {
-            showEventPreview(event);
-          }
+        // Тап на иконку типа → предпросмотр
+        const typeIcon = row.querySelector('.event-type-icon');
+        typeIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showEventPreview(event);
         });
 
-        // Кнопка навигации → только навигатор
-        const navBtn = row.querySelector('.event-nav-btn');
-        if(navBtn) {
-          navBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        // Тап на остальную область → навигация
+        row.addEventListener('click', (e) => {
+          if(!e.target.closest('.event-type-icon') && event.address) {
             openNavigation(event.address, e);
-          });
-        }
+          }
+        });
 
         // Добавляем swipe (вправо - звонок, влево - редактирование)
         addSwipeToCall(row, event);
@@ -3764,104 +3762,134 @@
     // ==========================================
     function addSwipeToCall(element, event) {
       let startX = 0;
+      let startY = 0;
       let currentX = 0;
       let isSwiping = false;
+      let swipeDirection = null;
       let callIcon = null;
       let previewIcon = null;
+      const SWIPE_THRESHOLD = 10; // Порог для определения горизонтального свайпа
 
       element.style.position = 'relative';
-      element.style.transition = 'transform 0.3s ease';
+      element.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
       const handleTouchStart = (e) => {
+        // Игнорируем если тап на иконку типа
+        if(e.target.closest('.event-type-icon')) return;
+
         startX = e.touches[0].clientX;
-        isSwiping = true;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+        isSwiping = false;
+        swipeDirection = null;
         element.style.transition = 'none';
       };
 
       const handleTouchMove = (e) => {
-        if(!isSwiping) return;
+        if(startX === 0) return;
 
         currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const diffX = currentX - startX;
+        const diffY = currentY - startY;
+
+        // Определяем направление свайпа только один раз
+        if(!isSwiping && (Math.abs(diffX) > SWIPE_THRESHOLD || Math.abs(diffY) > SWIPE_THRESHOLD)) {
+          // Если больше вертикальный свайп - игнорируем
+          if(Math.abs(diffY) > Math.abs(diffX)) {
+            startX = 0;
+            return;
+          }
+          isSwiping = true;
+          swipeDirection = diffX > 0 ? 'right' : 'left';
+        }
+
+        if(!isSwiping) return;
+
+        // Предотвращаем скролл при свайпе
+        e.preventDefault();
+
         const diff = currentX - startX;
 
         // Свайп вправо - звонок
-        if(diff > 0 && event.phone && event.phone.trim() !== '') {
-          element.style.transform = `translateX(${Math.min(diff, 120)}px)`;
+        if(swipeDirection === 'right' && event.phone && event.phone.trim() !== '') {
+          element.style.transform = `translateX(${Math.min(diff, 100)}px)`;
 
           if(!callIcon) {
             callIcon = document.createElement('div');
             callIcon.style.cssText = `
               position: absolute;
-              left: 12px;
+              left: 8px;
               top: 50%;
               transform: translateY(-50%);
-              width: 52px;
-              height: 52px;
+              width: 56px;
+              height: 56px;
               background: linear-gradient(135deg, #22c55e, #16a34a);
-              border-radius: 12px;
+              border-radius: 16px;
               display: flex;
               align-items: center;
               justify-content: center;
               opacity: 0;
-              transition: opacity 0.2s;
+              transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               z-index: 0;
               pointer-events: none;
-              box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+              box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
             `;
-            callIcon.innerHTML = '<i data-lucide="phone" style="width: 24px; height: 24px; color: white;"></i>';
-            element.appendChild(callIcon);
+            callIcon.innerHTML = '<i data-lucide="phone" style="width: 26px; height: 26px; color: white;"></i>';
+            element.insertBefore(callIcon, element.firstChild);
             lucide.createIcons();
           }
-          if(callIcon) callIcon.style.opacity = Math.min(diff / 80, 1);
+          if(callIcon) callIcon.style.opacity = Math.min(diff / 60, 1);
         }
 
         // Свайп влево - редактирование
-        if(diff < 0) {
-          element.style.transform = `translateX(${Math.max(diff, -120)}px)`;
+        if(swipeDirection === 'left') {
+          element.style.transform = `translateX(${Math.max(diff, -100)}px)`;
 
           if(!previewIcon) {
             previewIcon = document.createElement('div');
             previewIcon.style.cssText = `
               position: absolute;
-              right: 12px;
+              right: 8px;
               top: 50%;
               transform: translateY(-50%);
-              width: 52px;
-              height: 52px;
+              width: 56px;
+              height: 56px;
               background: linear-gradient(135deg, #f59e0b, #d97706);
-              border-radius: 12px;
+              border-radius: 16px;
               display: flex;
               align-items: center;
               justify-content: center;
               opacity: 0;
-              transition: opacity 0.2s;
+              transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               z-index: 0;
               pointer-events: none;
-              box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+              box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
             `;
-            previewIcon.innerHTML = '<i data-lucide="edit-3" style="width: 24px; height: 24px; color: white;"></i>';
-            element.appendChild(previewIcon);
+            previewIcon.innerHTML = '<i data-lucide="edit-3" style="width: 26px; height: 26px; color: white;"></i>';
+            element.insertBefore(previewIcon, element.firstChild);
             lucide.createIcons();
           }
-          if(previewIcon) previewIcon.style.opacity = Math.min(Math.abs(diff) / 80, 1);
+          if(previewIcon) previewIcon.style.opacity = Math.min(Math.abs(diff) / 60, 1);
         }
       };
 
       const handleTouchEnd = () => {
-        if(!isSwiping) return;
+        if(!isSwiping) {
+          startX = 0;
+          return;
+        }
 
         const diff = currentX - startX;
-        element.style.transition = 'transform 0.3s ease';
+        element.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
-        if(diff > 100 && event.phone) {
+        if(diff > 80 && event.phone && swipeDirection === 'right') {
           makeCall(event.phone);
-          element.style.transform = 'translateX(0)';
-        } else if(diff < -100) {
+        } else if(diff < -80 && swipeDirection === 'left') {
           editEvent(event.id);
-          element.style.transform = 'translateX(0)';
-        } else {
-          element.style.transform = 'translateX(0)';
         }
+
+        element.style.transform = 'translateX(0)';
 
         if(callIcon) {
           callIcon.style.opacity = '0';
@@ -3880,6 +3908,9 @@
         }
 
         isSwiping = false;
+        swipeDirection = null;
+        startX = 0;
+        startY = 0;
         currentX = 0;
       };
 
