@@ -683,7 +683,8 @@
       background-clip: text;
     }
 
-    .modal-close {
+    .modal-close,
+    .close-btn {
       width: 40px;
       height: 40px;
       background: rgba(245,158,11,0.08);
@@ -697,7 +698,8 @@
       transition: all 0.3s;
     }
 
-    .modal-close:hover {
+    .modal-close:hover,
+    .close-btn:hover {
       background: rgba(245,158,11,0.15);
       border-color: rgba(245,158,11,0.35);
       transform: rotate(90deg);
@@ -4376,7 +4378,8 @@
         schedule: schedule.map(item => ({
           type: item.type,
           time: item.time,
-          duration: parseInt(item.duration) || 60
+          duration: parseInt(item.duration) || 60,
+          checklist: item.checklist || []
         })),
         location: document.getElementById('event-location').value,
         address: document.getElementById('event-address').value,
