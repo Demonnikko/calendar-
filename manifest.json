@@ -2,7 +2,7 @@
   "name": "Illusionist OS - Calendar",
   "short_name": "Illusionist",
   "description": "Календарь для иллюзионистов - управляй магией и прибылью",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#050507",
   "theme_color": "#050507",
