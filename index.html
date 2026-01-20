@@ -2259,6 +2259,12 @@
       magic.style.opacity = '0';
       setTimeout(() => {
         document.body.removeChild(magic);
+        // Initialize app after magic animation
+        loadEvents();
+        renderCalendar();
+        renderSchedule();
+        lucide.createIcons();
+        showSplashScreen();
       }, 500);
     }, 3500);
   }
