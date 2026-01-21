@@ -29,13 +29,13 @@
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
 
   <script>
   // ============================================
@@ -1225,7 +1225,7 @@
       position: fixed;
       top: calc(20px + env(safe-area-inset-top, 0px));
       left: 50%;
-      transform: translateX(-50%) translateY(-120px);
+      transform: translateX(-50%);
       padding: 16px 24px;
       background: linear-gradient(135deg, rgba(20,25,35,0.95) 0%, rgba(10,15,25,0.98) 100%);
       backdrop-filter: blur(20px);
@@ -1236,15 +1236,17 @@
       font-size: 14px;
       font-weight: 700;
       z-index: 10000;
-      box-shadow: 
+      box-shadow:
         0 8px 32px rgba(0,0,0,0.6),
         0 0 40px rgba(245,158,11,0.2);
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
       pointer-events: none;
+      transition: opacity 0.3s ease;
     }
 
     #toast.show {
-      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
 
     /* MONTH PICKER */
@@ -2332,7 +2334,7 @@
   </header>
 
   <!-- CALENDAR TAB -->
-  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(68px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column;">
+  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(68px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh;">
     <div style="padding: 10px 18px; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); border-bottom: 1px solid rgba(245,158,11,0.15); flex-shrink: 0;">
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
         <button class="header-btn" onclick="changeMonth(-1)" style="margin: 0;">
@@ -2367,7 +2369,7 @@
   </div>
 
   <!-- DASHBOARD TAB -->
-  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); background: #000;">
+  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); background: #000; min-height: 100vh; min-height: 100dvh; overflow-y: auto;">
     <div class="dashboard-container" style="background: #000;">
       <!-- PROFIT CARD -->
       <div class="glass-panel" style="padding: 24px; margin-bottom: 20px;">
@@ -2979,12 +2981,12 @@
     let currentDate = new Date();
     let selectedDate = new Date();
     let events = [];
-    let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
+    let schedule = [];
     let editingEventId = null;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
     let currentType = 'rabbit';
-    let monthlyGoal = 200000;
+    let monthlyGoal = 0;
     let editingTypeKey = null;
     let selectedColor = '#f59e0b';
     let selectedIcon = 'sparkles';
@@ -4461,16 +4463,16 @@
     // ==========================================
     function showSplashScreen() {
       const splash = document.getElementById('splash-screen');
-      
-      // Hide splash after 2 seconds
+
+      // Hide splash after 600ms
       setTimeout(() => {
         splash.classList.add('hide');
-        
+
         // Remove from DOM after fade out
         setTimeout(() => {
           splash.remove();
-        }, 600);
-      }, 2000);
+        }, 300);
+      }, 600);
     }
 
     function showToast(message) {
