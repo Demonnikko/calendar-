@@ -2888,33 +2888,8 @@
       'coins', 'brain', 'lock', 'user'
     ];
 
-    // Default types
-    const DEFAULT_TYPES = {
-      rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' },
-      wand: { label: 'Волшебство', color: '#c084fc', icon: 'wand-2' },
-      cards: { label: 'Карты', color: '#ef4444', icon: 'spade' },
-      spades: { label: 'Пики ♠', color: '#1e293b', icon: 'spade' },
-      clubs: { label: 'Крести ♣', color: '#0f172a', icon: 'club' },
-      diamonds: { label: 'Бубны ♦', color: '#ef4444', icon: 'diamond' },
-      wow: { label: 'Вау', color: '#fbbf24', icon: 'sparkles' },
-      microphone: { label: 'Микрофон', color: '#60a5fa', icon: 'mic' },
-      dice: { label: 'Игра', color: '#34d399', icon: 'dice-5' },
-      baby: { label: 'Детское', color: '#fb923c', icon: 'baby' },
-      alert: { label: 'Важно', color: '#ef4444', icon: 'alert-circle' },
-      hat: { label: 'Шляпа', color: '#a855f7', icon: 'cylinder' },
-      family: { label: 'Семья', color: '#22c55e', icon: 'users' },
-      tie: { label: 'Корпоратив', color: '#3b82f6', icon: 'briefcase' },
-      time: { label: 'Время', color: '#94a3b8', icon: 'clock' },
-      money: { label: 'Деньги', color: '#22c55e', icon: 'wallet' },
-      theater: { label: 'Театр', color: '#c084fc', icon: 'drama' },
-      package: { label: 'Коробка', color: '#f59e0b', icon: 'box' },
-      song: { label: 'Музыка', color: '#60a5fa', icon: 'music' },
-      coin: { label: 'Монеты', color: '#fbbf24', icon: 'coins' },
-      mind: { label: 'Мозг', color: '#c084fc', icon: 'brain' },
-      secure: { label: 'Замок', color: '#94a3b8', icon: 'lock' },
-      juggle: { label: 'Жонглер', color: '#f59e0b', icon: 'user' },
-      rehearsal: { label: 'Репетиция', color: '#94a3b8', icon: 'clock' }
-    };
+    // Default types (пустой объект - пользователь создает сам)
+    const DEFAULT_TYPES = {};
 
     // Custom types storage
     let customTypes = {};
@@ -4053,7 +4028,6 @@
       }
 
       document.getElementById('event-modal').classList.add('show');
-      setupTitleAutocomplete();
       lucide.createIcons();
     }
 
@@ -5393,7 +5367,8 @@
         loadEvents();
         renderCalendar();
         renderSchedule();
-         lucide.createIcons();
+        setupTitleAutocomplete();
+        lucide.createIcons();
 
         showSplashScreen();
 
