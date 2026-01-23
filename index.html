@@ -452,6 +452,7 @@
       margin-top: 24px;
       padding-top: 24px;
       border-top: 1px solid rgba(245,158,11,0.1);
+      min-height: 60vh;
     }
 
     .day-list-header {
@@ -2505,9 +2506,10 @@
 
         <!-- INFO TAB -->
         <div id="tab-info" class="tab-panel active">
-          <div class="form-group">
+          <div class="form-group" style="position: relative;">
             <label class="form-label">Название события</label>
-            <input type="text" id="event-title" class="form-input" placeholder="Юбилей 50 лет">
+            <input type="text" id="event-title" class="form-input" placeholder="Юбилей 50 лет" autocomplete="off">
+            <div id="title-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;"></div>
           </div>
 
           <div class="form-group">
@@ -2910,7 +2912,8 @@
       coin: { label: 'Монеты', color: '#fbbf24', icon: 'coins' },
       mind: { label: 'Мозг', color: '#c084fc', icon: 'brain' },
       secure: { label: 'Замок', color: '#94a3b8', icon: 'lock' },
-      juggle: { label: 'Жонглер', color: '#f59e0b', icon: 'user' }
+      juggle: { label: 'Жонглер', color: '#f59e0b', icon: 'user' },
+      rehearsal: { label: 'Репетиция', color: '#94a3b8', icon: 'clock' }
     };
 
     // Custom types storage
@@ -3360,7 +3363,10 @@
         return eventDate.getFullYear() === year && eventDate.getMonth() === month;
       });
       
-      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      const totalShows = monthEvents.reduce((sum, e) => {
+        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        return sum + showCount;
+      }, 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
@@ -4047,6 +4053,7 @@
       }
 
       document.getElementById('event-modal').classList.add('show');
+      setupTitleAutocomplete();
       lucide.createIcons();
     }
 
@@ -4140,8 +4147,16 @@
       const currentIndex = types.indexOf(schedule[index].type);
       const nextIndex = (currentIndex + 1) % types.length;
       schedule[index].type = types[nextIndex];
-      renderSchedule();
-      lucide.createIcons();
+
+      // Обновляем только конкретную иконку без перерисовки всего списка
+      const typeInfo = getTypes()[schedule[index].type];
+      const iconBtn = document.querySelector(`#schedule-list .schedule-item:nth-child(${index + 1}) .schedule-type-icon`);
+      if (iconBtn && typeInfo) {
+        iconBtn.style.background = typeInfo.color + '20';
+        iconBtn.style.borderColor = typeInfo.color + '40';
+        iconBtn.innerHTML = `<i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>`;
+        if (window.lucide) lucide.createIcons();
+      }
     }
 
     function updateScheduleTime(index, time) {
@@ -4375,6 +4390,72 @@
       document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
     }
 
+    // Автозаполнение названия события
+    function setupTitleAutocomplete() {
+      const input = document.getElementById('event-title');
+      const suggestionsDiv = document.getElementById('title-suggestions');
+
+      input.addEventListener('input', function() {
+        const value = this.value.trim().toLowerCase();
+
+        if(value.length < 2) {
+          suggestionsDiv.style.display = 'none';
+          return;
+        }
+
+        // Получаем уникальные названия из истории
+        const uniqueTitles = [...new Set(events.map(e => e.title))];
+        const matches = uniqueTitles.filter(title =>
+          title.toLowerCase().includes(value)
+        ).slice(0, 5);
+
+        if(matches.length === 0) {
+          suggestionsDiv.style.display = 'none';
+          return;
+        }
+
+        suggestionsDiv.innerHTML = matches.map(title => `
+          <div style="padding: 12px 16px; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid rgba(245,158,11,0.1);"
+               onmouseover="this.style.background='rgba(245,158,11,0.1)'"
+               onmouseout="this.style.background='transparent'"
+               onclick="selectTitle('${title.replace(/'/g, "\\'")}')">
+            <div style="font-size: 14px; font-weight: 600; color: #fff;">${title}</div>
+          </div>
+        `).join('');
+
+        suggestionsDiv.style.display = 'block';
+      });
+
+      // Закрыть при клике вне
+      document.addEventListener('click', function(e) {
+        if(!input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+          suggestionsDiv.style.display = 'none';
+        }
+      });
+    }
+
+    function selectTitle(title) {
+      document.getElementById('event-title').value = title;
+      document.getElementById('title-suggestions').style.display = 'none';
+
+      // Автозаполнение остальных полей из последнего события с таким названием
+      const lastEvent = events.filter(e => e.title === title).sort((a, b) =>
+        new Date(b.date) - new Date(a.date)
+      )[0];
+
+      if(lastEvent) {
+        document.getElementById('event-location').value = lastEvent.location || '';
+        document.getElementById('event-address').value = lastEvent.address || '';
+        document.getElementById('event-client').value = lastEvent.client || '';
+        document.getElementById('event-phone').value = lastEvent.phone || '';
+        document.getElementById('event-guests').value = lastEvent.guests || '';
+        if(lastEvent.schedule && lastEvent.schedule.length > 0) {
+          schedule = JSON.parse(JSON.stringify(lastEvent.schedule));
+          renderSchedule();
+        }
+      }
+    }
+
     function saveEvent() {
       const title = document.getElementById('event-title').value.trim();
       const date = document.getElementById('event-date').value;
@@ -4476,15 +4557,44 @@
     }
 
     function showToast(message) {
-      const toast = document.getElementById('toast');
-      const msg = document.getElementById('toast-msg');
+      // Создаём новый toast элемент
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        top: calc(20px + env(safe-area-inset-top, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 16px 24px;
+        background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(251,191,36,0.95));
+        color: #000;
+        font-size: 15px;
+        font-weight: 800;
+        border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(245,158,11,0.6), 0 0 0 1px rgba(255,255,255,0.2) inset;
+        backdrop-filter: blur(12px);
+        z-index: 10000;
+        max-width: 90%;
+        text-align: center;
+        letter-spacing: 0.02em;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
 
-      msg.textContent = message;
-      toast.classList.add('show');
+      // Показываем
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+      });
 
-      clearTimeout(window.toastTimer);
-      window.toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
+      // Скрываем и удаляем
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
       }, 2500);
     }
 
@@ -4822,7 +4932,10 @@
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
-      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      const totalShows = monthEvents.reduce((sum, e) => {
+        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        return sum + showCount;
+      }, 0);
       const totalTax = monthEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
@@ -4972,7 +5085,10 @@
 
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-      const totalShows = yearEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      const totalShows = yearEvents.reduce((sum, e) => {
+        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        return sum + showCount;
+      }, 0);
       const totalTax = yearEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
