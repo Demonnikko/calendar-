@@ -4147,16 +4147,7 @@
       const currentIndex = types.indexOf(schedule[index].type);
       const nextIndex = (currentIndex + 1) % types.length;
       schedule[index].type = types[nextIndex];
-
-      // Обновляем только конкретную иконку без перерисовки всего списка
-      const typeInfo = getTypes()[schedule[index].type];
-      const iconBtn = document.querySelector(`#schedule-list .schedule-item:nth-child(${index + 1}) .schedule-type-icon`);
-      if (iconBtn && typeInfo) {
-        iconBtn.style.background = typeInfo.color + '20';
-        iconBtn.style.borderColor = typeInfo.color + '40';
-        iconBtn.innerHTML = `<i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>`;
-        if (window.lucide) lucide.createIcons();
-      }
+      renderSchedule();
     }
 
     function updateScheduleTime(index, time) {
