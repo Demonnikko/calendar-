@@ -4391,11 +4391,11 @@
         suggestionsDiv.style.display = 'block';
       });
 
-      // Закрыть при клике вне (только если подсказки открыты)
-      document.addEventListener('click', function(e) {
-        if(suggestionsDiv.style.display === 'block' && !input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+      // Закрыть при потере фокуса инпута
+      input.addEventListener('blur', function() {
+        setTimeout(() => {
           suggestionsDiv.style.display = 'none';
-        }
+        }, 200);
       });
     }
 
