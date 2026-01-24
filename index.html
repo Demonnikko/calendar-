@@ -2349,7 +2349,7 @@
     </div>
 
     <!-- Календарная сетка (фиксированная) -->
-    <div style="margin: 12px; margin-top: 8px; flex-shrink: 0;">
+    <div id="calendar-swipe-area" style="margin: 12px; margin-top: 8px; flex-shrink: 0;">
       <div class="day-headers">
         <div class="day-header">Пн</div>
         <div class="day-header">Вт</div>
@@ -3444,21 +3444,29 @@
       // Type analytics - считаем только уникальные типы событий
       const typeStats = {};
       monthEvents.forEach(event => {
-        // Берём основной тип события (первый show в schedule или event.type)
-        let mainType = 'rabbit';
-
+        // Считаем каждый элемент расписания
         if(event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          event.schedule.forEach(scheduleItem => {
+            const type = scheduleItem.type || 'rabbit';
+            if(!typeStats[type]) {
+              typeStats[type] = { count: 0, income: 0 };
+            }
+            typeStats[type].count++;
+          });
+          // Доход распределяем пропорционально на все типы в событии
+          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
+          event.schedule.forEach(scheduleItem => {
+            const type = scheduleItem.type || 'rabbit';
+            typeStats[type].income += incomePerShow;
+          });
         } else {
-          mainType = event.type || 'rabbit';
+          const type = event.type || 'rabbit';
+          if(!typeStats[type]) {
+            typeStats[type] = { count: 0, income: 0 };
+          }
+          typeStats[type].count++;
+          typeStats[type].income += event.income || 0;
         }
-
-        if(!typeStats[mainType]) {
-          typeStats[mainType] = { count: 0, income: 0 };
-        }
-
-        typeStats[mainType].count++;
-        typeStats[mainType].income += event.income || 0;
       });
       
       const typesList = document.getElementById('types-list');
@@ -4878,17 +4886,27 @@
       // Статистика по типам
       const typeStats = {};
       monthEvents.forEach(event => {
-        let mainType = 'rabbit';
         if(event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          event.schedule.forEach(scheduleItem => {
+            const type = scheduleItem.type || 'rabbit';
+            if(!typeStats[type]) {
+              typeStats[type] = { count: 0, income: 0 };
+            }
+            typeStats[type].count++;
+          });
+          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
+          event.schedule.forEach(scheduleItem => {
+            const type = scheduleItem.type || 'rabbit';
+            typeStats[type].income += incomePerShow;
+          });
         } else {
-          mainType = event.type || 'rabbit';
+          const type = event.type || 'rabbit';
+          if(!typeStats[type]) {
+            typeStats[type] = { count: 0, income: 0 };
+          }
+          typeStats[type].count++;
+          typeStats[type].income += event.income || 0;
         }
-        if(!typeStats[mainType]) {
-          typeStats[mainType] = { count: 0, income: 0 };
-        }
-        typeStats[mainType].count++;
-        typeStats[mainType].income += event.income || 0;
       });
 
       const typeStatsHTML = Object.entries(typeStats)
@@ -5344,11 +5362,49 @@
             console.log('ServiceWorker registration failed:', err);
           });
         }
+
+        // Добавляем свайп для календаря
+        setupCalendarSwipe();
       } catch (error) {
         console.error("License check error:", error);
         showLicensePrompt("first");
       }
     });
+
+    // ==========================================
+    // CALENDAR SWIPE
+    // ==========================================
+    function setupCalendarSwipe() {
+      const swipeArea = document.getElementById('calendar-swipe-area');
+      if (!swipeArea) return;
+
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      swipeArea.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      swipeArea.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleCalendarSwipe();
+      }, { passive: true });
+
+      function handleCalendarSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // Свайп влево - следующий месяц
+            changeMonth(1);
+          } else {
+            // Свайп вправо - предыдущий месяц
+            changeMonth(-1);
+          }
+        }
+      }
+    }
   </script>
 </body>
 </html>
