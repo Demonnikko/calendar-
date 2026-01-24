@@ -451,6 +451,7 @@
     .day-list {
       margin-top: 24px;
       padding-top: 24px;
+      padding-bottom: 20px;
       border-top: 1px solid rgba(245,158,11,0.1);
     }
 
@@ -1133,7 +1134,7 @@
       right: 0;
       z-index: 100;
       padding: 0 20px;
-      padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
@@ -1142,7 +1143,7 @@
     .nav-inner {
       pointer-events: all;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: space-between;
       gap: 0;
       position: relative;
@@ -1167,7 +1168,6 @@
     }
 
     .nav-item:hover {
-      transform: translateY(-4px);
       border-color: rgba(245,158,11,0.4);
       color: rgba(245,158,11,0.9);
     }
@@ -1175,7 +1175,6 @@
     .nav-item.active {
       border-color: rgba(245,158,11,0.6);
       color: #f59e0b;
-      transform: translateY(-4px);
     }
 
     /* FAB - центральная кнопка */
@@ -1184,7 +1183,7 @@
       height: 80px;
       background: transparent;
       border: 2.5px solid rgba(245,158,11,0.35);
-      margin-bottom: 12px;
+      transform: translateY(-12px);
     }
 
     .nav-item:nth-child(2):hover {
@@ -2349,22 +2348,23 @@
       </div>
     </div>
 
-    <div style="margin: 12px; margin-top: 8px; margin-bottom: 4px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-      <div class="calendar-container">
-        <div class="day-headers">
-          <div class="day-header">Пн</div>
-          <div class="day-header">Вт</div>
-          <div class="day-header">Ср</div>
-          <div class="day-header">Чт</div>
-          <div class="day-header">Пт</div>
-          <div class="day-header">Сб</div>
-          <div class="day-header">Вс</div>
-        </div>
-
-        <div class="calendar-grid" id="calendar-grid"></div>
-
-        <div class="day-list" id="day-list" style="padding-bottom: 20px;"></div>
+    <!-- Календарная сетка (фиксированная) -->
+    <div style="margin: 12px; margin-top: 8px; flex-shrink: 0;">
+      <div class="day-headers">
+        <div class="day-header">Пн</div>
+        <div class="day-header">Вт</div>
+        <div class="day-header">Ср</div>
+        <div class="day-header">Чт</div>
+        <div class="day-header">Пт</div>
+        <div class="day-header">Сб</div>
+        <div class="day-header">Вс</div>
       </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <!-- Список событий (скроллируемая область) -->
+    <div id="events-scroll-container" style="flex: 1; overflow-y: auto; margin: 0 12px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling: touch;">
+      <div class="day-list" id="day-list"></div>
     </div>
   </div>
 
@@ -2521,6 +2521,7 @@
               <option value="pending">Предварительная бронь</option>
               <option value="confirmed">Подтверждено</option>
               <option value="completed">Выполнено</option>
+              <option value="rehearsal">Репетиция</option>
             </select>
           </div>
 
@@ -2887,7 +2888,9 @@
     ];
 
     // Default types (пустой объект - пользователь создает сам)
-    const DEFAULT_TYPES = {};
+    const DEFAULT_TYPES = {
+      rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' }
+    };
 
     // Custom types storage
     let customTypes = {};
@@ -3041,13 +3044,13 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        // Проверяем позицию скролла календаря и скрываем меню если не внизу
+        // Проверяем позицию скролла событий и скрываем меню если не внизу
         setTimeout(() => {
-          const calContainer = document.querySelector('.calendar-container');
-          if(calContainer) {
-            const scrollTop = calContainer.scrollTop;
-            const scrollHeight = calContainer.scrollHeight;
-            const clientHeight = calContainer.clientHeight;
+          const eventsContainer = document.getElementById('events-scroll-container');
+          if(eventsContainer) {
+            const scrollTop = eventsContainer.scrollTop;
+            const scrollHeight = eventsContainer.scrollHeight;
+            const clientHeight = eventsContainer.clientHeight;
             const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
             if(!isAtBottom) {
@@ -3155,6 +3158,10 @@
               dot.style.background = '#f59e0b';
             } else if(event.status === 'confirmed') {
               dot.style.background = '#22c55e';
+            } else if(event.status === 'rehearsal') {
+              dot.style.background = '#3b82f6';
+            } else if(event.status === 'completed') {
+              dot.style.background = '#a855f7';
             } else if(event.status === 'cancelled') {
               dot.style.background = '#ef4444';
             }
@@ -3190,7 +3197,7 @@
 
       dayEvents.forEach(event => {
         const typeInfo = TYPES[event.type] || TYPES.rabbit;
-        const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+        const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
         const eventDate = new Date(event.date);
 
         const row = document.createElement('div');
@@ -3337,7 +3344,8 @@
       });
       
       const totalShows = monthEvents.reduce((sum, e) => {
-        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        if (e.status === 'rehearsal') return sum;
+        const showCount = e.schedule?.length || 1;
         return sum + showCount;
       }, 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
@@ -3506,7 +3514,7 @@
           const allTypes = getTypes();
           const typeInfo = allTypes[event.type] || allTypes[Object.keys(allTypes)[0]];
           const eventDate = new Date(event.date);
-          const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+          const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
 
           const row = document.createElement('div');
           row.className = 'day-list-row';
@@ -4353,11 +4361,6 @@
       document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
     }
 
-    // Автозаполнение отключено
-    function setupTitleAutocomplete() {
-      // Временно отключено
-    }
-
     function saveEvent() {
       const title = document.getElementById('event-title').value.trim();
       const date = document.getElementById('event-date').value;
@@ -4731,8 +4734,8 @@
 
     function showEventPreview(event) {
       const typeInfo = TYPES[event.type] || TYPES.rabbit;
-      const statusText = event.status === 'confirmed' ? 'Подтверждено' : event.status === 'pending' ? 'Ожидание' : 'Отменено';
-      const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
+      const statusText = event.status === 'confirmed' ? 'Подтверждено' : event.status === 'pending' ? 'Ожидание' : event.status === 'rehearsal' ? 'Репетиция' : event.status === 'completed' ? 'Выполнено' : 'Отменено';
+      const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
 
       let content = `
         <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -4835,7 +4838,8 @@
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
       const totalShows = monthEvents.reduce((sum, e) => {
-        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        if (e.status === 'rehearsal') return sum;
+        const showCount = e.schedule?.length || 1;
         return sum + showCount;
       }, 0);
       const totalTax = monthEvents.reduce((sum, e) => {
@@ -4988,7 +4992,8 @@
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalShows = yearEvents.reduce((sum, e) => {
-        const showCount = e.schedule?.filter(s => s.type !== 'rehearsal').length || 1;
+        if (e.status === 'rehearsal') return sum;
+        const showCount = e.schedule?.length || 1;
         return sum + showCount;
       }, 0);
       const totalTax = yearEvents.reduce((sum, e) => {
@@ -5269,7 +5274,7 @@
 
     // Добавляем обработчики скролла
     document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll);
-    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScroll);
+    document.getElementById('events-scroll-container')?.addEventListener('scroll', handleScroll);
 
     // ==========================================
     // HELPERS
