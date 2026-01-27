@@ -29,15 +29,41 @@
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
 
-  <script src="tailwind.min.js"></script>
-  <script src="lucide.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+  // ============================================
+  // FIREBASE CONFIGURATION
+  // ============================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
+    authDomain: "calc76.firebaseapp.com",
+    databaseURL: "https://calc76-default-rtdb.firebaseio.com",
+    projectId: "calc76",
+    storageBucket: "calc76.firebasestorage.app",
+    messagingSenderId: "972929668805",
+    appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
+  };
+
+  window.firebaseDB = null;
+  window.firebaseEnabled = false;
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    window.firebaseDB = firebase.database();
+    window.firebaseEnabled = true;
+    console.log("✅ Firebase initialized");
+  } catch (error) {
+    console.error("❌ Firebase error:", error);
+    window.firebaseEnabled = false;
+  }
+  </script>
 
   <style>
     :root {
@@ -1789,7 +1815,6 @@
       opacity: 1;
       transition: opacity 0.6s ease-out;
       overflow: hidden;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     #splash-screen.hide {
@@ -2342,7 +2367,7 @@
   </div>
 
   <!-- DASHBOARD TAB -->
-  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); background: #000; min-height: 100vh; min-height: 100dvh; overflow: hidden; display: flex; flex-direction: column;">
+  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); background: #000;">
     <div class="dashboard-container" style="background: #000;">
       <!-- PROFIT CARD -->
       <div class="glass-panel" style="padding: 24px; margin-bottom: 20px;">
@@ -2493,7 +2518,6 @@
             <select id="event-status" class="form-select">
               <option value="pending">Предварительная бронь</option>
               <option value="confirmed">Подтверждено</option>
-              <option value="rehearsal">Репетиция</option>
               <option value="completed">Выполнено</option>
             </select>
           </div>
@@ -2605,12 +2629,6 @@
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           <button class="btn-primary" onclick="saveEvent()">Сохранить</button>
           <button class="btn-secondary" onclick="closeEventModal()">Отмена</button>
-          <button class="btn-secondary" id="duplicate-btn" onclick="duplicateEvent()" style="display: none;">
-            <span style="display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="copy" style="width: 18px; height: 18px;"></i>
-              Дублировать
-            </span>
-          </button>
           <button class="btn-danger" id="delete-btn" onclick="deleteEvent()" style="display: none;">Удалить</button>
         </div>
       </div>
@@ -2979,33 +2997,19 @@
     }
 
     function loadEvents() {
-      try {
-        const stored = localStorage.getItem('illusionist_events');
-        if(stored) {
-          events = JSON.parse(stored);
-        }
-      } catch(e) {
-        console.error('Error loading events:', e);
-        events = [];
+      const stored = localStorage.getItem('illusionist_events');
+      if(stored) {
+        events = JSON.parse(stored);
       }
 
-      try {
-        const savedGoal = localStorage.getItem('illusionist_goal');
-        if(savedGoal) {
-          monthlyGoal = parseFloat(savedGoal) || 200000;
-        }
-      } catch(e) {
-        monthlyGoal = 200000;
+      const savedGoal = localStorage.getItem('illusionist_goal');
+      if(savedGoal) {
+        monthlyGoal = parseFloat(savedGoal) || 200000;
       }
 
-      try {
-        const savedTypes = localStorage.getItem('illusionist_custom_types');
-        if(savedTypes) {
-          customTypes = JSON.parse(savedTypes);
-        }
-      } catch(e) {
-        console.error('Error loading custom types:', e);
-        customTypes = {};
+      const savedTypes = localStorage.getItem('illusionist_custom_types');
+      if(savedTypes) {
+        customTypes = JSON.parse(savedTypes);
       }
 
       loadCustomExpenseCategories();
@@ -3354,10 +3358,7 @@
         return eventDate.getFullYear() === year && eventDate.getMonth() === month;
       });
       
-      const totalShows = monthEvents.reduce((sum, e) => {
-        if(e.status === 'rehearsal') return sum;
-        return sum + (e.schedule?.length || 1);
-      }, 0);
+      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
@@ -3366,14 +3367,14 @@
         return sum + taxAmount;
       }, 0);
       const profit = totalIncome - totalExpense;
-      const avgCheck = totalShows > 0 ? Math.round(totalIncome / totalShows) : 0;
+      const avgCheck = monthEvents.length > 0 ? Math.round(totalIncome / monthEvents.length) : 0;
       const netProfit = totalIncome - totalExpense - totalTax;
 
       // Update KPIs
       document.getElementById('profit-amount').textContent = `${Math.round(profit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-income').textContent = `${Math.round(totalIncome).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-expense').textContent = `${Math.round(totalExpense).toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} соб.)`;
+      document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} вых.)`;
       document.getElementById('kpi-avg').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-balance').textContent = `${Math.round(netProfit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-tax').textContent = `${Math.round(totalTax).toLocaleString('ru-RU')} ₽`;
@@ -3429,28 +3430,21 @@
       // Type analytics - считаем только уникальные типы событий
       const typeStats = {};
       monthEvents.forEach(event => {
-        // Считаем каждый элемент расписания отдельно
-        if(event.schedule && event.schedule.length > 0) {
-          // Доход распределяем пропорционально на все типы в событии
-          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
+        // Берём основной тип события (первый show в schedule или event.type)
+        let mainType = 'rabbit';
 
-          event.schedule.forEach(scheduleItem => {
-            const type = scheduleItem.type || 'rabbit';
-            if(!typeStats[type]) {
-              typeStats[type] = { count: 0, income: 0 };
-            }
-            typeStats[type].count++;
-            typeStats[type].income += incomePerShow;
-          });
+        if(event.schedule && event.schedule.length > 0) {
+          mainType = event.schedule[0].type || 'rabbit';
         } else {
-          // Событие без расписания
-          const type = event.type || 'rabbit';
-          if(!typeStats[type]) {
-            typeStats[type] = { count: 0, income: 0 };
-          }
-          typeStats[type].count++;
-          typeStats[type].income += event.income || 0;
+          mainType = event.type || 'rabbit';
         }
+
+        if(!typeStats[mainType]) {
+          typeStats[mainType] = { count: 0, income: 0 };
+        }
+
+        typeStats[mainType].count++;
+        typeStats[mainType].income += event.income || 0;
       });
       
       const typesList = document.getElementById('types-list');
@@ -3575,36 +3569,6 @@
     function changeMonth(delta) {
       currentDate.setMonth(currentDate.getMonth() + delta);
       renderCalendar();
-    }
-
-    function setupCalendarSwipe() {
-      const swipeArea = document.getElementById('calendar-swipe-area');
-      if (!swipeArea) return;
-
-      let touchStartX = 0;
-      let touchEndX = 0;
-
-      swipeArea.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-      }, { passive: true });
-
-      swipeArea.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleCalendarSwipe();
-      }, { passive: true });
-
-      function handleCalendarSwipe() {
-        const swipeThreshold = 50;
-        const diff = touchStartX - touchEndX;
-
-        if (Math.abs(diff) > swipeThreshold) {
-          if (diff > 0) {
-            changeMonth(1); // Swipe left = next month
-          } else {
-            changeMonth(-1); // Swipe right = previous month
-          }
-        }
-      }
     }
 
     function selectDate(date) {
@@ -4069,7 +4033,6 @@
       editingEventId = null;
       document.getElementById('modal-title').textContent = 'Новое событие';
       document.getElementById('delete-btn').style.display = 'none';
-      document.getElementById('duplicate-btn').style.display = 'none';
 
       resetForm();
       updateExpenseCategorySelect();
@@ -4092,7 +4055,6 @@
       editingEventId = eventId;
       document.getElementById('modal-title').textContent = 'Редактировать';
       document.getElementById('delete-btn').style.display = 'block';
-      document.getElementById('duplicate-btn').style.display = 'block';
 
       updateExpenseCategorySelect();
 
@@ -4404,8 +4366,9 @@
       const expense = parseFloat(document.getElementById('event-expense').value) || 0;
       const taxPercent = parseFloat(document.getElementById('event-tax').value) || 0;
 
-      const taxAmount = (income * taxPercent) / 100;
-      const balance = income - prepay - expense - taxAmount;
+      const remainder = income - prepay - expense;
+      const taxAmount = (remainder * taxPercent) / 100;
+      const balance = remainder - taxAmount;
 
       document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
     }
@@ -4491,23 +4454,6 @@
 
         showToast('Событие удалено');
       });
-    }
-
-    function duplicateEvent() {
-      if(!editingEventId) return;
-
-      // Переключаем в режим создания нового события
-      editingEventId = null;
-
-      // Очищаем дату
-      document.getElementById('event-date').value = '';
-
-      // Меняем заголовок и кнопки
-      document.getElementById('modal-title').textContent = 'Новое событие (копия)';
-      document.getElementById('delete-btn').style.display = 'none';
-      document.getElementById('duplicate-btn').style.display = 'none';
-
-      showToast('Выберите новую дату для копии события');
     }
 
     // ==========================================
@@ -4874,39 +4820,29 @@
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
-      const totalShows = monthEvents.reduce((sum, e) => {
-        if(e.status === 'rehearsal') return sum;
-        return sum + (e.schedule?.length || 1);
-      }, 0);
+      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalTax = monthEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
       }, 0);
       const profit = totalIncome - totalExpense;
       const netProfit = totalIncome - totalExpense - totalTax;
-      const avgCheck = totalShows > 0 ? Math.round(totalIncome / totalShows) : 0;
+      const avgCheck = monthEvents.length > 0 ? Math.round(totalIncome / monthEvents.length) : 0;
 
       // Статистика по типам
       const typeStats = {};
       monthEvents.forEach(event => {
+        let mainType = 'rabbit';
         if(event.schedule && event.schedule.length > 0) {
-          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
-          event.schedule.forEach(scheduleItem => {
-            const type = scheduleItem.type || 'rabbit';
-            if(!typeStats[type]) {
-              typeStats[type] = { count: 0, income: 0 };
-            }
-            typeStats[type].count++;
-            typeStats[type].income += incomePerShow;
-          });
+          mainType = event.schedule[0].type || 'rabbit';
         } else {
-          const type = event.type || 'rabbit';
-          if(!typeStats[type]) {
-            typeStats[type] = { count: 0, income: 0 };
-          }
-          typeStats[type].count++;
-          typeStats[type].income += event.income || 0;
+          mainType = event.type || 'rabbit';
         }
+        if(!typeStats[mainType]) {
+          typeStats[mainType] = { count: 0, income: 0 };
+        }
+        typeStats[mainType].count++;
+        typeStats[mainType].income += event.income || 0;
       });
 
       const typeStatsHTML = Object.entries(typeStats)
@@ -5034,10 +4970,7 @@
 
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-      const totalShows = yearEvents.reduce((sum, e) => {
-        if(e.status === 'rehearsal') return sum;
-        return sum + (e.schedule?.length || 1);
-      }, 0);
+      const totalShows = yearEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalTax = yearEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
@@ -5073,24 +5006,17 @@
       // Статистика по типам
       const typeStats = {};
       yearEvents.forEach(event => {
+        let mainType = 'rabbit';
         if(event.schedule && event.schedule.length > 0) {
-          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
-          event.schedule.forEach(scheduleItem => {
-            const type = scheduleItem.type || 'rabbit';
-            if(!typeStats[type]) {
-              typeStats[type] = { count: 0, income: 0 };
-            }
-            typeStats[type].count++;
-            typeStats[type].income += incomePerShow;
-          });
+          mainType = event.schedule[0].type || 'rabbit';
         } else {
-          const type = event.type || 'rabbit';
-          if(!typeStats[type]) {
-            typeStats[type] = { count: 0, income: 0 };
-          }
-          typeStats[type].count++;
-          typeStats[type].income += event.income || 0;
+          mainType = event.type || 'rabbit';
         }
+        if(!typeStats[mainType]) {
+          typeStats[mainType] = { count: 0, income: 0 };
+        }
+        typeStats[mainType].count++;
+        typeStats[mainType].income += event.income || 0;
       });
 
       const typeStatsHTML = Object.entries(typeStats)
@@ -5343,57 +5269,24 @@
     // INIT
     // ==========================================
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize Firebase
-      const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
-        authDomain: "calc76.firebaseapp.com",
-        databaseURL: "https://calc76-default-rtdb.firebaseio.com",
-        projectId: "calc76",
-        storageBucket: "calc76.firebasestorage.app",
-        messagingSenderId: "972929668805",
-        appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
-      };
-
-      window.firebaseDB = null;
-      window.firebaseEnabled = false;
-
+      // Check license first
       try {
-        if (typeof firebase !== 'undefined') {
-          firebase.initializeApp(FIREBASE_CONFIG);
-          window.firebaseDB = firebase.database();
-          window.firebaseEnabled = true;
-          console.log("✅ Firebase initialized");
+        const hasLicense = await checkActivation();
+
+        if (!hasLicense || hasLicense === 'expired') {
+          const splash = document.getElementById('splash-screen');
+          if (splash) splash.style.display = 'none';
+
+          showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
+          return;
         }
-      } catch (error) {
-        console.error("❌ Firebase error:", error);
-        window.firebaseEnabled = false;
-      }
-
-      // Check license first (optional, works offline)
-      try {
-        // Если есть интернет - проверяем лицензию
-        if (window.firebaseEnabled && navigator.onLine) {
-          const hasLicense = await checkActivation();
-
-          if (!hasLicense || hasLicense === 'expired') {
-            const splash = document.getElementById('splash-screen');
-            if (splash) splash.style.display = 'none';
-
-            showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
-            return;
-          }
-        }
-        // Если офлайн или Firebase недоступен - работаем без проверки
 
         loadEvents();
         renderCalendar();
         renderSchedule();
-        lucide.createIcons();
+         lucide.createIcons();
 
         showSplashScreen();
-
-        // Setup calendar swipe
-        setupCalendarSwipe();
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
