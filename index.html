@@ -29,41 +29,15 @@
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
 
-  <script src="https://cdn.tailwindcss.com" defer></script>
-  <script src="https://unpkg.com/lucide@latest" defer></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <script src="tailwind.min.js"></script>
+  <script src="lucide.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+  </style>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
-
-  <script>
-  // ============================================
-  // FIREBASE CONFIGURATION
-  // ============================================
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
-    authDomain: "calc76.firebaseapp.com",
-    databaseURL: "https://calc76-default-rtdb.firebaseio.com",
-    projectId: "calc76",
-    storageBucket: "calc76.firebasestorage.app",
-    messagingSenderId: "972929668805",
-    appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
-  };
-
-  window.firebaseDB = null;
-  window.firebaseEnabled = false;
-
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    window.firebaseDB = firebase.database();
-    window.firebaseEnabled = true;
-    console.log("✅ Firebase initialized");
-  } catch (error) {
-    console.error("❌ Firebase error:", error);
-    window.firebaseEnabled = false;
-  }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
   <style>
     :root {
@@ -451,7 +425,6 @@
     .day-list {
       margin-top: 24px;
       padding-top: 24px;
-      padding-bottom: 20px;
       border-top: 1px solid rgba(245,158,11,0.1);
     }
 
@@ -1134,7 +1107,7 @@
       right: 0;
       z-index: 100;
       padding: 0 20px;
-      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
@@ -1143,7 +1116,7 @@
     .nav-inner {
       pointer-events: all;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
       gap: 0;
       position: relative;
@@ -1168,6 +1141,7 @@
     }
 
     .nav-item:hover {
+      transform: translateY(-4px);
       border-color: rgba(245,158,11,0.4);
       color: rgba(245,158,11,0.9);
     }
@@ -1175,6 +1149,7 @@
     .nav-item.active {
       border-color: rgba(245,158,11,0.6);
       color: #f59e0b;
+      transform: translateY(-4px);
     }
 
     /* FAB - центральная кнопка */
@@ -1183,7 +1158,7 @@
       height: 80px;
       background: transparent;
       border: 2.5px solid rgba(245,158,11,0.35);
-      transform: translateY(-12px);
+      margin-bottom: 12px;
     }
 
     .nav-item:nth-child(2):hover {
@@ -1224,7 +1199,7 @@
       position: fixed;
       top: calc(20px + env(safe-area-inset-top, 0px));
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(-120px);
       padding: 16px 24px;
       background: linear-gradient(135deg, rgba(20,25,35,0.95) 0%, rgba(10,15,25,0.98) 100%);
       backdrop-filter: blur(20px);
@@ -1235,17 +1210,15 @@
       font-size: 14px;
       font-weight: 700;
       z-index: 10000;
-      box-shadow:
+      box-shadow: 
         0 8px 32px rgba(0,0,0,0.6),
         0 0 40px rgba(245,158,11,0.2);
-      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
-      transition: opacity 0.3s ease;
     }
 
     #toast.show {
-      opacity: 1;
-      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
     }
 
     /* MONTH PICKER */
@@ -2333,7 +2306,7 @@
   </header>
 
   <!-- CALENDAR TAB -->
-  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(68px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow-x: hidden;">
+  <div id="calendar-tab" class="tab-content active" style="padding-top: calc(68px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column;">
     <div style="padding: 10px 18px; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)); border-bottom: 1px solid rgba(245,158,11,0.15); flex-shrink: 0;">
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
         <button class="header-btn" onclick="changeMonth(-1)" style="margin: 0;">
@@ -2348,28 +2321,27 @@
       </div>
     </div>
 
-    <!-- Календарная сетка (фиксированная) -->
-    <div id="calendar-swipe-area" style="margin: 12px; margin-top: 8px; flex-shrink: 0;">
-      <div class="day-headers">
-        <div class="day-header">Пн</div>
-        <div class="day-header">Вт</div>
-        <div class="day-header">Ср</div>
-        <div class="day-header">Чт</div>
-        <div class="day-header">Пт</div>
-        <div class="day-header">Сб</div>
-        <div class="day-header">Вс</div>
-      </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
-    </div>
+    <div style="margin: 12px; margin-top: 8px; margin-bottom: 4px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="calendar-container">
+        <div class="day-headers">
+          <div class="day-header">Пн</div>
+          <div class="day-header">Вт</div>
+          <div class="day-header">Ср</div>
+          <div class="day-header">Чт</div>
+          <div class="day-header">Пт</div>
+          <div class="day-header">Сб</div>
+          <div class="day-header">Вс</div>
+        </div>
 
-    <!-- Список событий (скроллируемая область) -->
-    <div id="events-scroll-container" style="flex: 1; overflow-y: auto; overflow-x: hidden; margin: 0 12px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling: touch;">
-      <div class="day-list" id="day-list"></div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+
+        <div class="day-list" id="day-list" style="padding-bottom: 20px;"></div>
+      </div>
     </div>
   </div>
 
   <!-- DASHBOARD TAB -->
-  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); background: #000; min-height: 100vh; min-height: 100dvh; overflow-y: auto;">
+  <div id="dashboard-tab" class="tab-content" style="padding-top: calc(82px + var(--safe-top)); background: #000;">
     <div class="dashboard-container" style="background: #000;">
       <!-- PROFIT CARD -->
       <div class="glass-panel" style="padding: 24px; margin-bottom: 20px;">
@@ -2520,8 +2492,8 @@
             <select id="event-status" class="form-select">
               <option value="pending">Предварительная бронь</option>
               <option value="confirmed">Подтверждено</option>
-              <option value="completed">Выполнено</option>
               <option value="rehearsal">Репетиция</option>
+              <option value="completed">Выполнено</option>
             </select>
           </div>
 
@@ -2632,6 +2604,12 @@
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
           <button class="btn-primary" onclick="saveEvent()">Сохранить</button>
           <button class="btn-secondary" onclick="closeEventModal()">Отмена</button>
+          <button class="btn-secondary" id="duplicate-btn" onclick="duplicateEvent()" style="display: none;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="copy" style="width: 18px; height: 18px;"></i>
+              Дублировать
+            </span>
+          </button>
           <button class="btn-danger" id="delete-btn" onclick="deleteEvent()" style="display: none;">Удалить</button>
         </div>
       </div>
@@ -2881,15 +2859,37 @@
     // ==========================================
     // Available icons for selection
     const AVAILABLE_ICONS = [
-      'rabbit', 'wand-2', 'spade', 'club', 'diamond', 'heart', 'sparkles', 'mic', 'dice-5',
-      'baby', 'alert-circle', 'crown', 'users', 'briefcase', 'help-circle',
+      'rabbit', 'wand-2', 'spade', 'club', 'diamond', 'sparkles', 'mic', 'dice-5',
+      'baby', 'alert-circle', 'cylinder', 'users', 'briefcase',
       'clock', 'wallet', 'drama', 'box', 'music',
       'coins', 'brain', 'lock', 'user'
     ];
 
-    // Default types (пустой объект - пользователь создает сам)
+    // Default types
     const DEFAULT_TYPES = {
-      rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' }
+      rabbit: { label: 'Кролик', color: '#f59e0b', icon: 'rabbit' },
+      wand: { label: 'Волшебство', color: '#c084fc', icon: 'wand-2' },
+      cards: { label: 'Карты', color: '#ef4444', icon: 'spade' },
+      spades: { label: 'Пики ♠', color: '#1e293b', icon: 'spade' },
+      clubs: { label: 'Крести ♣', color: '#0f172a', icon: 'club' },
+      diamonds: { label: 'Бубны ♦', color: '#ef4444', icon: 'diamond' },
+      wow: { label: 'Вау', color: '#fbbf24', icon: 'sparkles' },
+      microphone: { label: 'Микрофон', color: '#60a5fa', icon: 'mic' },
+      dice: { label: 'Игра', color: '#34d399', icon: 'dice-5' },
+      baby: { label: 'Детское', color: '#fb923c', icon: 'baby' },
+      alert: { label: 'Важно', color: '#ef4444', icon: 'alert-circle' },
+      hat: { label: 'Шляпа', color: '#a855f7', icon: 'cylinder' },
+      family: { label: 'Семья', color: '#22c55e', icon: 'users' },
+      tie: { label: 'Корпоратив', color: '#3b82f6', icon: 'briefcase' },
+      time: { label: 'Время', color: '#94a3b8', icon: 'clock' },
+      money: { label: 'Деньги', color: '#22c55e', icon: 'wallet' },
+      theater: { label: 'Театр', color: '#c084fc', icon: 'drama' },
+      package: { label: 'Коробка', color: '#f59e0b', icon: 'box' },
+      song: { label: 'Музыка', color: '#60a5fa', icon: 'music' },
+      coin: { label: 'Монеты', color: '#fbbf24', icon: 'coins' },
+      mind: { label: 'Мозг', color: '#c084fc', icon: 'brain' },
+      secure: { label: 'Замок', color: '#94a3b8', icon: 'lock' },
+      juggle: { label: 'Жонглер', color: '#f59e0b', icon: 'user' }
     };
 
     // Custom types storage
@@ -2960,12 +2960,12 @@
     let currentDate = new Date();
     let selectedDate = new Date();
     let events = [];
-    let schedule = [];
+    let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
     let editingEventId = null;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
     let currentType = 'rabbit';
-    let monthlyGoal = 0;
+    let monthlyGoal = 200000;
     let editingTypeKey = null;
     let selectedColor = '#f59e0b';
     let selectedIcon = 'sparkles';
@@ -2978,19 +2978,33 @@
     }
 
     function loadEvents() {
-      const stored = localStorage.getItem('illusionist_events');
-      if(stored) {
-        events = JSON.parse(stored);
+      try {
+        const stored = localStorage.getItem('illusionist_events');
+        if(stored) {
+          events = JSON.parse(stored);
+        }
+      } catch(e) {
+        console.error('Error loading events:', e);
+        events = [];
       }
 
-      const savedGoal = localStorage.getItem('illusionist_goal');
-      if(savedGoal) {
-        monthlyGoal = parseFloat(savedGoal) || 200000;
+      try {
+        const savedGoal = localStorage.getItem('illusionist_goal');
+        if(savedGoal) {
+          monthlyGoal = parseFloat(savedGoal) || 200000;
+        }
+      } catch(e) {
+        monthlyGoal = 200000;
       }
 
-      const savedTypes = localStorage.getItem('illusionist_custom_types');
-      if(savedTypes) {
-        customTypes = JSON.parse(savedTypes);
+      try {
+        const savedTypes = localStorage.getItem('illusionist_custom_types');
+        if(savedTypes) {
+          customTypes = JSON.parse(savedTypes);
+        }
+      } catch(e) {
+        console.error('Error loading custom types:', e);
+        customTypes = {};
       }
 
       loadCustomExpenseCategories();
@@ -3044,13 +3058,13 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        // Проверяем позицию скролла событий и скрываем меню если не внизу
+        // Проверяем позицию скролла календаря и скрываем меню если не внизу
         setTimeout(() => {
-          const eventsContainer = document.getElementById('events-scroll-container');
-          if(eventsContainer) {
-            const scrollTop = eventsContainer.scrollTop;
-            const scrollHeight = eventsContainer.scrollHeight;
-            const clientHeight = eventsContainer.clientHeight;
+          const calContainer = document.querySelector('.calendar-container');
+          if(calContainer) {
+            const scrollTop = calContainer.scrollTop;
+            const scrollHeight = calContainer.scrollHeight;
+            const clientHeight = calContainer.clientHeight;
             const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
             if(!isAtBottom) {
@@ -3158,10 +3172,6 @@
               dot.style.background = '#f59e0b';
             } else if(event.status === 'confirmed') {
               dot.style.background = '#22c55e';
-            } else if(event.status === 'rehearsal') {
-              dot.style.background = '#3b82f6';
-            } else if(event.status === 'completed') {
-              dot.style.background = '#a855f7';
             } else if(event.status === 'cancelled') {
               dot.style.background = '#ef4444';
             }
@@ -3184,35 +3194,10 @@
       const dateStr = formatDate(selectedDate);
       const dayEvents = events.filter(e => e.date === dateStr);
 
-      // Проверяем нужно ли показать меню
-      const bottomNav = document.getElementById('bottom-nav');
-      const eventsContainer = document.getElementById('events-scroll-container');
-
       if(dayEvents.length === 0) {
         container.innerHTML = '';
-        // Нет событий - показываем меню
-        if(bottomNav) {
-          bottomNav.style.transform = 'translateY(0)';
-          bottomNav.style.opacity = '1';
-        }
         return;
       }
-
-      // Есть события - после рендера проверим нужен ли скролл
-      setTimeout(() => {
-        if(eventsContainer && bottomNav) {
-          const hasScroll = eventsContainer.scrollHeight > eventsContainer.clientHeight;
-          if(hasScroll) {
-            // Есть скролл - скрываем меню
-            bottomNav.style.transform = 'translateY(120px)';
-            bottomNav.style.opacity = '0';
-          } else {
-            // Нет скролла (мало событий) - показываем меню
-            bottomNav.style.transform = 'translateY(0)';
-            bottomNav.style.opacity = '1';
-          }
-        }
-      }, 100);
 
       container.innerHTML = `
         <div class="day-list-header">
@@ -3222,7 +3207,7 @@
 
       dayEvents.forEach(event => {
         const typeInfo = TYPES[event.type] || TYPES.rabbit;
-        const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
+        const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
         const eventDate = new Date(event.date);
 
         const row = document.createElement('div');
@@ -3369,9 +3354,8 @@
       });
       
       const totalShows = monthEvents.reduce((sum, e) => {
-        if (e.status === 'rehearsal') return sum;
-        const showCount = e.schedule?.length || 1;
-        return sum + showCount;
+        if(e.status === 'rehearsal') return sum;
+        return sum + (e.schedule?.length || 1);
       }, 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
@@ -3381,14 +3365,14 @@
         return sum + taxAmount;
       }, 0);
       const profit = totalIncome - totalExpense;
-      const avgCheck = monthEvents.length > 0 ? Math.round(totalIncome / monthEvents.length) : 0;
+      const avgCheck = totalShows > 0 ? Math.round(totalIncome / totalShows) : 0;
       const netProfit = totalIncome - totalExpense - totalTax;
 
       // Update KPIs
       document.getElementById('profit-amount').textContent = `${Math.round(profit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-income').textContent = `${Math.round(totalIncome).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-expense').textContent = `${Math.round(totalExpense).toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} вых.)`;
+      document.getElementById('kpi-shows').textContent = `${totalShows} (${monthEvents.length} соб.)`;
       document.getElementById('kpi-avg').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-balance').textContent = `${Math.round(netProfit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-tax').textContent = `${Math.round(totalTax).toLocaleString('ru-RU')} ₽`;
@@ -3444,22 +3428,21 @@
       // Type analytics - считаем только уникальные типы событий
       const typeStats = {};
       monthEvents.forEach(event => {
-        // Считаем каждый элемент расписания
+        // Считаем каждый элемент расписания отдельно
         if(event.schedule && event.schedule.length > 0) {
+          // Доход распределяем пропорционально на все типы в событии
+          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
+
           event.schedule.forEach(scheduleItem => {
             const type = scheduleItem.type || 'rabbit';
             if(!typeStats[type]) {
               typeStats[type] = { count: 0, income: 0 };
             }
             typeStats[type].count++;
-          });
-          // Доход распределяем пропорционально на все типы в событии
-          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
-          event.schedule.forEach(scheduleItem => {
-            const type = scheduleItem.type || 'rabbit';
             typeStats[type].income += incomePerShow;
           });
         } else {
+          // Событие без расписания
           const type = event.type || 'rabbit';
           if(!typeStats[type]) {
             typeStats[type] = { count: 0, income: 0 };
@@ -3547,7 +3530,7 @@
           const allTypes = getTypes();
           const typeInfo = allTypes[event.type] || allTypes[Object.keys(allTypes)[0]];
           const eventDate = new Date(event.date);
-          const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
+          const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
 
           const row = document.createElement('div');
           row.className = 'day-list-row';
@@ -3591,6 +3574,36 @@
     function changeMonth(delta) {
       currentDate.setMonth(currentDate.getMonth() + delta);
       renderCalendar();
+    }
+
+    function setupCalendarSwipe() {
+      const swipeArea = document.getElementById('calendar-swipe-area');
+      if (!swipeArea) return;
+
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      swipeArea.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      swipeArea.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleCalendarSwipe();
+      }, { passive: true });
+
+      function handleCalendarSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            changeMonth(1); // Swipe left = next month
+          } else {
+            changeMonth(-1); // Swipe right = previous month
+          }
+        }
+      }
     }
 
     function selectDate(date) {
@@ -4055,6 +4068,7 @@
       editingEventId = null;
       document.getElementById('modal-title').textContent = 'Новое событие';
       document.getElementById('delete-btn').style.display = 'none';
+      document.getElementById('duplicate-btn').style.display = 'none';
 
       resetForm();
       updateExpenseCategorySelect();
@@ -4077,6 +4091,7 @@
       editingEventId = eventId;
       document.getElementById('modal-title').textContent = 'Редактировать';
       document.getElementById('delete-btn').style.display = 'block';
+      document.getElementById('duplicate-btn').style.display = 'block';
 
       updateExpenseCategorySelect();
 
@@ -4161,6 +4176,7 @@
       const nextIndex = (currentIndex + 1) % types.length;
       schedule[index].type = types[nextIndex];
       renderSchedule();
+      lucide.createIcons();
     }
 
     function updateScheduleTime(index, time) {
@@ -4319,7 +4335,7 @@
             <input type="time" value="${item.time}" onchange="updateScheduleTime(${index}, this.value)" style="flex: 1;">
           </div>
 
-          <input type="number" class="schedule-duration" value="${item.duration}" onchange="updateScheduleDuration(${index}, this.value)" placeholder="мін" min="5" max="300" step="5">
+          <input type="number" class="schedule-duration" value="${item.duration}" onchange="updateScheduleDuration(${index}, this.value)" placeholder="мин" min="1">
 
           <button type="button" class="schedule-remove" onclick="removeScheduleItem(${index})">
             <i data-lucide="x"></i>
@@ -4387,9 +4403,8 @@
       const expense = parseFloat(document.getElementById('event-expense').value) || 0;
       const taxPercent = parseFloat(document.getElementById('event-tax').value) || 0;
 
-      const remainder = income - prepay - expense;
-      const taxAmount = (remainder * taxPercent) / 100;
-      const balance = remainder - taxAmount;
+      const taxAmount = (income * taxPercent) / 100;
+      const balance = income - prepay - expense - taxAmount;
 
       document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
     }
@@ -4477,62 +4492,50 @@
       });
     }
 
+    function duplicateEvent() {
+      if(!editingEventId) return;
+
+      // Переключаем в режим создания нового события
+      editingEventId = null;
+
+      // Очищаем дату
+      document.getElementById('event-date').value = '';
+
+      // Меняем заголовок и кнопки
+      document.getElementById('modal-title').textContent = 'Новое событие (копия)';
+      document.getElementById('delete-btn').style.display = 'none';
+      document.getElementById('duplicate-btn').style.display = 'none';
+
+      showToast('Выберите новую дату для копии события');
+    }
+
     // ==========================================
     // SPLASH SCREEN
     // ==========================================
     function showSplashScreen() {
       const splash = document.getElementById('splash-screen');
-
-      // Hide splash after 600ms
+      
+      // Hide splash after 2 seconds
       setTimeout(() => {
         splash.classList.add('hide');
-
+        
         // Remove from DOM after fade out
         setTimeout(() => {
           splash.remove();
-        }, 300);
-      }, 600);
+        }, 600);
+      }, 2000);
     }
 
     function showToast(message) {
-      // Создаём новый toast элемент
-      const toast = document.createElement('div');
-      toast.style.cssText = `
-        position: fixed;
-        top: calc(20px + env(safe-area-inset-top, 0px));
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 16px 24px;
-        background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(251,191,36,0.95));
-        color: #000;
-        font-size: 15px;
-        font-weight: 800;
-        border-radius: 16px;
-        box-shadow: 0 12px 48px rgba(245,158,11,0.6), 0 0 0 1px rgba(255,255,255,0.2) inset;
-        backdrop-filter: blur(12px);
-        z-index: 10000;
-        max-width: 90%;
-        text-align: center;
-        letter-spacing: 0.02em;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      `;
-      toast.textContent = message;
-      document.body.appendChild(toast);
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-msg');
 
-      // Показываем
-      requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-      });
+      msg.textContent = message;
+      toast.classList.add('show');
 
-      // Скрываем и удаляем
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => {
-          if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-          }
-        }, 300);
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
       }, 2500);
     }
 
@@ -4767,8 +4770,8 @@
 
     function showEventPreview(event) {
       const typeInfo = TYPES[event.type] || TYPES.rabbit;
-      const statusText = event.status === 'confirmed' ? 'Подтверждено' : event.status === 'pending' ? 'Ожидание' : event.status === 'rehearsal' ? 'Репетиция' : event.status === 'completed' ? 'Выполнено' : 'Отменено';
-      const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'rehearsal' ? '#3b82f6' : event.status === 'completed' ? '#a855f7' : '#ef4444';
+      const statusText = event.status === 'confirmed' ? 'Подтверждено' : event.status === 'pending' ? 'Ожидание' : 'Отменено';
+      const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : '#ef4444';
 
       let content = `
         <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -4871,9 +4874,8 @@
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
       const totalShows = monthEvents.reduce((sum, e) => {
-        if (e.status === 'rehearsal') return sum;
-        const showCount = e.schedule?.length || 1;
-        return sum + showCount;
+        if(e.status === 'rehearsal') return sum;
+        return sum + (e.schedule?.length || 1);
       }, 0);
       const totalTax = monthEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
@@ -4881,22 +4883,19 @@
       }, 0);
       const profit = totalIncome - totalExpense;
       const netProfit = totalIncome - totalExpense - totalTax;
-      const avgCheck = monthEvents.length > 0 ? Math.round(totalIncome / monthEvents.length) : 0;
+      const avgCheck = totalShows > 0 ? Math.round(totalIncome / totalShows) : 0;
 
       // Статистика по типам
       const typeStats = {};
       monthEvents.forEach(event => {
         if(event.schedule && event.schedule.length > 0) {
+          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
           event.schedule.forEach(scheduleItem => {
             const type = scheduleItem.type || 'rabbit';
             if(!typeStats[type]) {
               typeStats[type] = { count: 0, income: 0 };
             }
             typeStats[type].count++;
-          });
-          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
-          event.schedule.forEach(scheduleItem => {
-            const type = scheduleItem.type || 'rabbit';
             typeStats[type].income += incomePerShow;
           });
         } else {
@@ -5035,9 +5034,8 @@
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalShows = yearEvents.reduce((sum, e) => {
-        if (e.status === 'rehearsal') return sum;
-        const showCount = e.schedule?.length || 1;
-        return sum + showCount;
+        if(e.status === 'rehearsal') return sum;
+        return sum + (e.schedule?.length || 1);
       }, 0);
       const totalTax = yearEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
@@ -5074,17 +5072,24 @@
       // Статистика по типам
       const typeStats = {};
       yearEvents.forEach(event => {
-        let mainType = 'rabbit';
         if(event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          const incomePerShow = event.schedule.length > 0 ? (event.income || 0) / event.schedule.length : 0;
+          event.schedule.forEach(scheduleItem => {
+            const type = scheduleItem.type || 'rabbit';
+            if(!typeStats[type]) {
+              typeStats[type] = { count: 0, income: 0 };
+            }
+            typeStats[type].count++;
+            typeStats[type].income += incomePerShow;
+          });
         } else {
-          mainType = event.type || 'rabbit';
+          const type = event.type || 'rabbit';
+          if(!typeStats[type]) {
+            typeStats[type] = { count: 0, income: 0 };
+          }
+          typeStats[type].count++;
+          typeStats[type].income += event.income || 0;
         }
-        if(!typeStats[mainType]) {
-          typeStats[mainType] = { count: 0, income: 0 };
-        }
-        typeStats[mainType].count++;
-        typeStats[mainType].income += event.income || 0;
       });
 
       const typeStatsHTML = Object.entries(typeStats)
@@ -5317,7 +5322,7 @@
 
     // Добавляем обработчики скролла
     document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll);
-    document.getElementById('events-scroll-container')?.addEventListener('scroll', handleScroll);
+    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScroll);
 
     // ==========================================
     // HELPERS
@@ -5337,17 +5342,47 @@
     // INIT
     // ==========================================
     document.addEventListener('DOMContentLoaded', async () => {
-      // Check license first
+      // Initialize Firebase
+      const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
+        authDomain: "calc76.firebaseapp.com",
+        databaseURL: "https://calc76-default-rtdb.firebaseio.com",
+        projectId: "calc76",
+        storageBucket: "calc76.firebasestorage.app",
+        messagingSenderId: "972929668805",
+        appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
+      };
+
+      window.firebaseDB = null;
+      window.firebaseEnabled = false;
+
       try {
-        const hasLicense = await checkActivation();
-
-        if (!hasLicense || hasLicense === 'expired') {
-          const splash = document.getElementById('splash-screen');
-          if (splash) splash.style.display = 'none';
-
-          showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
-          return;
+        if (typeof firebase !== 'undefined') {
+          firebase.initializeApp(FIREBASE_CONFIG);
+          window.firebaseDB = firebase.database();
+          window.firebaseEnabled = true;
+          console.log("✅ Firebase initialized");
         }
+      } catch (error) {
+        console.error("❌ Firebase error:", error);
+        window.firebaseEnabled = false;
+      }
+
+      // Check license first (optional, works offline)
+      try {
+        // Если есть интернет - проверяем лицензию
+        if (window.firebaseEnabled && navigator.onLine) {
+          const hasLicense = await checkActivation();
+
+          if (!hasLicense || hasLicense === 'expired') {
+            const splash = document.getElementById('splash-screen');
+            if (splash) splash.style.display = 'none';
+
+            showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
+            return;
+          }
+        }
+        // Если офлайн или Firebase недоступен - работаем без проверки
 
         loadEvents();
         renderCalendar();
@@ -5356,55 +5391,20 @@
 
         showSplashScreen();
 
+        // Setup calendar swipe
+        setupCalendarSwipe();
+
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => {
             console.log('ServiceWorker registration failed:', err);
           });
         }
-
-        // Добавляем свайп для календаря
-        setupCalendarSwipe();
       } catch (error) {
         console.error("License check error:", error);
         showLicensePrompt("first");
       }
     });
-
-    // ==========================================
-    // CALENDAR SWIPE
-    // ==========================================
-    function setupCalendarSwipe() {
-      const swipeArea = document.getElementById('calendar-swipe-area');
-      if (!swipeArea) return;
-
-      let touchStartX = 0;
-      let touchEndX = 0;
-
-      swipeArea.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-      }, { passive: true });
-
-      swipeArea.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleCalendarSwipe();
-      }, { passive: true });
-
-      function handleCalendarSwipe() {
-        const swipeThreshold = 50;
-        const diff = touchStartX - touchEndX;
-
-        if (Math.abs(diff) > swipeThreshold) {
-          if (diff > 0) {
-            // Свайп влево - следующий месяц
-            changeMonth(1);
-          } else {
-            // Свайп вправо - предыдущий месяц
-            changeMonth(-1);
-          }
-        }
-      }
-    }
   </script>
 </body>
 </html>
