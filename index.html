@@ -32,9 +32,9 @@
   <script src="tailwind.min.js"></script>
   <script src="lucide.min.js"></script>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <!-- Firebase SDK - опциональный, загружается асинхронно -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" async></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" async></script>
 
   <script>
   // ============================================
@@ -2088,7 +2088,7 @@
     overlay.style.cssText = `
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.95);
+      background: #000000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2098,7 +2098,7 @@
 
     const box = document.createElement('div');
     box.style.cssText = `
-      background: linear-gradient(135deg, rgba(26,26,46,0.98), rgba(15,15,25,0.98));
+      background: #000000;
       border: 2px solid rgba(245,158,11,0.5);
       border-radius: 16px;
       padding: 32px;
