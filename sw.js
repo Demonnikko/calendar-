@@ -1,5 +1,5 @@
 // Service Worker для Illusionist OS Calendar
-const CACHE_NAME = 'illusionist-calendar-v2-offline';
+const CACHE_NAME = 'illusionist-calendar-v5-offline-fixed';
 const urlsToCache = [
   './',
   './index.html',
