@@ -29,9 +29,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="tailwind.min.js"></script>
+  <script src="lucide.min.js"></script>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -78,9 +77,9 @@
       --safe-bottom: env(safe-area-inset-bottom);
       --safe-left: env(safe-area-inset-left);
       --safe-right: env(safe-area-inset-right);
-      --font-display: 'Cinzel', serif;
+      --font-display: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-      --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+      --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
     }
 
     *, *::before, *::after {
@@ -225,7 +224,7 @@
     }
 
     .month-title {
-      font-family: 'Cinzel', serif;
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 24px;
       font-weight: 800;
       background: linear-gradient(135deg, #f59e0b 0%, #fb923c 50%, #ea580c 100%);
@@ -692,7 +691,7 @@
     }
 
     .modal-title {
-      font-family: 'Cinzel', serif;
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 22px;
       font-weight: 800;
       background: linear-gradient(135deg, #f59e0b, #fb923c);
@@ -1533,7 +1532,7 @@
         font-size: 18px;
         font-weight: 800;
         text-align: center;
-        font-family: 'Cinzel', serif;
+        font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
         text-shadow: 0 0 30px rgba(245,158,11,0.5);
       }
     }
@@ -1733,7 +1732,7 @@
     }
 
     .goal-message-title {
-      font-family: 'Cinzel', serif;
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 32px;
       font-weight: 900;
       background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 25%, #f59e0b 50%, #fbbf24 75%, #f59e0b 100%);
@@ -1827,7 +1826,7 @@
       height: 120px;
       border-radius: 28px;
       position: relative;
-      background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06));
+      background: #000000;
       border: 2px solid rgba(245,158,11,0.2);
       box-shadow:
         0 20px 60px rgba(0,0,0,0.6),
@@ -1850,7 +1849,7 @@
     }
 
     .splash-title {
-      font-family: 'Cinzel', serif;
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 32px;
       font-weight: 900;
       background: linear-gradient(135deg, #f59e0b, #f59e0b, #f59e0b);
@@ -2112,7 +2111,7 @@
     const title = document.createElement('h2');
     title.textContent = reason === 'expired' ? 'Продление лицензии' : 'Активация приложения';
     title.style.cssText = `
-      font-family: 'Cinzel', serif;
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 24px;
       background: linear-gradient(135deg, #f59e0b, #fbbf24);
       -webkit-background-clip: text;
@@ -2243,8 +2242,8 @@
     magic.innerHTML = `
       <div style="text-align: center;">
         <div style="font-size: 120px; margin-bottom: 30px; animation: wand-spin 1.5s ease-out;">🪄</div>
-        <h2 style="font-family: 'Cinzel', serif; font-size: 36px; background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0; letter-spacing: 2px;">Твори магию</h2>
-        <p style="font-family: 'Cinzel', serif; font-size: 22px; color: #f59e0b; letter-spacing: 1px;">Считай прибыль</p>
+        <h2 style="font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif; font-size: 36px; background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0; letter-spacing: 2px;">Твори магию</h2>
+        <p style="font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif; font-size: 22px; color: #f59e0b; letter-spacing: 1px;">Считай прибыль</p>
         <div style="margin-top: 30px; font-size: 24px; animation: sparkle-pulse 1.5s ease-in-out infinite;">✨</div>
       </div>
     `;
@@ -2377,7 +2376,7 @@
         </div>
 
         <div style="text-align: center; margin-bottom: 24px;">
-          <div style="font-size: 42px; font-weight: 900; background: linear-gradient(135deg, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-family: 'Cinzel', serif;" id="profit-amount">0 ₽</div>
+          <div style="font-size: 42px; font-weight: 900; background: linear-gradient(135deg, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;" id="profit-amount">0 ₽</div>
           <div style="font-size: 12px; color: rgba(148,163,184,.8); text-transform: uppercase; font-weight: 700; margin-top: 6px; letter-spacing: 0.08em;">Прибыль (доход − расход)</div>
         </div>
 
