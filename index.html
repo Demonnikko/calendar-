@@ -1220,9 +1220,9 @@
     /* TOAST */
     #toast {
       position: fixed;
-      top: calc(60px + env(safe-area-inset-top, 0px));
+      top: calc(80px + env(safe-area-inset-top, 0px));
       left: 50%;
-      transform: translateX(-50%) translateY(-150px);
+      transform: translateX(-50%) translateY(-200px);
       padding: 16px 24px;
       background: linear-gradient(135deg, rgba(20,25,35,0.95) 0%, rgba(10,15,25,0.98) 100%);
       backdrop-filter: blur(20px);
@@ -2552,6 +2552,7 @@
               <option value="pending">Предварительная бронь</option>
               <option value="confirmed">Подтверждено</option>
               <option value="completed">Выполнено</option>
+              <option value="rehearsal">Репетиция</option>
             </select>
           </div>
 
@@ -3390,8 +3391,9 @@
         const eventDate = new Date(e.date);
         return eventDate.getFullYear() === year && eventDate.getMonth() === month;
       });
-      
-      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+
+      // Репетиции не считаются за шоу, только за выходы
+      const totalShows = monthEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
@@ -4854,7 +4856,8 @@
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
-      const totalShows = monthEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      // Репетиции не считаются за шоу
+      const totalShows = monthEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalTax = monthEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
@@ -5004,7 +5007,8 @@
 
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
       const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
-      const totalShows = yearEvents.reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
+      // Репетиции не считаются за шоу
+      const totalShows = yearEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalTax = yearEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
         return sum + taxAmount;
