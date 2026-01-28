@@ -2982,21 +2982,21 @@
     // Custom types storage
     let customTypes = {};
 
-    // Get combined types (only custom + explicitly shown defaults)
+    // Get combined types (default + custom - hidden)
     function getTypes() {
-      const shownDefaults = customTypes._shown || [];
+      const hiddenTypes = customTypes._hidden || [];
       const result = {};
 
-      // Only show default types that user explicitly added
-      shownDefaults.forEach(key => {
-        if(DEFAULT_TYPES[key]) {
+      // Add non-hidden default types
+      Object.keys(DEFAULT_TYPES).forEach(key => {
+        if(!hiddenTypes.includes(key)) {
           result[key] = DEFAULT_TYPES[key];
         }
       });
 
-      // Add custom types (excluding meta keys)
+      // Add custom types (excluding _hidden meta key)
       Object.keys(customTypes).forEach(key => {
-        if(key !== '_hidden' && key !== '_shown') {
+        if(key !== '_hidden' && key !== '_shown' && key !== '_migrated') {
           result[key] = customTypes[key];
         }
       });
@@ -3078,14 +3078,6 @@
       const savedTypes = localStorage.getItem('illusionist_custom_types');
       if(savedTypes) {
         customTypes = JSON.parse(savedTypes);
-        // Миграция: если старый пользователь (нет _shown), показать все дефолтные типы
-        if(!customTypes._shown && !customTypes._migrated) {
-          const hiddenTypes = customTypes._hidden || [];
-          customTypes._shown = Object.keys(DEFAULT_TYPES).filter(k => !hiddenTypes.includes(k));
-          customTypes._migrated = true;
-          delete customTypes._hidden;
-          saveCustomTypes();
-        }
       }
 
       loadCustomExpenseCategories();
@@ -3943,9 +3935,9 @@
 
           // Remove type
           if(DEFAULT_TYPES[key]) {
-            // Remove from shown defaults
-            if(customTypes._shown) {
-              customTypes._shown = customTypes._shown.filter(k => k !== key);
+            if(!customTypes._hidden) customTypes._hidden = [];
+            if(!customTypes._hidden.includes(key)) {
+              customTypes._hidden.push(key);
             }
           } else {
             delete customTypes[key];
@@ -3976,11 +3968,6 @@
       const allTypes = getTypes();
 
       container.innerHTML = '';
-
-      if(Object.keys(allTypes).length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: rgba(148,163,184,0.5); font-size: 13px;">Нет типов событий. Нажмите «Добавить»</div>';
-        return;
-      }
 
       Object.keys(allTypes).forEach(key => {
         const type = allTypes[key];
