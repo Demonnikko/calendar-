@@ -658,9 +658,12 @@
 
     .modal-content {
       position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      top: env(safe-area-inset-top);
+      left: env(safe-area-inset-left);
+      right: env(safe-area-inset-right);
+      bottom: env(safe-area-inset-bottom);
+      width: auto;
+      height: auto;
       background: #000;
       transform: scale(1);
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -678,20 +681,13 @@
     }
 
     .modal-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
       padding: 16px 20px;
-      padding-top: calc(16px + env(safe-area-inset-top));
-      padding-left: max(20px, env(safe-area-inset-left));
-      padding-right: max(20px, env(safe-area-inset-right));
       border-bottom: 1px solid rgba(245,158,11,0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #000;
-      z-index: 10;
+      flex-shrink: 0;
     }
 
     .modal-title {
@@ -727,17 +723,10 @@
     }
 
     .modal-body {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding-top: calc(80px + env(safe-area-inset-top));
-      padding-bottom: calc(40px + env(safe-area-inset-bottom));
-      padding-left: max(20px, env(safe-area-inset-left));
-      padding-right: max(20px, env(safe-area-inset-right));
+      padding: 16px 20px 40px;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
@@ -1231,9 +1220,9 @@
     /* TOAST */
     #toast {
       position: fixed;
-      top: calc(20px + env(safe-area-inset-top, 0px));
+      top: calc(60px + env(safe-area-inset-top, 0px));
       left: 50%;
-      transform: translateX(-50%) translateY(-120px);
+      transform: translateX(-50%) translateY(-150px);
       padding: 16px 24px;
       background: linear-gradient(135deg, rgba(20,25,35,0.95) 0%, rgba(10,15,25,0.98) 100%);
       backdrop-filter: blur(20px);
@@ -1244,7 +1233,7 @@
       font-size: 14px;
       font-weight: 700;
       z-index: 10000;
-      box-shadow: 
+      box-shadow:
         0 8px 32px rgba(0,0,0,0.6),
         0 0 40px rgba(245,158,11,0.2);
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
