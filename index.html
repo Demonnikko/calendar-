@@ -33,8 +33,8 @@
   <script src="lucide.min.js"></script>
 
   <!-- Firebase SDK - опциональный, загружается асинхронно -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" async></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" async></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
   <script>
   // ============================================
@@ -53,14 +53,27 @@
   window.firebaseDB = null;
   window.firebaseEnabled = false;
 
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    window.firebaseDB = firebase.database();
-    window.firebaseEnabled = true;
-    console.log("✅ Firebase initialized");
-  } catch (error) {
-    console.error("❌ Firebase error:", error);
-    window.firebaseEnabled = false;
+  function initFirebase() {
+    if(typeof firebase === 'undefined') {
+      window.firebaseEnabled = false;
+      return;
+    }
+
+    try {
+      if(!firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      window.firebaseDB = firebase.database();
+      window.firebaseEnabled = true;
+    } catch (error) {
+      window.firebaseEnabled = false;
+    }
+  }
+
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFirebase);
+  } else {
+    initFirebase();
   }
   </script>
 
@@ -1463,7 +1476,6 @@
         padding: 12px 16px !important;
       }
 
-      .btn-gold,
       .btn-secondary {
         padding: 12px 16px !important;
         font-size: 14px !important;
@@ -1499,40 +1511,51 @@
 
     @media (max-width: 380px) {
       .calendar-header .month-title {
-        font-size: 18px !important;
+        font-size: 20px !important;
       }
 
       .glass-panel {
-        padding: 12px !important;
+        padding: 14px !important;
       }
 
       .calendar-grid {
-        gap: 4px;
+        gap: 5px;
       }
 
       .date-number {
-        font-size: 10px;
-        width: 22px;
-        height: 22px;
+        font-size: 11px;
+        width: 24px;
+        height: 24px;
       }
 
       .event-dot {
-        width: 4px;
-        height: 4px;
+        width: 5px;
+        height: 5px;
       }
 
       .event-label {
-        font-size: 6px;
+        font-size: 7px;
       }
 
       .header-btn {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
       }
 
       .schedule-type-btn {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+      }
+
+      .day-list-row {
+        padding: 14px;
+      }
+
+      .calendar-cell {
+        min-width: 40px;
+        min-height: 40px;
       }
     }
 
@@ -1542,7 +1565,6 @@
         padding: 24px !important;
       }
 
-      .btn-gold,
       .btn-secondary {
         min-height: 56px;
       }
@@ -2004,7 +2026,6 @@
         const data = JSON.parse(atob(stored));
 
         if (!validateLicense(data.key)) {
-          console.log('❌ Invalid license format');
           return false;
         }
 
@@ -2015,13 +2036,11 @@
             const firebaseData = snapshot.val();
 
             if (!firebaseData || !firebaseData.activated) {
-              console.log('❌ License not activated');
               return false;
             }
 
             const currentDevice = getDeviceId();
             if (firebaseData.deviceId !== currentDevice) {
-              console.log('❌ Device ID mismatch');
               return false;
             }
 
@@ -2029,21 +2048,18 @@
               const expiryDate = new Date(firebaseData.expiresAt);
               const now = new Date();
               if (now > expiryDate) {
-                console.log('⏰ License expired');
                 return 'expired';
               }
             }
 
-            console.log('✅ License valid (Firebase)');
             return true;
           } catch (firebaseError) {
-            console.error('⚠️ Firebase check failed:', firebaseError);
+            // Firebase check failed, fallback to local
           }
         }
 
         const currentDevice = getDeviceId();
         if (data.device !== currentDevice) {
-          console.log('❌ Device ID mismatch (local)');
           return false;
         }
 
@@ -2051,20 +2067,16 @@
           const expiryDate = new Date(data.expiresAt);
           const now = new Date();
           if (now > expiryDate) {
-            console.log('⏰ License expired (local)');
             return 'expired';
           }
         }
 
-        console.log('✅ License valid (local)');
         return true;
       } catch (e) {
-        console.error('❌ Error checking activation:', e);
         return false;
       }
     }
 
-    console.log('⚠️ No license found');
     return false;
   }
 
@@ -2090,9 +2102,7 @@
         }
 
         if (existingData.activated) {
-          if (existingData.deviceId === deviceId) {
-            console.log('✅ Re-activation on same device');
-          } else {
+          if (existingData.deviceId !== deviceId) {
             return {
               success: false,
               error: 'Этот ключ уже активирован на другом устройстве!\n\nКаждый ключ работает только на одном устройстве.'
@@ -2108,9 +2118,7 @@
           lastCheck: new Date().toISOString()
         });
 
-        console.log('✅ License activated in Firebase');
       } catch (firebaseError) {
-        console.error('⚠️ Firebase activation failed:', firebaseError);
         return {
           success: false,
           error: 'Ошибка подключения к серверу.\nПроверьте интернет-соединение.'
@@ -2128,7 +2136,6 @@
     const encoded = btoa(JSON.stringify(data));
     localStorage.setItem('illusionist_calendar_license', encoded);
 
-    console.log('✅ License activated locally');
     return { success: true };
   }
 
@@ -2320,25 +2327,53 @@
     }, 3500);
   }
 
+  let calendarEventHandlersSetup = false;
+
   function setupCalendarSwipe() {
     const calendarGrid = document.getElementById('calendar-grid');
-    if (!calendarGrid) return;
+    if (!calendarGrid || calendarEventHandlersSetup) return;
 
     let touchStartX = 0;
     let touchEndX = 0;
     let touchStartY = 0;
     let touchEndY = 0;
+    let longPressTimer = null;
+    let touchedCell = null;
 
+    // Swipe handler
     calendarGrid.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      touchStartY = e.changedTouches[0].screenY;
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+
+      // Long press handler
+      const cell = e.target.closest('.calendar-cell');
+      if(cell && cell.dataset.date) {
+        touchedCell = cell;
+        longPressTimer = setTimeout(() => {
+          const dateStr = cell.dataset.date;
+          const [y, m, d] = dateStr.split('-');
+          openEventModal(new Date(y, m - 1, d));
+        }, TIMING.LONG_PRESS);
+      }
+    }, { passive: true });
+
+    calendarGrid.addEventListener('touchmove', (e) => {
+      if(longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
     }, { passive: true });
 
     calendarGrid.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      touchEndY = e.changedTouches[0].screenY;
+      if(longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
 
-      const swipeThreshold = 80;
+      touchEndX = e.changedTouches[0].clientX;
+      touchEndY = e.changedTouches[0].clientY;
+
+      const swipeThreshold = 100;
       const diffX = touchStartX - touchEndX;
       const diffY = touchStartY - touchEndY;
 
@@ -2350,6 +2385,18 @@
         }
       }
     }, { passive: true });
+
+    // Click handler
+    calendarGrid.addEventListener('click', (e) => {
+      const cell = e.target.closest('.calendar-cell');
+      if(cell && cell.dataset.date) {
+        const dateStr = cell.dataset.date;
+        const [y, m, d] = dateStr.split('-');
+        selectDate(new Date(y, m - 1, d));
+      }
+    });
+
+    calendarEventHandlersSetup = true;
   }
 
   window.showLicensePrompt = showLicensePrompt;
@@ -2662,25 +2709,20 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Расходы</label>
-              <input type="number" id="event-expense" class="form-input" placeholder="0" oninput="calculateBalance()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Налог (%)</label>
-              <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
-            </div>
+          <div class="form-group">
+            <label class="form-label">Налог (%)</label>
+            <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
           </div>
 
           <div class="form-group">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <label class="form-label" style="margin-bottom: 0;">Категория расхода</label>
-              <button type="button" onclick="openCategoryManager()" style="padding: 6px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; font-size: 11px; font-weight: 600; color: #ef4444; cursor: pointer;">Управление</button>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <label class="form-label" style="margin-bottom: 0;">Расходы</label>
+              <button type="button" onclick="addExpenseRow()" style="padding: 8px 14px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; font-size: 13px; font-weight: 600; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                Добавить
+              </button>
             </div>
-            <select id="event-expense-category" class="form-input" onchange="handleExpenseCategoryChange()" style="appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23f59e0b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px;">
-              <option value="">Не выбрано</option>
-            </select>
+            <div id="expenses-list"></div>
           </div>
 
           <div id="custom-expense-form" style="display: none;">
@@ -2975,35 +3017,33 @@
     // Available icons for selection
     const AVAILABLE_ICONS = [
       // Магия и шоу
-      'rabbit', 'wand-sparkles', 'sparkles', 'star', 'zap', 'flame',
+      'sparkles', 'star', 'zap', 'flame', 'wand-2',
       'eye', 'eye-off', 'scan', 'focus', 'aperture', 'infinity',
       // Карты и игры
-      'square-stack', 'layers', 'copy', 'shuffle', 'dice-1', 'dice-5',
+      'layers', 'copy', 'shuffle', 'dice-1', 'dice-5', 'repeat',
       // Сцена и выступления
-      'theater', 'mic', 'mic-2', 'volume-2', 'music', 'radio',
+      'mic', 'mic-2', 'volume-2', 'music', 'radio',
       'video', 'camera', 'clapperboard', 'tv', 'monitor', 'projector',
       // События
-      'party-popper', 'cake', 'gift', 'balloon', 'confetti', 'firework',
-      'crown', 'trophy', 'award', 'medal', 'badge-check', 'ribbon',
+      'party-popper', 'cake', 'gift', 'crown', 'trophy', 'award',
       // Люди и мероприятия
-      'users', 'user', 'baby', 'smile', 'heart', 'hand-heart',
-      'building-2', 'home', 'tent', 'castle', 'church', 'warehouse',
+      'users', 'user', 'baby', 'smile', 'heart',
+      'building-2', 'home', 'tent',
       // Время и планирование
       'clock', 'timer', 'hourglass', 'calendar', 'calendar-check', 'alarm-clock',
       // Деньги
-      'coins', 'wallet', 'banknote', 'credit-card', 'piggy-bank', 'receipt',
+      'coins', 'wallet', 'banknote', 'credit-card', 'receipt',
       // Транспорт
       'car', 'plane', 'train', 'ship', 'bike', 'truck',
       // Разное
-      'brain', 'lightbulb', 'key', 'lock-open', 'compass', 'map-pin',
+      'brain', 'lightbulb', 'key', 'compass', 'map-pin',
       'phone', 'mail', 'message-circle', 'send', 'bookmark', 'flag',
-      'sun', 'moon', 'cloud', 'umbrella', 'graduation-cap', 'briefcase',
-      'gem', 'diamond', 'glasses', 'ghost', 'skull', 'bird'
+      'sun', 'moon', 'cloud', 'umbrella', 'graduation-cap', 'briefcase'
     ];
 
     // Default types (8 основных)
     const DEFAULT_TYPES = {
-      rabbit: { label: 'Иллюзион', color: '#f59e0b', icon: 'rabbit' },
+      rabbit: { label: 'Иллюзион', color: '#f59e0b', icon: 'wand-2' },
       kids: { label: 'Детский праздник', color: '#f472b6', icon: 'party-popper' },
       corporate: { label: 'Корпоратив', color: '#3b82f6', icon: 'building-2' },
       wedding: { label: 'Свадьба', color: '#e879f9', icon: 'heart' },
@@ -3069,19 +3109,20 @@
           const savedCategories = JSON.parse(stored);
           EXPENSE_CATEGORIES = savedCategories;
         } catch(e) {
-          console.error('Failed to load custom expense categories', e);
+          showToast('⚠️ Ошибка загрузки категорий расходов');
         }
       }
     }
 
     function saveCustomExpenseCategories() {
-      localStorage.setItem('illusionist_expense_categories', JSON.stringify(EXPENSE_CATEGORIES));
+      safeLocalStorageSet('illusionist_expense_categories', JSON.stringify(EXPENSE_CATEGORIES));
     }
 
     let currentDate = new Date();
     let selectedDate = new Date();
     let events = [];
     let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
+    let expenses = []; // Новый массив расходов для текущего события
     let editingEventId = null;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
@@ -3090,18 +3131,95 @@
     let editingTypeKey = null;
     let selectedColor = '#f59e0b';
     let selectedIcon = 'sparkles';
+    let isRendering = false;
+
+    // Constants
+    const TIMING = {
+      LONG_PRESS: 500,
+      RENDER_DELAY: 100,
+      SPLASH_DURATION: 2000,
+      SPLASH_FADE: 600,
+      SWIPE_THRESHOLD: 100,
+      SWIPE_CALL_TRIGGER: 60,
+      SWIPE_EDIT_TRIGGER: 130,
+      SWIPE_DELETE_TRIGGER: 70
+    };
+
+    // DOM cache
+    const DOM = {
+      eventModal: null,
+      confirmModal: null,
+      calendarGrid: null,
+      dayList: null,
+      bottomNav: null,
+      init() {
+        this.eventModal = document.getElementById('event-modal');
+        this.confirmModal = document.getElementById('confirm-modal');
+        this.calendarGrid = document.getElementById('calendar-grid');
+        this.dayList = document.getElementById('day-list');
+        this.bottomNav = document.getElementById('bottom-nav');
+      }
+    };
+
+    // ==========================================
+    // SANITIZATION
+    // ==========================================
+    function escapeHtml(text) {
+      if(!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
     // ==========================================
     // STORAGE
     // ==========================================
+    function safeLocalStorageSet(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch(e) {
+        if(e.name === 'QuotaExceededError') {
+          showToast('⚠️ Хранилище заполнено! Удалите старые события');
+          return false;
+        }
+        return false;
+      }
+    }
+
     function saveEvents() {
-      localStorage.setItem('illusionist_events', JSON.stringify(events));
+      safeLocalStorageSet('illusionist_events', JSON.stringify(events));
     }
 
     function loadEvents() {
       const stored = localStorage.getItem('illusionist_events');
       if(stored) {
-        events = JSON.parse(stored);
+        try {
+          events = JSON.parse(stored);
+
+          // Миграция: конвертируем старые события с одним расходом в массив
+          let migrated = false;
+          events.forEach(event => {
+            if(event.expense && !event.expenses) {
+              event.expenses = [{
+                amount: event.expense,
+                category: event.expenseCategory || '',
+                note: ''
+              }];
+              delete event.expense;
+              delete event.expenseCategory;
+              migrated = true;
+            }
+            if(!event.expenses) {
+              event.expenses = [];
+            }
+          });
+          if(migrated) saveEvents();
+
+        } catch(e) {
+          events = [];
+          showToast('⚠️ Ошибка загрузки событий');
+        }
       }
 
       const savedGoal = localStorage.getItem('illusionist_goal');
@@ -3111,18 +3229,23 @@
 
       const savedTypes = localStorage.getItem('illusionist_custom_types');
       if(savedTypes) {
-        customTypes = JSON.parse(savedTypes);
+        try {
+          customTypes = JSON.parse(savedTypes);
+        } catch(e) {
+          customTypes = {};
+          showToast('⚠️ Ошибка загрузки типов');
+        }
       }
 
       loadCustomExpenseCategories();
     }
 
     function saveGoalToStorage() {
-      localStorage.setItem('illusionist_goal', monthlyGoal.toString());
+      safeLocalStorageSet('illusionist_goal', monthlyGoal.toString());
     }
 
     function saveCustomTypes() {
-      localStorage.setItem('illusionist_custom_types', JSON.stringify(customTypes));
+      safeLocalStorageSet('illusionist_custom_types', JSON.stringify(customTypes));
     }
 
     // ==========================================
@@ -3130,23 +3253,28 @@
     // ==========================================
     function customConfirm(message, onYes) {
       document.getElementById('confirm-message').textContent = message;
-      document.getElementById('confirm-modal').classList.add('show');
 
       const yesBtn = document.getElementById('confirm-yes');
       const noBtn = document.getElementById('confirm-no');
 
+      // Очистка старых обработчиков
+      const newYesBtn = yesBtn.cloneNode(true);
+      const newNoBtn = noBtn.cloneNode(true);
+      yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+      noBtn.parentNode.replaceChild(newNoBtn, noBtn);
+
       const cleanup = () => {
         document.getElementById('confirm-modal').classList.remove('show');
-        yesBtn.onclick = null;
-        noBtn.onclick = null;
       };
 
-      yesBtn.onclick = () => {
+      newYesBtn.onclick = () => {
         cleanup();
         onYes();
       };
 
-      noBtn.onclick = cleanup;
+      newNoBtn.onclick = cleanup;
+
+      document.getElementById('confirm-modal').classList.add('show');
     }
 
     // ==========================================
@@ -3165,47 +3293,17 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        // Проверяем позицию скролла событий и скрываем меню если не внизу
-        setTimeout(() => {
-          const eventsContainer = document.getElementById('events-scroll-container');
-          if(eventsContainer) {
-            const scrollTop = eventsContainer.scrollTop;
-            const scrollHeight = eventsContainer.scrollHeight;
-            const clientHeight = eventsContainer.clientHeight;
-            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-            if(!isAtBottom) {
-              bottomNav.style.transform = 'translateY(120px)';
-              bottomNav.style.opacity = '0';
-            } else {
-              bottomNav.style.transform = 'translateY(0)';
-              bottomNav.style.opacity = '1';
-            }
-          }
-        }, 50);
+        // Показываем меню при переключении на вкладку
+        bottomNav.style.transform = 'translateY(0)';
+        bottomNav.style.opacity = '1';
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
 
-        // Проверяем позицию скролла дашборда и скрываем меню если не внизу
-        setTimeout(() => {
-          const dashContainer = document.querySelector('.dashboard-container');
-          if(dashContainer) {
-            const scrollTop = dashContainer.scrollTop;
-            const scrollHeight = dashContainer.scrollHeight;
-            const clientHeight = dashContainer.clientHeight;
-            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-            if(!isAtBottom) {
-              bottomNav.style.transform = 'translateY(120px)';
-              bottomNav.style.opacity = '0';
-            } else {
-              bottomNav.style.transform = 'translateY(0)';
-              bottomNav.style.opacity = '1';
-            }
-          }
-        }, 50);
+        // Показываем меню при переключении на вкладку
+        bottomNav.style.transform = 'translateY(0)';
+        bottomNav.style.opacity = '1';
       }
     }
 
@@ -3213,103 +3311,97 @@
     // CALENDAR RENDERING
     // ==========================================
     function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      
-      document.getElementById('month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
-      
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startDay = firstDay.getDay() || 7;
-      
-      const grid = document.getElementById('calendar-grid');
-      grid.innerHTML = '';
-      
-      // Empty cells before first day
-      for(let i = 1; i < startDay; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        cell.style.opacity = '0.3';
-        grid.appendChild(cell);
+      if(isRendering) return;
+      isRendering = true;
+
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        document.getElementById('month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDay = firstDay.getDay() || 7;
+
+        const grid = DOM.calendarGrid || document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+
+        // Empty cells before first day
+        for(let i = 1; i < startDay; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'calendar-cell';
+          cell.style.opacity = '0.3';
+          grid.appendChild(cell);
+        }
+
+        // Days of month
+        const today = new Date();
+        const todayStr = formatDate(today);
+
+        for(let day = 1; day <= lastDay.getDate(); day++) {
+          const date = new Date(year, month, day);
+          const dateStr = formatDate(date);
+          const dayEvents = events.filter(e => e.date === dateStr);
+
+          const cell = document.createElement('div');
+          cell.className = 'calendar-cell';
+          cell.dataset.date = dateStr;
+
+          if(dateStr === todayStr) {
+            cell.classList.add('today');
+          }
+
+          if(dateStr === formatDate(selectedDate)) {
+            cell.classList.add('selected');
+          }
+
+          const dateNum = document.createElement('div');
+          dateNum.className = 'date-number';
+          dateNum.textContent = day;
+          cell.appendChild(dateNum);
+
+          if(dayEvents.length > 0) {
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'event-dots';
+
+            dayEvents.slice(0, 3).forEach(event => {
+              const dot = document.createElement('div');
+              dot.className = 'event-dot';
+              if(event.status === 'pending') {
+                dot.style.background = '#f59e0b';
+              } else if(event.status === 'confirmed') {
+                dot.style.background = '#22c55e';
+              } else if(event.status === 'completed') {
+                dot.style.background = '#3b82f6';
+              } else if(event.status === 'rehearsal') {
+                dot.style.background = '#94a3b8';
+              } else if(event.status === 'cancelled') {
+                dot.style.background = '#ef4444';
+              }
+              dotsContainer.appendChild(dot);
+            });
+
+            cell.appendChild(dotsContainer);
+          }
+
+          grid.appendChild(cell);
+        }
+
+        renderDayList();
+      } finally {
+        isRendering = false;
       }
-      
-      // Days of month
-      const today = new Date();
-      const todayStr = formatDate(today);
-      
-      for(let day = 1; day <= lastDay.getDate(); day++) {
-        const date = new Date(year, month, day);
-        const dateStr = formatDate(date);
-        const dayEvents = events.filter(e => e.date === dateStr);
-        
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        
-        if(dateStr === todayStr) {
-          cell.classList.add('today');
-        }
-        
-        if(dateStr === formatDate(selectedDate)) {
-          cell.classList.add('selected');
-        }
-        
-        const dateNum = document.createElement('div');
-        dateNum.className = 'date-number';
-        dateNum.textContent = day;
-        cell.appendChild(dateNum);
-        
-        if(dayEvents.length > 0) {
-          const dotsContainer = document.createElement('div');
-          dotsContainer.className = 'event-dots';
-
-          dayEvents.slice(0, 3).forEach(event => {
-            const dot = document.createElement('div');
-            dot.className = 'event-dot';
-            if(event.status === 'pending') {
-              dot.style.background = '#f59e0b';
-            } else if(event.status === 'confirmed') {
-              dot.style.background = '#22c55e';
-            } else if(event.status === 'completed') {
-              dot.style.background = '#3b82f6';
-            } else if(event.status === 'rehearsal') {
-              dot.style.background = '#94a3b8';
-            } else if(event.status === 'cancelled') {
-              dot.style.background = '#ef4444';
-            }
-            dotsContainer.appendChild(dot);
-          });
-
-          cell.appendChild(dotsContainer);
-        }
-
-        cell.onclick = () => selectDate(date);
-
-        // Долгий тап — создать событие
-        let longPressTimer;
-        cell.addEventListener('touchstart', (e) => {
-          longPressTimer = setTimeout(() => {
-            e.preventDefault();
-            openEventModal(date);
-          }, 500);
-        });
-        cell.addEventListener('touchend', () => clearTimeout(longPressTimer));
-        cell.addEventListener('touchmove', () => clearTimeout(longPressTimer));
-
-        grid.appendChild(cell);
-      }
-      
-      renderDayList();
-      lucide.createIcons();
     }
 
     function renderDayList() {
-      const container = document.getElementById('day-list');
+      const container = DOM.dayList || document.getElementById('day-list');
       const dateStr = formatDate(selectedDate);
       const dayEvents = events.filter(e => e.date === dateStr);
 
       // Проверяем нужно ли показать меню
-      const bottomNav = document.getElementById('bottom-nav');
-      const eventsContainer = document.getElementById('events-scroll-container');
+      const bottomNav = DOM.bottomNav || document.getElementById('bottom-nav');
+      const eventsContainer = document.querySelector('.calendar-container');
 
       if(dayEvents.length === 0) {
         container.innerHTML = '';
@@ -3321,21 +3413,11 @@
         return;
       }
 
-      // Есть события - после рендера проверим нужен ли скролл
-      setTimeout(() => {
-        if(eventsContainer && bottomNav) {
-          const hasScroll = eventsContainer.scrollHeight > eventsContainer.clientHeight;
-          if(hasScroll) {
-            // Есть скролл - скрываем меню
-            bottomNav.style.transform = 'translateY(120px)';
-            bottomNav.style.opacity = '0';
-          } else {
-            // Нет скролла (мало событий) - показываем меню
-            bottomNav.style.transform = 'translateY(0)';
-            bottomNav.style.opacity = '1';
-          }
-        }
-      }, 100);
+      // Показываем меню всегда
+      if(bottomNav) {
+        bottomNav.style.transform = 'translateY(0)';
+        bottomNav.style.opacity = '1';
+      }
 
       container.innerHTML = `
         <div class="day-list-header">
@@ -3346,7 +3428,7 @@
       dayEvents.forEach(event => {
         const typeInfo = TYPES[event.type] || TYPES.rabbit;
         const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'completed' ? '#3b82f6' : event.status === 'rehearsal' ? '#94a3b8' : '#ef4444';
-        const eventDate = new Date(event.date);
+        const eventDate = parseEventDate(event.date);
 
         const row = document.createElement('div');
         row.className = 'day-list-row';
@@ -3357,10 +3439,10 @@
             <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
           </div>
           <div class="day-list-info" style="flex: 1;">
-            <div class="day-list-title">${event.title}</div>
+            <div class="day-list-title">${escapeHtml(event.title)}</div>
             <div class="day-list-subtitle">
               <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
-              <span>${event.location || 'Не указано'}</span>
+              <span>${escapeHtml(event.location) || 'Не указано'}</span>
             </div>
           </div>
           ${event.address ? `
@@ -3369,7 +3451,7 @@
           </button>
           ` : ''}
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-            <div class="day-list-time">${event.time || '—'}</div>
+            <div class="day-list-time">${escapeHtml(event.time) || '—'}</div>
             <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></div>
           </div>
         `;
@@ -3403,12 +3485,15 @@
       // Показываем итоги месяца только в последний день месяца (31, 30, 28/29)
       if(selectedDay === lastDayOfMonth) {
         const monthEvents = events.filter(e => {
-          const eventDate = new Date(e.date);
+          const eventDate = parseEventDate(e.date);
           return eventDate.getFullYear() === year && eventDate.getMonth() === month;
         });
 
         const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-        const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+        const totalExpense = monthEvents.reduce((sum, e) => {
+        const expensesSum = e.expenses ? e.expenses.reduce((s, exp) => s + (exp.amount || 0), 0) : 0;
+        return sum + expensesSum;
+      }, 0);
         const profit = totalIncome - totalExpense;
 
         const summaryCard = document.createElement('div');
@@ -3441,12 +3526,15 @@
       // Добавляем итоговую карточку за год (только 31 декабря)
       if(selectedDay === 31 && month === 11) {
         const yearEvents = events.filter(e => {
-          const eventDate = new Date(e.date);
+          const eventDate = parseEventDate(e.date);
           return eventDate.getFullYear() === year;
         });
 
         const yearIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-        const yearExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+        const yearExpense = yearEvents.reduce((sum, e) => {
+          const expensesSum = e.expenses ? e.expenses.reduce((s, exp) => s + (exp.amount || 0), 0) : 0;
+          return sum + expensesSum;
+        }, 0);
         const yearProfit = yearIncome - yearExpense;
 
         const yearCard = document.createElement('div');
@@ -3476,7 +3564,7 @@
         container.appendChild(yearCard);
       }
 
-      lucide.createIcons();
+      requestAnimationFrame(() => lucide.createIcons());
     }
 
     // ==========================================
@@ -3488,8 +3576,8 @@
       today.setHours(0, 0, 0, 0);
 
       const upcoming = events
-        .filter(e => new Date(e.date) >= today)
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .filter(e => parseEventDate(e.date) >= today)
+        .sort((a, b) => parseEventDate(a.date) - parseEventDate(b.date))
         .slice(0, 5);
 
       if(upcoming.length === 0) {
@@ -3499,7 +3587,7 @@
 
       container.innerHTML = upcoming.map(event => {
         const typeInfo = getTypes()[event.type] || getTypes()[Object.keys(getTypes())[0]] || { label: 'Событие', color: '#f59e0b', icon: 'sparkles' };
-        const eventDate = new Date(event.date);
+        const eventDate = parseEventDate(event.date);
         const isToday = eventDate.toDateString() === today.toDateString();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -3515,8 +3603,8 @@
               <i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>
             </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</div>
-              <div style="font-size: 12px; color: rgba(148,163,184,0.7);">${event.time || ''} ${event.location ? '• ' + event.location : ''}</div>
+              <div style="font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(event.title)}</div>
+              <div style="font-size: 12px; color: rgba(148,163,184,0.7);">${event.time || ''} ${event.location ? '• ' + escapeHtml(event.location) : ''}</div>
             </div>
             <div style="text-align: right; flex-shrink: 0;">
               <div style="font-size: 12px; font-weight: 700; color: ${isToday ? '#22c55e' : isTomorrow ? '#f59e0b' : 'rgba(148,163,184,0.8)'};">${dateText}</div>
@@ -3534,14 +3622,17 @@
       const month = currentDate.getMonth();
       
       const monthEvents = events.filter(e => {
-        const eventDate = new Date(e.date);
+        const eventDate = parseEventDate(e.date);
         return eventDate.getFullYear() === year && eventDate.getMonth() === month;
       });
 
       // Репетиции не считаются за шоу, только за выходы
       const totalShows = monthEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-      const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+      const totalExpense = monthEvents.reduce((sum, e) => {
+        const expensesSum = e.expenses ? e.expenses.reduce((s, exp) => s + (exp.amount || 0), 0) : 0;
+        return sum + expensesSum;
+      }, 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
       const totalTax = monthEvents.reduce((sum, e) => {
         const taxAmount = ((e.income || 0) * (e.tax || 0)) / 100;
@@ -3556,15 +3647,21 @@
       document.getElementById('kpi-income').textContent = `${Math.round(totalIncome).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-expense').textContent = `${Math.round(totalExpense).toLocaleString('ru-RU')} ₽`;
       const rehearsalCount = monthEvents.filter(e => e.status === 'rehearsal').length;
-      document.getElementById('kpi-shows').textContent = rehearsalCount > 0
-        ? `${totalShows} шоу + ${rehearsalCount} реп.`
-        : `${totalShows} (${monthEvents.length} соб.)`;
+      if(totalShows > 0 && rehearsalCount > 0) {
+        document.getElementById('kpi-shows').textContent = `${totalShows} шоу, ${rehearsalCount} реп`;
+      } else if(totalShows > 0) {
+        document.getElementById('kpi-shows').textContent = `${totalShows} шоу`;
+      } else if(rehearsalCount > 0) {
+        document.getElementById('kpi-shows').textContent = `${rehearsalCount} реп`;
+      } else {
+        document.getElementById('kpi-shows').textContent = '0';
+      }
       document.getElementById('kpi-avg').textContent = `${avgCheck.toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-balance').textContent = `${Math.round(netProfit).toLocaleString('ru-RU')} ₽`;
       document.getElementById('kpi-tax').textContent = `${Math.round(totalTax).toLocaleString('ru-RU')} ₽`;
       
       // Goal progress
-      const goalPercent = monthlyGoal > 0 ? Math.min(Math.round((netProfit / monthlyGoal) * 100), 100) : 0;
+      const goalPercent = monthlyGoal > 0 ? Math.min(Math.round((profit / monthlyGoal) * 100), 100) : 0;
       document.getElementById('goal-progress').style.width = `${goalPercent}%`;
       document.getElementById('goal-percent').textContent = `${goalPercent}%`;
       document.getElementById('goal-text').textContent = `Цель: ${monthlyGoal.toLocaleString('ru-RU')} ₽`;
@@ -3573,7 +3670,7 @@
       renderUpcomingEvents();
 
       // Check if goal achieved (100% or more) and trigger celebration
-      if(monthlyGoal > 0 && netProfit >= monthlyGoal) {
+      if(monthlyGoal > 0 && profit >= monthlyGoal) {
         const celebrationKey = `goal-celebration-${year}-${month}`;
         const hasSeenCelebration = localStorage.getItem(celebrationKey);
 
@@ -3649,7 +3746,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>
-              <span style="font-size: 14px; font-weight: 700; color: #fff;">${typeInfo.label}</span>
+              <span style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(typeInfo.label)}</span>
             </div>
             <span style="font-size: 13px; font-weight: 800; color: ${typeInfo.color}; font-family: 'JetBrains Mono', monospace;">${stats.count}</span>
           </div>
@@ -3677,7 +3774,7 @@
       // Best day (highest income day)
       const dayIncomes = {};
       monthEvents.forEach(event => {
-        const day = new Date(event.date).getDate();
+        const day = parseEventDate(event.date).getDate();
         if(!dayIncomes[day]) dayIncomes[day] = 0;
         dayIncomes[day] += event.income || 0;
       });
@@ -4034,7 +4131,7 @@
             <i data-lucide="${type.icon}" style="width: 20px; height: 20px; color: ${type.color};"></i>
           </div>
           <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openTypeEditor('${key}')">
-            <div style="font-size: 14px; font-weight: 700; color: #fff;">${type.label}</div>
+            <div style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(type.label)}</div>
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-top: 2px;">${isDefault ? 'По умолчанию' : 'Пользовательский'}</div>
           </div>
           <div style="width: 24px; height: 24px; border-radius: 6px; background: ${type.color}; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
@@ -4197,13 +4294,15 @@
       document.getElementById('event-guests').value = event.guests || '';
       document.getElementById('event-income').value = event.income || '';
       document.getElementById('event-prepay').value = event.prepay || '';
-      document.getElementById('event-expense').value = event.expense || '';
-      document.getElementById('event-expense-category').value = event.expenseCategory || '';
       document.getElementById('event-tax').value = event.tax || '';
       document.getElementById('event-notes').value = event.notes || '';
 
       schedule = event.schedule || [{ type: 'rabbit', time: '19:00', duration: 60 }];
       renderSchedule();
+
+      expenses = event.expenses || [];
+      renderExpenses();
+
       calculateBalance();
 
       document.getElementById('event-modal').classList.add('show');
@@ -4225,9 +4324,9 @@
       document.getElementById('event-guests').value = '';
       document.getElementById('event-income').value = '';
       document.getElementById('event-prepay').value = '';
-      document.getElementById('event-expense').value = '';
-      document.getElementById('event-expense-category').value = '';
       document.getElementById('event-tax').value = '';
+      expenses = [];
+      renderExpenses();
       document.getElementById('event-notes').value = '';
       document.getElementById('balance-display').textContent = '0 ₽';
 
@@ -4325,17 +4424,6 @@
     // ==========================================
     // EXPENSE CATEGORIES
     // ==========================================
-    function handleExpenseCategoryChange() {
-      const select = document.getElementById('event-expense-category');
-      const customForm = document.getElementById('custom-expense-form');
-
-      if(select.value === 'custom') {
-        customForm.style.display = 'block';
-      } else {
-        customForm.style.display = 'none';
-      }
-    }
-
     function saveCustomExpenseCategory() {
       const name = document.getElementById('custom-expense-name').value.trim();
       const emoji = document.getElementById('custom-expense-emoji').value.trim();
@@ -4358,37 +4446,20 @@
       };
 
       saveCustomExpenseCategories();
-      updateExpenseCategorySelect();
 
-      document.getElementById('event-expense-category').value = key;
       document.getElementById('custom-expense-form').style.display = 'none';
       document.getElementById('custom-expense-name').value = '';
       document.getElementById('custom-expense-emoji').value = '';
+
+      // Обновляем все существующие select в списке расходов
+      renderExpenses();
 
       showToast('Категория создана!');
     }
 
     function updateExpenseCategorySelect() {
-      const select = document.getElementById('event-expense-category');
-      const currentValue = select.value;
-
-      select.innerHTML = '<option value="">Не выбрано</option>';
-
-      Object.entries(EXPENSE_CATEGORIES).forEach(([key, cat]) => {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = `${cat.emoji} ${cat.label}`;
-        select.appendChild(option);
-      });
-
-      const customOption = document.createElement('option');
-      customOption.value = 'custom';
-      customOption.textContent = '➕ Создать свою';
-      select.appendChild(customOption);
-
-      if(currentValue && currentValue !== 'custom') {
-        select.value = currentValue;
-      }
+      // Категории теперь в select внутри каждой строки расходов — обновление не нужно
+      return;
     }
 
     function openCategoryManager() {
@@ -4412,9 +4483,9 @@
             ${Object.entries(EXPENSE_CATEGORIES).map(([key, cat]) => `
               <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px;">
                 <div style="width: 32px; height: 32px; border-radius: 8px; background: ${cat.color}20; border: 1px solid ${cat.color}40; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-                  ${cat.emoji}
+                  ${escapeHtml(cat.emoji)}
                 </div>
-                <div style="flex: 1; font-size: 14px; color: #fff; font-weight: 600;">${cat.label}</div>
+                <div style="flex: 1; font-size: 14px; color: #fff; font-weight: 600;">${escapeHtml(cat.label)}</div>
                 <button onclick="deleteExpenseCategory('${key}')" style="padding: 6px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-size: 12px; font-weight: 600; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;">
                   <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                   Удалить
@@ -4462,15 +4533,15 @@
         div.className = 'schedule-item';
 
         div.innerHTML = `
-          <button type="button" class="schedule-type-btn" onclick="openTypePicker(${index})" style="color: ${typeInfo.color};" title="${typeInfo.label}">
+          <button type="button" class="schedule-type-btn" onclick="openTypePicker(${index})" style="color: ${typeInfo.color};" title="${escapeHtml(typeInfo.label)}">
             <i data-lucide="${typeInfo.icon}"></i>
           </button>
 
           <div class="schedule-inputs">
-            <input type="time" value="${item.time}" onchange="updateScheduleTime(${index}, this.value)" style="flex: 1;">
+            <input type="time" value="${escapeHtml(item.time || '')}" onchange="updateScheduleTime(${index}, this.value)" style="flex: 1;">
           </div>
 
-          <input type="number" class="schedule-duration" value="${item.duration}" onchange="updateScheduleDuration(${index}, this.value)" placeholder="мин" min="1">
+          <input type="number" class="schedule-duration" value="${escapeHtml(String(item.duration || ''))}" onchange="updateScheduleDuration(${index}, this.value)" placeholder="мин" min="1">
 
           <button type="button" class="schedule-remove" onclick="removeScheduleItem(${index})">
             <i data-lucide="x"></i>
@@ -4489,7 +4560,7 @@
           checkItem.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
           checkItem.innerHTML = `
             <input type="checkbox" ${check.done ? 'checked' : ''} onchange="toggleChecklistItem(${index}, ${checkIndex})" style="width: 16px; height: 16px; cursor: pointer;">
-            <input type="text" value="${check.text}" onchange="updateChecklistItem(${index}, ${checkIndex}, this.value)" placeholder="Пункт программы" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; color: #e2e8f0; font-size: 13px;">
+            <input type="text" value="${escapeHtml(check.text)}" onchange="updateChecklistItem(${index}, ${checkIndex}, this.value)" placeholder="Пункт программы" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; color: #e2e8f0; font-size: 13px;">
             <button type="button" onclick="removeChecklistItem(${index}, ${checkIndex})" style="width: 28px; height: 28px; border-radius: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer;">
               <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>
@@ -4508,6 +4579,62 @@
       });
 
       lucide.createIcons();
+    }
+
+    function renderExpenses() {
+      const container = document.getElementById('expenses-list');
+      container.innerHTML = '';
+
+      expenses.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);';
+
+        div.innerHTML = `
+          <input type="number" value="${escapeHtml(String(item.amount))}" onchange="updateExpenseAmount(${index}, this.value)" placeholder="Сумма" min="0" style="width: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
+          <select onchange="updateExpenseCategory(${index}, this.value)" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
+            ${getExpenseCategoryOptions(item.category)}
+          </select>
+          <input type="text" value="${escapeHtml(item.note)}" onchange="updateExpenseNote(${index}, this.value)" placeholder="Примечание" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
+          <button type="button" onclick="removeExpense(${index})" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </button>
+        `;
+
+        container.appendChild(div);
+      });
+
+      lucide.createIcons();
+    }
+
+    function getExpenseCategoryOptions(selected) {
+      return Object.keys(EXPENSE_CATEGORIES).map(key => {
+        const cat = EXPENSE_CATEGORIES[key];
+        return `<option value="${escapeHtml(key)}" ${key === selected ? 'selected' : ''}>${escapeHtml(cat.emoji)} ${escapeHtml(cat.label)}</option>`;
+      }).join('');
+    }
+
+    function addExpenseRow() {
+      expenses.push({ amount: 0, category: '', note: '' });
+      renderExpenses();
+    }
+
+    function removeExpense(index) {
+      expenses.splice(index, 1);
+      renderExpenses();
+      calculateBalance();
+    }
+
+    function updateExpenseAmount(index, value) {
+      expenses[index].amount = parseFloat(value) || 0;
+      calculateBalance();
+    }
+
+    function updateExpenseCategory(index, value) {
+      expenses[index].category = value;
+    }
+
+    function updateExpenseNote(index, value) {
+      expenses[index].note = value;
     }
 
     function addChecklistItem(scheduleIndex) {
@@ -4535,12 +4662,9 @@
     function calculateBalance() {
       const income = parseFloat(document.getElementById('event-income').value) || 0;
       const prepay = parseFloat(document.getElementById('event-prepay').value) || 0;
-      const expense = parseFloat(document.getElementById('event-expense').value) || 0;
-      const taxPercent = parseFloat(document.getElementById('event-tax').value) || 0;
 
-      // Налог считается от дохода (как в dashboard)
-      const taxAmount = (income * taxPercent) / 100;
-      const balance = income - prepay - expense - taxAmount;
+      // "К получению" = сколько осталось получить от клиента
+      const balance = income - prepay;
 
       document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
     }
@@ -4548,14 +4672,39 @@
     function saveEvent() {
       const title = document.getElementById('event-title').value.trim();
       const date = document.getElementById('event-date').value;
-      
+
       if(!title) {
         showToast('Введите название события');
         return;
       }
-      
+
       if(!date) {
         showToast('Выберите дату');
+        return;
+      }
+
+      const phone = document.getElementById('event-phone').value.trim();
+      if(phone && !/^[\d\s\+\-\(\)]+$/.test(phone)) {
+        showToast('Некорректный формат телефона');
+        return;
+      }
+
+      const income = parseFloat(document.getElementById('event-income').value) || 0;
+      const prepay = parseFloat(document.getElementById('event-prepay').value) || 0;
+      const tax = parseFloat(document.getElementById('event-tax').value) || 0;
+
+      if(income < 0 || prepay < 0 || tax < 0) {
+        showToast('Суммы не могут быть отрицательными');
+        return;
+      }
+
+      if(prepay > income) {
+        showToast('Предоплата не может превышать доход');
+        return;
+      }
+
+      if(tax > 100) {
+        showToast('Налог не может быть больше 100%');
         return;
       }
 
@@ -4577,17 +4726,16 @@
           duration: parseInt(item.duration) || 60,
           checklist: item.checklist || []
         })),
-        location: document.getElementById('event-location').value,
-        address: document.getElementById('event-address').value,
-        client: document.getElementById('event-client').value,
-        phone: document.getElementById('event-phone').value,
+        location: document.getElementById('event-location').value.trim(),
+        address: document.getElementById('event-address').value.trim(),
+        client: document.getElementById('event-client').value.trim(),
+        phone: phone,
         guests: parseInt(document.getElementById('event-guests').value) || 0,
-        income: parseFloat(document.getElementById('event-income').value) || 0,
-        prepay: parseFloat(document.getElementById('event-prepay').value) || 0,
-        expense: parseFloat(document.getElementById('event-expense').value) || 0,
-        expenseCategory: document.getElementById('event-expense-category').value || '',
-        tax: parseFloat(document.getElementById('event-tax').value) || 0,
-        notes: document.getElementById('event-notes').value
+        income: income,
+        prepay: prepay,
+        expenses: expenses.map(e => ({ amount: e.amount, category: e.category, note: e.note })),
+        tax: tax,
+        notes: document.getElementById('event-notes').value.trim()
       };
       
       if(editingEventId) {
@@ -4711,6 +4859,17 @@
       const cleanAddress = address.trim();
       const encodedAddress = encodeURIComponent(cleanAddress);
 
+      // Проверка интернета
+      if(!navigator.onLine) {
+        // Fallback: открываем Яндекс.Карты с поиском по адресу
+        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
+        window.location.href = yandexMapsUrl;
+        showToast('Офлайн: открываем карты с поиском');
+        return;
+      }
+
+      showToast('⏳ Поиск адреса...');
+
       try {
         // Геокодирование через Nominatim (бесплатно, без ключа)
         const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&accept-language=ru`;
@@ -4720,6 +4879,10 @@
             'User-Agent': 'CalendarApp/1.0'
           }
         });
+
+        if(!response.ok) {
+          throw new Error('Network error');
+        }
 
         const data = await response.json();
 
@@ -4736,8 +4899,10 @@
         }
 
       } catch(error) {
-        console.error('Geocoding error:', error);
-        showToast('Не удалось найти адрес');
+        // Fallback: открываем Яндекс.Карты с поиском
+        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
+        window.location.href = yandexMapsUrl;
+        showToast('Открываем карты');
       }
     }
 
@@ -4989,44 +5154,44 @@
           <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(135deg, ${typeInfo.color}15, ${typeInfo.color}08); border: 1px solid ${typeInfo.color}30; border-radius: 12px;">
             <i data-lucide="${typeInfo.icon}" style="width: 28px; height: 28px; color: ${typeInfo.color};"></i>
             <div>
-              <div style="font-size: 18px; font-weight: 700; color: #fff;">${event.title}</div>
-              <div style="font-size: 13px; color: rgba(148,163,184,0.8);">${typeInfo.label}</div>
+              <div style="font-size: 18px; font-weight: 700; color: #fff;">${escapeHtml(event.title)}</div>
+              <div style="font-size: 13px; color: rgba(148,163,184,0.8);">${escapeHtml(typeInfo.label)}</div>
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
               <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">Дата</div>
-              <div style="font-size: 14px; font-weight: 600; color: #fff;">${new Date(event.date).toLocaleDateString('ru-RU')}</div>
+              <div style="font-size: 14px; font-weight: 600; color: #fff;">${parseEventDate(event.date).toLocaleDateString('ru-RU')}</div>
             </div>
             <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
               <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">Время</div>
-              <div style="font-size: 14px; font-weight: 600; color: #fff;">${event.time || '—'}</div>
+              <div style="font-size: 14px; font-weight: 600; color: #fff;">${escapeHtml(event.time) || '—'}</div>
             </div>
           </div>
 
           ${event.location ? `
           <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">📍 Локация</div>
-            <div style="font-size: 14px; color: #fff;">${event.location}</div>
+            <div style="font-size: 14px; color: #fff;">${escapeHtml(event.location)}</div>
           </div>
           ` : ''}
 
           ${event.address ? `
           <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">🗺️ Адрес</div>
-            <div style="font-size: 14px; color: #fff;">${event.address}</div>
+            <div style="font-size: 14px; color: #fff;">${escapeHtml(event.address)}</div>
           </div>
           ` : ''}
 
           ${event.client ? `
           <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">👤 Клиент</div>
-            <div style="font-size: 14px; color: #fff;">${event.client}</div>
+            <div style="font-size: 14px; color: #fff;">${escapeHtml(event.client)}</div>
             ${event.phone ? `
-            <a href="tel:${event.phone}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 14px; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: #22c55e; text-decoration: none; transition: all 0.2s;">
+            <a href="tel:${escapeHtml(event.phone)}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 14px; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: #22c55e; text-decoration: none; transition: all 0.2s;">
               <i data-lucide="phone" style="width: 16px; height: 16px;"></i>
-              ${event.phone}
+              ${escapeHtml(event.phone)}
             </a>
             ` : ''}
           </div>
@@ -5037,7 +5202,7 @@
             <div style="display: inline-block; padding: 6px 12px; background: ${statusColor}20; border: 1px solid ${statusColor}40; border-radius: 8px; font-size: 13px; font-weight: 600; color: ${statusColor};">${statusText}</div>
           </div>
 
-          ${event.income || event.expense ? `
+          ${event.income || (event.expenses && event.expenses.length > 0) ? `
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             ${event.income ? `
             <div style="padding: 12px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px;">
@@ -5045,10 +5210,10 @@
               <div style="font-size: 16px; font-weight: 700; color: #22c55e;">${event.income.toLocaleString('ru-RU')} ₽</div>
             </div>
             ` : ''}
-            ${event.expense ? `
+            ${event.expenses && event.expenses.length > 0 ? `
             <div style="padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px;">
-              <div style="font-size: 11px; color: rgba(239,68,68,0.8); margin-bottom: 4px;">💸 Расход</div>
-              <div style="font-size: 16px; font-weight: 700; color: #ef4444;">${event.expense.toLocaleString('ru-RU')} ₽</div>
+              <div style="font-size: 11px; color: rgba(239,68,68,0.8); margin-bottom: 4px;">💸 Расходы</div>
+              <div style="font-size: 16px; font-weight: 700; color: #ef4444;">${event.expenses.reduce((sum, e) => sum + (e.amount || 0), 0).toLocaleString('ru-RU')} ₽</div>
             </div>
             ` : ''}
           </div>
@@ -5057,7 +5222,7 @@
           ${event.notes ? `
           <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 6px;">📝 Заметки</div>
-            <div style="font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5;">${event.notes}</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5;">${escapeHtml(event.notes)}</div>
           </div>
           ` : ''}
         </div>
@@ -5077,12 +5242,15 @@
     // ==========================================
     function showMonthSummary(year, month) {
       const monthEvents = events.filter(e => {
-        const eventDate = new Date(e.date);
+        const eventDate = parseEventDate(e.date);
         return eventDate.getFullYear() === year && eventDate.getMonth() === month;
       });
 
       const totalIncome = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-      const totalExpense = monthEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+      const totalExpense = monthEvents.reduce((sum, e) => {
+        const expensesSum = e.expenses ? e.expenses.reduce((s, exp) => s + (exp.amount || 0), 0) : 0;
+        return sum + expensesSum;
+      }, 0);
       const totalPrepay = monthEvents.reduce((sum, e) => sum + (e.prepay || 0), 0);
       // Репетиции не считаются за шоу
       const totalShows = monthEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
@@ -5120,7 +5288,7 @@
                 <i data-lucide="${typeInfo.icon}" style="width: 18px; height: 18px; color: ${typeInfo.color};"></i>
               </div>
               <div style="flex: 1;">
-                <div style="font-size: 13px; color: #fff; font-weight: 600;">${typeInfo.label}</div>
+                <div style="font-size: 13px; color: #fff; font-weight: 600;">${escapeHtml(typeInfo.label)}</div>
                 <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${stats.count} событий</div>
               </div>
               <div style="font-size: 15px; font-weight: 700; color: ${typeInfo.color};">${stats.income.toLocaleString('ru-RU')} ₽</div>
@@ -5172,11 +5340,15 @@
           ${(() => {
             const expenseByCategory = {};
             monthEvents.forEach(e => {
-              if(e.expense > 0 && e.expenseCategory) {
-                if(!expenseByCategory[e.expenseCategory]) {
-                  expenseByCategory[e.expenseCategory] = 0;
-                }
-                expenseByCategory[e.expenseCategory] += e.expense;
+              if(e.expenses && e.expenses.length > 0) {
+                e.expenses.forEach(exp => {
+                  if(exp.amount > 0 && exp.category) {
+                    if(!expenseByCategory[exp.category]) {
+                      expenseByCategory[exp.category] = 0;
+                    }
+                    expenseByCategory[exp.category] += exp.amount;
+                  }
+                });
               }
             });
 
@@ -5188,10 +5360,10 @@
                   return `
                     <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); border-radius: 10px;">
                       <div style="width: 32px; height: 32px; border-radius: 8px; background: ${catInfo.color}20; border: 1px solid ${catInfo.color}40; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-                        ${catInfo.emoji}
+                        ${escapeHtml(catInfo.emoji)}
                       </div>
                       <div style="flex: 1;">
-                        <div style="font-size: 13px; color: #fff; font-weight: 600;">${catInfo.label}</div>
+                        <div style="font-size: 13px; color: #fff; font-weight: 600;">${escapeHtml(catInfo.label)}</div>
                       </div>
                       <div style="font-size: 14px; font-weight: 700; color: #ef4444;">${amount.toLocaleString('ru-RU')} ₽</div>
                     </div>
@@ -5229,12 +5401,15 @@
     // ==========================================
     function showYearSummary(year) {
       const yearEvents = events.filter(e => {
-        const eventDate = new Date(e.date);
+        const eventDate = parseEventDate(e.date);
         return eventDate.getFullYear() === year;
       });
 
       const totalIncome = yearEvents.reduce((sum, e) => sum + (e.income || 0), 0);
-      const totalExpense = yearEvents.reduce((sum, e) => sum + (e.expense || 0), 0);
+      const totalExpense = yearEvents.reduce((sum, e) => {
+        const expensesSum = e.expenses ? e.expenses.reduce((s, exp) => s + (exp.amount || 0), 0) : 0;
+        return sum + expensesSum;
+      }, 0);
       // Репетиции не считаются за шоу
       const totalShows = yearEvents.filter(e => e.status !== 'rehearsal').reduce((sum, e) => sum + (e.schedule?.length || 1), 0);
       const totalTax = yearEvents.reduce((sum, e) => {
@@ -5248,7 +5423,7 @@
       // Статистика по месяцам
       const monthStats = {};
       for(let m = 0; m < 12; m++) {
-        const monthEvents = yearEvents.filter(e => new Date(e.date).getMonth() === m);
+        const monthEvents = yearEvents.filter(e => parseEventDate(e.date).getMonth() === m);
         const income = monthEvents.reduce((sum, e) => sum + (e.income || 0), 0);
         if(monthEvents.length > 0 || income > 0) {
           monthStats[m] = { count: monthEvents.length, income };
@@ -5296,7 +5471,7 @@
                 <i data-lucide="${typeInfo.icon}" style="width: 18px; height: 18px; color: ${typeInfo.color};"></i>
               </div>
               <div style="flex: 1;">
-                <div style="font-size: 13px; color: #fff; font-weight: 600;">${typeInfo.label}</div>
+                <div style="font-size: 13px; color: #fff; font-weight: 600;">${escapeHtml(typeInfo.label)}</div>
                 <div style="font-size: 11px; color: rgba(148,163,184,0.7);">${stats.count} событий</div>
               </div>
               <div style="font-size: 15px; font-weight: 700; color: ${typeInfo.color};">${stats.income.toLocaleString('ru-RU')} ₽</div>
@@ -5493,8 +5668,16 @@
     // BOTTOM NAV AUTO-HIDE ON SCROLL
     // ==========================================
     const bottomNav = document.getElementById('bottom-nav');
+    let scrollTimeout = null;
 
-    function handleScroll(e) {
+    function debounce(func, delay) {
+      return function(...args) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    function handleScrollImmediate(e) {
       const scrollTop = e.target.scrollTop;
       const scrollHeight = e.target.scrollHeight;
       const clientHeight = e.target.clientHeight;
@@ -5513,14 +5696,20 @@
       }
     }
 
+    const handleScroll = debounce(handleScrollImmediate, 100);
+
     // Добавляем обработчики скролла
-    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll);
-    document.getElementById('events-scroll-container')?.addEventListener('scroll', handleScroll);
+    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll, { passive: true });
+    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScroll, { passive: true });
 
     // ==========================================
     // HELPERS
     // ==========================================
     function formatDate(date) {
+      if(typeof date === 'string') {
+        // Уже строка формата YYYY-MM-DD
+        return date;
+      }
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -5529,6 +5718,12 @@
 
     function formatDateInput(date) {
       return formatDate(date);
+    }
+
+    function parseEventDate(dateStr) {
+      // Парсим дату как локальную, а не UTC
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
     }
 
     // ==========================================
@@ -5546,6 +5741,7 @@
         }
 
         // App is already activated - load data first
+        DOM.init();
         loadEvents();
         renderCalendar();
         renderSchedule();
@@ -5565,15 +5761,34 @@
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => {
-            console.log('ServiceWorker registration failed:', err);
-          });
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
         }
 
         // Setup swipe for already activated app
         setupCalendarSwipe();
+
+        // Handle Android/iOS back button for modals
+        window.addEventListener('popstate', () => {
+          const eventModal = document.getElementById('event-modal');
+          const confirmModal = document.getElementById('confirm-modal');
+          const previewModal = document.getElementById('preview-modal');
+
+          if(eventModal && eventModal.classList.contains('show')) {
+            closeEventModal();
+            history.pushState(null, '', location.href);
+          } else if(confirmModal && confirmModal.classList.contains('show')) {
+            confirmModal.classList.remove('show');
+            history.pushState(null, '', location.href);
+          } else if(previewModal && previewModal.classList.contains('show')) {
+            closePreview();
+            history.pushState(null, '', location.href);
+          }
+        });
+
+        // Push initial state
+        history.pushState(null, '', location.href);
+
       } catch (error) {
-        console.error("License check error:", error);
         showLicensePrompt("first");
       }
     });
