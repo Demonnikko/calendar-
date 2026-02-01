@@ -1185,12 +1185,15 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
-      /* Появление — упругий spring, скрытие — быстрый ease-in (через JS classes) */
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+      transform: translateY(120px);
+      opacity: 0;
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
     }
 
-    #bottom-nav.hiding {
-      transition: transform 0.15s cubic-bezier(0.55, 0, 1, 1), opacity 0.1s ease-in;
+    #bottom-nav.visible {
+      transform: translateY(0);
+      opacity: 1;
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
     }
 
     .nav-inner {
@@ -1216,24 +1219,12 @@
       border-radius: 50%;
       color: rgba(148,163,184,0.8);
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
-      /* Stagger при появлении меню */
-      opacity: 0;
-      transform: translateY(12px) scale(0.85);
     }
-
-    #bottom-nav.visible .nav-item {
-      opacity: 1;
-      transform: translateY(-4px) scale(1);
-    }
-
-    #bottom-nav.visible .nav-item:nth-child(1) { transition-delay: 0.06s; }
-    #bottom-nav.visible .nav-item:nth-child(2) { transition-delay: 0.1s; }
-    #bottom-nav.visible .nav-item:nth-child(3) { transition-delay: 0.14s; }
 
     .nav-item:hover {
-      transform: translateY(-4px) scale(1);
+      transform: translateY(-3px);
       border-color: rgba(245,158,11,0.4);
       color: rgba(245,158,11,0.9);
     }
@@ -1241,7 +1232,7 @@
     .nav-item.active {
       border-color: rgba(245,158,11,0.6);
       color: #f59e0b;
-      transform: translateY(-4px) scale(1);
+      transform: translateY(-3px);
     }
 
     /* FAB - центральная кнопка */
@@ -2340,6 +2331,11 @@
         document.body.removeChild(magic);
         // Setup swipe after first activation
         setupCalendarSwipe();
+        // Начальная проверка позиции скролла для bottom-nav
+        const initCal = document.querySelector('.calendar-container');
+        if(initCal && typeof handleScrollImmediate === 'function') {
+          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: initCal })));
+        }
       }, 500);
     }, 3500);
   }
@@ -3303,8 +3299,6 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-      const bottomNav = document.getElementById('bottom-nav');
-
       if(tab === 'calendar') {
         document.getElementById('calendar-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
@@ -3313,7 +3307,8 @@
         hideBottomNav();
         const calContainer = document.querySelector('.calendar-container');
         if(calContainer) {
-          requestAnimationFrame(() => handleScrollImmediate({ target: calContainer }));
+          // Два rAF — чтобы контент полностью отрендерился и layout пересчитался
+          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: calContainer })));
         }
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
@@ -3323,7 +3318,7 @@
         hideBottomNav();
         const dashContainer = document.querySelector('.dashboard-container');
         if(dashContainer) {
-          requestAnimationFrame(() => handleScrollImmediate({ target: dashContainer }));
+          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: dashContainer })));
         }
       }
     }
@@ -5684,20 +5679,11 @@
     }
 
     function showBottomNav() {
-      bottomNav.classList.remove('hiding');
-      // Запускаем в следующем кадре чтобы transition не пропустилась
-      requestAnimationFrame(() => {
-        bottomNav.style.transform = 'translateY(0)';
-        bottomNav.style.opacity = '1';
-        bottomNav.classList.add('visible');
-      });
+      bottomNav.classList.add('visible');
     }
 
     function hideBottomNav() {
       bottomNav.classList.remove('visible');
-      bottomNav.classList.add('hiding');
-      bottomNav.style.transform = 'translateY(120px)';
-      bottomNav.style.opacity = '0';
     }
 
     function handleScrollImmediate(e) {
@@ -5778,6 +5764,12 @@
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        }
+
+        // Начальная проверка позиции скролла для bottom-nav
+        const initContainer = document.querySelector('.calendar-container');
+        if(initContainer) {
+          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: initContainer })));
         }
 
         // Setup swipe for already activated app
