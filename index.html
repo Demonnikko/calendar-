@@ -1185,7 +1185,7 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
     }
 
     .nav-inner {
@@ -5692,11 +5692,9 @@
       }
     }
 
-    const handleScroll = debounce(handleScrollImmediate, 100);
-
-    // Добавляем обработчики скролла
-    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScroll, { passive: true });
-    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScroll, { passive: true });
+    // Добавляем обработчики скролла напрямую без debounce
+    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
+    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
 
     // ==========================================
     // HELPERS
