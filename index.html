@@ -3293,17 +3293,28 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        // Показываем меню при переключении на вкладку
-        bottomNav.style.transform = 'translateY(0)';
-        bottomNav.style.opacity = '1';
+        // Скрываем меню — покажется только при скролле до низа
+        bottomNav.style.transform = 'translateY(120px)';
+        bottomNav.style.opacity = '0';
+
+        const calContainer = document.querySelector('.calendar-container');
+        if(calContainer) {
+          requestAnimationFrame(() => handleScrollImmediate({ target: calContainer }));
+        }
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
 
-        // Показываем меню при переключении на вкладку
-        bottomNav.style.transform = 'translateY(0)';
-        bottomNav.style.opacity = '1';
+        // Скрываем меню — покажется только при скролле до низа
+        bottomNav.style.transform = 'translateY(120px)';
+        bottomNav.style.opacity = '0';
+
+        // После рендера проверяем позицию скролла
+        const dashContainer = document.querySelector('.dashboard-container');
+        if(dashContainer) {
+          requestAnimationFrame(() => handleScrollImmediate({ target: dashContainer }));
+        }
       }
     }
 
@@ -3399,24 +3410,9 @@
       const dateStr = formatDate(selectedDate);
       const dayEvents = events.filter(e => e.date === dateStr);
 
-      // Проверяем нужно ли показать меню
-      const bottomNav = DOM.bottomNav || document.getElementById('bottom-nav');
-      const eventsContainer = document.querySelector('.calendar-container');
-
       if(dayEvents.length === 0) {
         container.innerHTML = '';
-        // Нет событий - показываем меню
-        if(bottomNav) {
-          bottomNav.style.transform = 'translateY(0)';
-          bottomNav.style.opacity = '1';
-        }
         return;
-      }
-
-      // Показываем меню всегда
-      if(bottomNav) {
-        bottomNav.style.transform = 'translateY(0)';
-        bottomNav.style.opacity = '1';
       }
 
       container.innerHTML = `
