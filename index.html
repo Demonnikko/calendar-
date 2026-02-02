@@ -2357,11 +2357,16 @@
         renderCalendar();
         renderSchedule();
 
-        setTimeout(() => {
-          lucide.createIcons();
-        }, 50);
-
         setupCalendarSwipe();
+
+        // Рендерим иконки с несколькими попытками
+        setTimeout(() => {
+          if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+            setTimeout(() => lucide.createIcons(), 100);
+            setTimeout(() => lucide.createIcons(), 300);
+          }
+        }, 100);
 
         // Регистрируем обработчики скролла для bottom-nav
         const dashContainer = document.querySelector('.dashboard-container');
@@ -5795,12 +5800,16 @@
               renderCalendar();
               renderSchedule();
 
-              // Рендерим иконки с задержкой
-              setTimeout(() => {
-                lucide.createIcons();
-              }, 50);
-
               setupCalendarSwipe();
+
+              // Рендерим иконки с несколькими попытками
+              setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                  lucide.createIcons();
+                  setTimeout(() => lucide.createIcons(), 100);
+                  setTimeout(() => lucide.createIcons(), 300);
+                }
+              }, 100);
 
               // Регистрируем обработчики скролла для bottom-nav
               const dashContainer = document.querySelector('.dashboard-container');
