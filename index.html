@@ -2348,12 +2348,27 @@
         loadEvents();
         renderCalendar();
         renderSchedule();
-        lucide.createIcons();
+
+        setTimeout(() => {
+          lucide.createIcons();
+        }, 50);
+
         setupCalendarSwipe();
 
         // Регистрируем обработчики скролла для bottom-nav
-        document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
-        document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
+        const dashContainer = document.querySelector('.dashboard-container');
+        const calContainer = document.querySelector('.calendar-container');
+
+        if (dashContainer) {
+          dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+        }
+        if (calContainer) {
+          calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+          // Проверяем начальную позицию скролла
+          setTimeout(() => {
+            handleScrollImmediate({ target: calContainer });
+          }, 100);
+        }
       }, 500);
     }, 3500);
   }
@@ -5783,8 +5798,19 @@
               setupCalendarSwipe();
 
               // Регистрируем обработчики скролла для bottom-nav
-              document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
-              document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
+              const dashContainer = document.querySelector('.dashboard-container');
+              const calContainer = document.querySelector('.calendar-container');
+
+              if (dashContainer) {
+                dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+              }
+              if (calContainer) {
+                calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+                // Проверяем начальную позицию скролла
+                setTimeout(() => {
+                  handleScrollImmediate({ target: calContainer });
+                }, 100);
+              }
             }, 600);
           }, 2000);
         }
