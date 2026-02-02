@@ -129,6 +129,27 @@
       position: relative;
     }
 
+    /* Hide ALL app content until ready - calendar MUST be last */
+    .tab-content,
+    header,
+    .calendar-container,
+    .dashboard-container,
+    #bottom-nav {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+
+    body.app-ready .tab-content,
+    body.app-ready header,
+    body.app-ready .calendar-container,
+    body.app-ready .dashboard-container,
+    body.app-ready #bottom-nav {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      visibility: visible !important;
+    }
+
     /* Touch optimization */
     * {
       -webkit-touch-callout: none;
@@ -273,6 +294,7 @@
     .header-btn:active {
       transform: translateY(0);
     }
+
 
     /* CALENDAR CONTAINER */
     .calendar-container {
@@ -1885,7 +1907,7 @@
       height: 100dvh;
       z-index: 99999;
       background: #000000 !important;
-      display: flex;
+      /* display управляется через JS - изначально none */
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -2028,6 +2050,13 @@
   async function checkActivation() {
     if (DEMO_MODE) return false;
 
+    // Если только что активировали и анимация показана - сразу true
+    const justActivated = localStorage.getItem('illusionist_welcome_shown');
+    if (justActivated) {
+      localStorage.removeItem('illusionist_welcome_shown');
+      return true;
+    }
+
     const stored = localStorage.getItem('illusionist_calendar_license');
     if (stored) {
       try {
@@ -2036,7 +2065,6 @@
         if (!validateLicense(data.key)) {
           return false;
         }
-
         if (window.firebaseEnabled && window.firebaseDB) {
           try {
             const keyRef = window.firebaseDB.ref('licenses/' + data.key.replace(/[\.#$\[\]]/g, '-'));
@@ -2261,14 +2289,13 @@
           overlay.style.transition = 'opacity 0.5s';
           overlay.style.opacity = '0';
 
-          // Load app data before animation
-          loadEvents();
-          renderCalendar();
-          renderSchedule();
-          lucide.createIcons();
+          // УДАЛЯЕМ SPLASH - он не нужен при первой активации!
+          const splash = document.getElementById('splash-screen');
+          if (splash) splash.remove();
 
           setTimeout(() => {
             document.body.removeChild(overlay);
+            // Показываем ТОЛЬКО анимацию, никакого splash!
             showMagicWelcome();
           }, 500);
         } else {
@@ -2292,11 +2319,19 @@
     box.appendChild(error);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
+    // НЕ добавляем app-ready здесь - календарь должен быть скрыт до анимации
 
     setTimeout(() => input.focus(), 100);
   }
 
   function showMagicWelcome() {
+    // Удаляем splash если он есть (при первой активации его не должно быть видно)
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.display = 'none';
+      splash.remove();
+    }
+
     const magic = document.createElement('div');
     magic.style.cssText = `
       position: fixed;
@@ -2329,13 +2364,27 @@
       magic.style.opacity = '0';
       setTimeout(() => {
         document.body.removeChild(magic);
-        // Setup swipe after first activation
-        setupCalendarSwipe();
-        // Начальная проверка позиции скролла для bottom-nav
-        const initCal = document.querySelector('.calendar-container');
-        if(initCal && typeof handleScrollImmediate === 'function') {
-          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: initCal })));
-        }
+        document.body.classList.add('app-ready');
+
+        setTimeout(() => {
+          try {
+            DOM.init();
+            loadEvents();
+            renderCalendar();
+            renderSchedule();
+
+            setTimeout(() => {
+              if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                // Повторный вызов для надежности
+                setTimeout(() => lucide.createIcons(), 200);
+              }
+              setupCalendarSwipe();
+            }, 300);
+          } catch(e) {
+            console.error('Error loading calendar:', e);
+          }
+        }, 100);
       }, 500);
     }, 3500);
   }
@@ -3304,22 +3353,13 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        hideBottomNav();
-        const calContainer = document.querySelector('.calendar-container');
-        if(calContainer) {
-          // Два rAF — чтобы контент полностью отрендерился и layout пересчитался
-          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: calContainer })));
-        }
+        showBottomNav();
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
 
-        hideBottomNav();
-        const dashContainer = document.querySelector('.dashboard-container');
-        if(dashContainer) {
-          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: dashContainer })));
-        }
+        showBottomNav();
       }
     }
 
@@ -5729,6 +5769,17 @@
     }
 
     // ==========================================
+    // EXPORT FUNCTIONS TO WINDOW FOR ONCLICK
+    // ==========================================
+    window.changeMonth = changeMonth;
+    window.openMonthPicker = openMonthPicker;
+    window.openSettingsModal = openSettingsModal;
+    window.switchTab = switchTab;
+    window.closeEventModal = closeEventModal;
+    window.closePreview = closePreview;
+    window.openEventModal = openEventModal;
+
+    // ==========================================
     // INIT
     // ==========================================
     document.addEventListener('DOMContentLoaded', async () => {
@@ -5742,21 +5793,27 @@
           return;
         }
 
-        // App is already activated - load data first
-        DOM.init();
-        loadEvents();
-        renderCalendar();
-        renderSchedule();
-        lucide.createIcons();
-
-        // Show splash screen only when app is already activated
+        // App is already activated - show splash FIRST, then calendar
         const splash = document.getElementById('splash-screen');
         if (splash) {
           splash.style.display = 'flex';
+
+          // Загружаем данные в фоне пока показывается splash
+          DOM.init();
+          loadEvents();
+          renderCalendar();
+          renderSchedule();
+          lucide.createIcons();
+
+          // После завершения splash - показываем календарь
           setTimeout(() => {
             splash.classList.add('hide');
             setTimeout(() => {
               splash.style.display = 'none';
+              // Только СЕЙЧАС показываем календарь
+              document.body.classList.add('app-ready');
+              showBottomNav();
+              setupCalendarSwipe();
             }, 600);
           }, 2000);
         }
@@ -5765,15 +5822,6 @@
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
         }
-
-        // Начальная проверка позиции скролла для bottom-nav
-        const initContainer = document.querySelector('.calendar-container');
-        if(initContainer) {
-          requestAnimationFrame(() => requestAnimationFrame(() => handleScrollImmediate({ target: initContainer })));
-        }
-
-        // Setup swipe for already activated app
-        setupCalendarSwipe();
 
         // Handle Android/iOS back button for modals
         window.addEventListener('popstate', () => {
