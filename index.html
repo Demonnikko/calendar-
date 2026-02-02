@@ -129,6 +129,12 @@
       position: relative;
     }
 
+    /* Hide app content on initial load */
+    body:not(.app-loaded) header,
+    body:not(.app-loaded) .tab-content,
+    body:not(.app-loaded) #bottom-nav {
+      visibility: hidden !important;
+    }
 
     /* Touch optimization */
     * {
@@ -2344,6 +2350,8 @@
       magic.style.opacity = '0';
       setTimeout(() => {
         document.body.removeChild(magic);
+        document.body.classList.add('app-loaded');
+
         DOM.init();
         loadEvents();
         renderCalendar();
@@ -2364,10 +2372,6 @@
         }
         if (calContainer) {
           calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-          // Проверяем начальную позицию скролла
-          setTimeout(() => {
-            handleScrollImmediate({ target: calContainer });
-          }, 100);
         }
       }, 500);
     }, 3500);
@@ -5783,6 +5787,7 @@
             splash.classList.add('hide');
             setTimeout(() => {
               splash.style.display = 'none';
+              document.body.classList.add('app-loaded');
 
               // Загружаем данные ПОСЛЕ скрытия splash
               DOM.init();
@@ -5806,10 +5811,6 @@
               }
               if (calContainer) {
                 calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-                // Проверяем начальную позицию скролла
-                setTimeout(() => {
-                  handleScrollImmediate({ target: calContainer });
-                }, 100);
               }
             }, 600);
           }, 2000);
