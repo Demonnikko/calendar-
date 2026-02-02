@@ -129,11 +129,15 @@
       position: relative;
     }
 
-    /* Hide app content on initial load */
-    body:not(.app-loaded) header,
-    body:not(.app-loaded) .tab-content,
-    body:not(.app-loaded) #bottom-nav {
-      visibility: hidden !important;
+    /* Hide ALL app content on initial load */
+    body:not(.app-loaded) {
+      opacity: 0 !important;
+    }
+
+    /* Always show splash and activation screens */
+    body:not(.app-loaded) #splash-screen,
+    body:not(.app-loaded) #license-overlay {
+      opacity: 1 !important;
     }
 
     /* Touch optimization */
