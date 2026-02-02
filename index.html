@@ -129,26 +129,6 @@
       position: relative;
     }
 
-    /* Hide ALL app content until ready - calendar MUST be last */
-    .tab-content,
-    header,
-    .calendar-container,
-    .dashboard-container,
-    #bottom-nav {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      visibility: hidden !important;
-    }
-
-    body.app-ready .tab-content,
-    body.app-ready header,
-    body.app-ready .calendar-container,
-    body.app-ready .dashboard-container,
-    body.app-ready #bottom-nav {
-      opacity: 1 !important;
-      pointer-events: auto !important;
-      visibility: visible !important;
-    }
 
     /* Touch optimization */
     * {
@@ -2364,27 +2344,16 @@
       magic.style.opacity = '0';
       setTimeout(() => {
         document.body.removeChild(magic);
-        document.body.classList.add('app-ready');
+        DOM.init();
+        loadEvents();
+        renderCalendar();
+        renderSchedule();
+        lucide.createIcons();
+        setupCalendarSwipe();
 
-        setTimeout(() => {
-          try {
-            DOM.init();
-            loadEvents();
-            renderCalendar();
-            renderSchedule();
-
-            setTimeout(() => {
-              if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-                // Повторный вызов для надежности
-                setTimeout(() => lucide.createIcons(), 200);
-              }
-              setupCalendarSwipe();
-            }, 300);
-          } catch(e) {
-            console.error('Error loading calendar:', e);
-          }
-        }, 100);
+        // Регистрируем обработчики скролла для bottom-nav
+        document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
+        document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
       }, 500);
     }, 3500);
   }
@@ -5740,10 +5709,6 @@
       }
     }
 
-    // Добавляем обработчики скролла напрямую без debounce
-    document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
-    document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
-
     // ==========================================
     // HELPERS
     // ==========================================
@@ -5798,22 +5763,28 @@
         if (splash) {
           splash.style.display = 'flex';
 
-          // Загружаем данные в фоне пока показывается splash
-          DOM.init();
-          loadEvents();
-          renderCalendar();
-          renderSchedule();
-          lucide.createIcons();
-
           // После завершения splash - показываем календарь
           setTimeout(() => {
             splash.classList.add('hide');
             setTimeout(() => {
               splash.style.display = 'none';
-              // Только СЕЙЧАС показываем календарь
-              document.body.classList.add('app-ready');
-              showBottomNav();
+
+              // Загружаем данные ПОСЛЕ скрытия splash
+              DOM.init();
+              loadEvents();
+              renderCalendar();
+              renderSchedule();
+
+              // Рендерим иконки с задержкой
+              setTimeout(() => {
+                lucide.createIcons();
+              }, 50);
+
               setupCalendarSwipe();
+
+              // Регистрируем обработчики скролла для bottom-nav
+              document.querySelector('.dashboard-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
+              document.querySelector('.calendar-container')?.addEventListener('scroll', handleScrollImmediate, { passive: true });
             }, 600);
           }, 2000);
         }
