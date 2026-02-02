@@ -2309,12 +2309,14 @@
     box.appendChild(error);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
-    // НЕ добавляем app-ready здесь - календарь должен быть скрыт до анимации
 
     setTimeout(() => input.focus(), 100);
   }
 
   function showMagicWelcome() {
+    // Показываем body перед анимацией
+    document.body.classList.add('app-loaded');
+
     // Удаляем splash если он есть (при первой активации его не должно быть видно)
     const splash = document.getElementById('splash-screen');
     if (splash) {
