@@ -127,17 +127,26 @@
       -webkit-user-select: none;
       user-select: none;
       position: relative;
+      background: #000000;
     }
 
-    /* Hide ALL app content on initial load */
-    body:not(.app-loaded) {
-      opacity: 0 !important;
+    /* Hide ALL app content until fully loaded */
+    #calendar-tab,
+    #dashboard-tab,
+    #bottom-nav,
+    header {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
     }
 
-    /* Always show splash and activation screens */
-    body:not(.app-loaded) #splash-screen,
-    body:not(.app-loaded) #license-overlay {
-      opacity: 1 !important;
+    /* Show content only when app is fully loaded */
+    body.app-ready #calendar-tab,
+    body.app-ready #dashboard-tab,
+    body.app-ready #bottom-nav,
+    body.app-ready header {
+      opacity: 1;
+      visibility: visible;
     }
 
     /* Touch optimization */
@@ -297,6 +306,9 @@
       overscroll-behavior: contain;
       min-height: 0;
       position: relative;
+      will-change: scroll-position;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .calendar-container::-webkit-scrollbar {
@@ -589,6 +601,9 @@
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      will-change: scroll-position;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .dashboard-container::-webkit-scrollbar {
@@ -1197,15 +1212,15 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
-      transform: translateY(120px);
+      transform: translateY(100px);
       opacity: 0;
-      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-out;
+      will-change: transform, opacity;
     }
 
     #bottom-nav.visible {
       transform: translateY(0);
       opacity: 1;
-      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
     }
 
     .nav-inner {
@@ -1896,13 +1911,13 @@
       height: 100vh;
       height: 100dvh;
       z-index: 99999;
-      background: #000000 !important;
-      /* display управляется через JS - изначально none */
+      background: #000000;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       opacity: 1;
-      transition: opacity 0.6s ease-out;
+      transition: opacity 0.5s ease-out;
       overflow: hidden;
       padding: 0;
       margin: 0;
@@ -1911,6 +1926,10 @@
     #splash-screen.hide {
       opacity: 0;
       pointer-events: none;
+    }
+
+    #splash-screen.hidden {
+      display: none !important;
     }
 
     .splash-icon {
@@ -2136,13 +2155,23 @@
           }
         }
 
-        await keyRef.update({
+        // Вычисляем дату истечения на основе expiryDays
+        const updateData = {
           activated: true,
           deviceId: deviceId,
           installId: installId,
           activatedDate: new Date().toISOString(),
           lastCheck: new Date().toISOString()
-        });
+        };
+
+        // Если в ключе есть срок действия - вычисляем дату истечения
+        if (existingData.expiryDays && existingData.expiryDays < 999999) {
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + existingData.expiryDays);
+          updateData.expiresAt = expiryDate.toISOString();
+        }
+
+        await keyRef.update(updateData);
 
       } catch (firebaseError) {
         return {
@@ -2276,18 +2305,18 @@
 
         if (result.success) {
           button.textContent = '✅ Активировано!';
-          overlay.style.transition = 'opacity 0.5s';
-          overlay.style.opacity = '0';
-
-          // УДАЛЯЕМ SPLASH - он не нужен при первой активации!
-          const splash = document.getElementById('splash-screen');
-          if (splash) splash.remove();
+          button.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
 
           setTimeout(() => {
-            document.body.removeChild(overlay);
-            // Показываем ТОЛЬКО анимацию, никакого splash!
-            showMagicWelcome();
-          }, 500);
+            overlay.style.transition = 'opacity 0.5s';
+            overlay.style.opacity = '0';
+
+            setTimeout(() => {
+              overlay.remove();
+              // Показываем анимацию приветствия
+              showMagicWelcome();
+            }, 500);
+          }, 800);
         } else {
           button.textContent = 'Активировать';
           button.disabled = false;
@@ -2314,17 +2343,15 @@
   }
 
   function showMagicWelcome() {
-    // Показываем body перед анимацией
-    document.body.classList.add('app-loaded');
-
-    // Удаляем splash если он есть (при первой активации его не должно быть видно)
+    // Удаляем splash если он есть
     const splash = document.getElementById('splash-screen');
     if (splash) {
-      splash.style.display = 'none';
-      splash.remove();
+      splash.classList.add('hidden');
     }
 
+    // Создаём экран анимации приветствия
     const magic = document.createElement('div');
+    magic.id = 'magic-welcome';
     magic.style.cssText = `
       position: fixed;
       inset: 0;
@@ -2333,12 +2360,11 @@
       align-items: center;
       justify-content: center;
       z-index: 999998;
-      opacity: 0;
-      transition: opacity 0.5s;
+      opacity: 1;
     `;
 
     magic.innerHTML = `
-      <div style="text-align: center;">
+      <div style="text-align: center; opacity: 0; transform: scale(0.9); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);" id="magic-content">
         <div style="font-size: 120px; margin-bottom: 30px; animation: wand-spin 1.5s ease-out;">🪄</div>
         <h2 style="font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif; font-size: 36px; background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0; letter-spacing: 2px;">Твори магию</h2>
         <p style="font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif; font-size: 22px; color: #f59e0b; letter-spacing: 1px;">Считай прибыль</p>
@@ -2348,42 +2374,62 @@
 
     document.body.appendChild(magic);
 
+    // Анимация появления контента
     setTimeout(() => {
-      magic.style.opacity = '1';
-    }, 50);
+      const content = document.getElementById('magic-content');
+      if (content) {
+        content.style.opacity = '1';
+        content.style.transform = 'scale(1)';
+      }
+    }, 100);
 
+    // Пока показывается анимация - инициализируем приложение в фоне
     setTimeout(() => {
+      DOM.init();
+      loadEvents();
+      renderCalendar();
+      renderSchedule();
+      setupCalendarSwipe();
+
+      // Рендерим иконки
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+
+      // Регистрируем обработчики скролла
+      const dashContainer = document.querySelector('.dashboard-container');
+      const calContainer = document.querySelector('.calendar-container');
+      if (dashContainer) {
+        dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+      }
+      if (calContainer) {
+        calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+      }
+    }, 500);
+
+    // Скрываем анимацию и показываем приложение
+    setTimeout(() => {
+      // Ещё раз рендерим иконки перед показом
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+
+      magic.style.transition = 'opacity 0.5s ease-out';
       magic.style.opacity = '0';
+
       setTimeout(() => {
-        document.body.removeChild(magic);
-        document.body.classList.add('app-loaded');
+        magic.remove();
+        document.body.classList.add('app-ready');
 
-        DOM.init();
-        loadEvents();
-        renderCalendar();
-        renderSchedule();
+        // Проверяем позицию скролла для текущего таба
+        setTimeout(() => checkScrollPosition('calendar'), 100);
 
-        setupCalendarSwipe();
-
-        // Рендерим иконки с несколькими попытками
+        // Финальный рендер иконок
         setTimeout(() => {
           if (typeof lucide !== 'undefined') {
             lucide.createIcons();
-            setTimeout(() => lucide.createIcons(), 100);
-            setTimeout(() => lucide.createIcons(), 300);
           }
         }, 100);
-
-        // Регистрируем обработчики скролла для bottom-nav
-        const dashContainer = document.querySelector('.dashboard-container');
-        const calContainer = document.querySelector('.calendar-container');
-
-        if (dashContainer) {
-          dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-        }
-        if (calContainer) {
-          calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-        }
       }, 500);
     }, 3500);
   }
@@ -2468,7 +2514,7 @@
   <!-- PARTICLES CANVAS -->
 
   <!-- SPLASH SCREEN -->
-  <div id="splash-screen" style="display: none;">
+  <div id="splash-screen">
     <div class="splash-icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 64px; height: 64px;">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -3352,13 +3398,15 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        showBottomNav();
+        // Проверяем позицию скролла после рендера
+        setTimeout(() => checkScrollPosition('calendar'), 100);
       } else if(tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
 
-        showBottomNav();
+        // Проверяем позицию скролла после рендера
+        setTimeout(() => checkScrollPosition('dashboard'), 100);
       }
     }
 
@@ -5718,25 +5766,68 @@
     }
 
     function showBottomNav() {
-      bottomNav.classList.add('visible');
+      if (bottomNav) {
+        bottomNav.classList.add('visible');
+      }
     }
 
     function hideBottomNav() {
-      bottomNav.classList.remove('visible');
+      if (bottomNav) {
+        bottomNav.classList.remove('visible');
+      }
     }
 
-    function handleScrollImmediate(e) {
-      const scrollTop = e.target.scrollTop;
-      const scrollHeight = e.target.scrollHeight;
-      const clientHeight = e.target.clientHeight;
+    // Проверка позиции скролла для конкретного таба
+    function checkScrollPosition(tabName) {
+      let container = null;
 
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+      if (tabName === 'calendar') {
+        container = document.querySelector('.calendar-container');
+      } else if (tabName === 'dashboard') {
+        container = document.querySelector('.dashboard-container');
+      }
 
-      if (isAtBottom) {
+      if (!container) return;
+
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+
+      // Если контент помещается без скролла или мы внизу - показываем меню
+      const hasNoScroll = scrollHeight <= clientHeight + 10;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+      if (hasNoScroll || isAtBottom) {
         showBottomNav();
       } else {
         hideBottomNav();
       }
+    }
+
+    let scrollTicking = false;
+
+    function handleScrollImmediate(e) {
+      if (scrollTicking) return;
+
+      scrollTicking = true;
+
+      requestAnimationFrame(() => {
+        const scrollTop = e.target.scrollTop;
+        const scrollHeight = e.target.scrollHeight;
+        const clientHeight = e.target.clientHeight;
+
+        // Если контент помещается без скролла - всегда показываем
+        const hasNoScroll = scrollHeight <= clientHeight + 10;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30;
+
+        if (hasNoScroll || isAtBottom) {
+          showBottomNav();
+        } else {
+          hideBottomNav();
+        }
+
+        scrollTicking = false;
+      });
     }
 
     // ==========================================
@@ -5777,87 +5868,127 @@
     // ==========================================
     // INIT
     // ==========================================
+
+    // Функция инициализации контента (без показа)
+    function initializeApp() {
+      DOM.init();
+      loadEvents();
+      renderCalendar();
+      renderSchedule();
+      setupCalendarSwipe();
+
+      // Регистрируем обработчики скролла для bottom-nav
+      const dashContainer = document.querySelector('.dashboard-container');
+      const calContainer = document.querySelector('.calendar-container');
+
+      if (dashContainer) {
+        dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+      }
+      if (calContainer) {
+        calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
+      }
+    }
+
+    // Функция рендера иконок с ожиданием
+    function renderIconsAndShow(callback) {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+        // Даём время на рендер иконок
+        setTimeout(() => {
+          lucide.createIcons();
+          setTimeout(() => {
+            lucide.createIcons();
+            // Теперь показываем контент
+            document.body.classList.add('app-ready');
+            if (callback) callback();
+          }, 150);
+        }, 100);
+      } else {
+        document.body.classList.add('app-ready');
+        if (callback) callback();
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
-      // Check license first
+      const splash = document.getElementById('splash-screen');
+
+      // Register Service Worker for PWA
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+      }
+
+      // Handle Android/iOS back button for modals
+      window.addEventListener('popstate', () => {
+        const eventModal = document.getElementById('event-modal');
+        const confirmModal = document.getElementById('confirm-modal');
+        const previewModal = document.getElementById('preview-modal');
+
+        if(eventModal && eventModal.classList.contains('show')) {
+          closeEventModal();
+          history.pushState(null, '', location.href);
+        } else if(confirmModal && confirmModal.classList.contains('show')) {
+          confirmModal.classList.remove('show');
+          history.pushState(null, '', location.href);
+        } else if(previewModal && previewModal.classList.contains('show')) {
+          closePreview();
+          history.pushState(null, '', location.href);
+        }
+      });
+      history.pushState(null, '', location.href);
+
+      // Check license
       try {
         const hasLicense = await checkActivation();
 
         if (!hasLicense || hasLicense === 'expired') {
-          // No splash screen when showing activation
+          // Скрываем splash, показываем форму активации
+          if (splash) splash.classList.add('hidden');
           showLicensePrompt(hasLicense === 'expired' ? 'expired' : 'first');
           return;
         }
 
-        // App is already activated - show splash FIRST, then calendar
-        const splash = document.getElementById('splash-screen');
-        if (splash) {
-          splash.style.display = 'flex';
+        // ===== ПОВТОРНЫЙ ЗАПУСК (уже активирован) =====
+        // Splash уже виден, загружаем контент в фоне
 
-          // После завершения splash - показываем календарь
+        // Инициализируем приложение пока показывается splash
+        initializeApp();
+
+        // Ждём минимум 1.8 сек для splash + рендер иконок
+        setTimeout(() => {
+          // Рендерим иконки
+          if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+          }
+
+          // Ещё немного ждём для полного рендера
           setTimeout(() => {
+            if (typeof lucide !== 'undefined') {
+              lucide.createIcons();
+            }
+
+            // Плавно скрываем splash
             splash.classList.add('hide');
+
+            // После fade-out показываем контент
             setTimeout(() => {
-              splash.style.display = 'none';
-              document.body.classList.add('app-loaded');
+              splash.classList.add('hidden');
+              document.body.classList.add('app-ready');
 
-              // Загружаем данные ПОСЛЕ скрытия splash
-              DOM.init();
-              loadEvents();
-              renderCalendar();
-              renderSchedule();
+              // Проверяем позицию скролла для текущего таба
+              setTimeout(() => checkScrollPosition('calendar'), 100);
 
-              setupCalendarSwipe();
-
-              // Рендерим иконки с несколькими попытками
+              // Финальный рендер иконок
               setTimeout(() => {
                 if (typeof lucide !== 'undefined') {
                   lucide.createIcons();
-                  setTimeout(() => lucide.createIcons(), 100);
-                  setTimeout(() => lucide.createIcons(), 300);
                 }
               }, 100);
-
-              // Регистрируем обработчики скролла для bottom-nav
-              const dashContainer = document.querySelector('.dashboard-container');
-              const calContainer = document.querySelector('.calendar-container');
-
-              if (dashContainer) {
-                dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-              }
-              if (calContainer) {
-                calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-              }
-            }, 600);
-          }, 2000);
-        }
-
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
-        }
-
-        // Handle Android/iOS back button for modals
-        window.addEventListener('popstate', () => {
-          const eventModal = document.getElementById('event-modal');
-          const confirmModal = document.getElementById('confirm-modal');
-          const previewModal = document.getElementById('preview-modal');
-
-          if(eventModal && eventModal.classList.contains('show')) {
-            closeEventModal();
-            history.pushState(null, '', location.href);
-          } else if(confirmModal && confirmModal.classList.contains('show')) {
-            confirmModal.classList.remove('show');
-            history.pushState(null, '', location.href);
-          } else if(previewModal && previewModal.classList.contains('show')) {
-            closePreview();
-            history.pushState(null, '', location.href);
-          }
-        });
-
-        // Push initial state
-        history.pushState(null, '', location.href);
+            }, 500);
+          }, 200);
+        }, 1800);
 
       } catch (error) {
+        if (splash) splash.classList.add('hidden');
         showLicensePrompt("first");
       }
     });
