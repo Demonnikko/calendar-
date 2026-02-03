@@ -2438,19 +2438,67 @@
 
   function setupCalendarSwipe() {
     const calendarGrid = document.getElementById('calendar-grid');
-    if (!calendarGrid || calendarEventHandlersSetup) return;
+    const calendarContainer = document.querySelector('#calendar-tab .calendar-container');
+    if (!calendarGrid || !calendarContainer || calendarEventHandlersSetup) return;
 
-    let touchStartX = 0;
-    let touchEndX = 0;
-    let touchStartY = 0;
-    let touchEndY = 0;
+    // === СВАЙП НА ВСЁМ КОНТЕЙНЕРЕ (смена месяца) ===
+    let swipeStartX = 0;
+    let swipeStartY = 0;
+    let isSwiping = false;
+
+    calendarContainer.addEventListener('touchstart', (e) => {
+      swipeStartX = e.changedTouches[0].clientX;
+      swipeStartY = e.changedTouches[0].clientY;
+      isSwiping = false;
+    }, { passive: true });
+
+    calendarContainer.addEventListener('touchmove', (e) => {
+      if (swipeStartX === 0) return;
+
+      const currentX = e.changedTouches[0].clientX;
+      const currentY = e.changedTouches[0].clientY;
+      const diffX = Math.abs(currentX - swipeStartX);
+      const diffY = Math.abs(currentY - swipeStartY);
+
+      // Определяем горизонтальный свайп (если X > Y * 1.5)
+      if (diffX > 30 && diffX > diffY * 1.5) {
+        isSwiping = true;
+      }
+    }, { passive: true });
+
+    calendarContainer.addEventListener('touchend', (e) => {
+      if (swipeStartX === 0) return;
+
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = swipeStartX - endX;
+      const diffY = Math.abs(swipeStartY - endY);
+
+      const swipeThreshold = 80;
+
+      // Только горизонтальный свайп (X > Y и достаточная длина)
+      if (Math.abs(diffX) > diffY && Math.abs(diffX) > swipeThreshold) {
+        if (diffX > 0) {
+          changeMonth(1); // Свайп влево → следующий месяц
+        } else {
+          changeMonth(-1); // Свайп вправо → предыдущий месяц
+        }
+      }
+
+      swipeStartX = 0;
+      swipeStartY = 0;
+      isSwiping = false;
+    }, { passive: true });
+
+    // === LONG PRESS И КЛИК НА СЕТКЕ (выбор даты, создание события) ===
     let longPressTimer = null;
     let touchedCell = null;
+    let cellTouchStartX = 0;
+    let cellTouchStartY = 0;
 
-    // Swipe handler
     calendarGrid.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].clientX;
-      touchStartY = e.changedTouches[0].clientY;
+      cellTouchStartX = e.changedTouches[0].clientX;
+      cellTouchStartY = e.changedTouches[0].clientY;
 
       // Long press handler
       const cell = e.target.closest('.calendar-cell');
@@ -2465,9 +2513,15 @@
     }, { passive: true });
 
     calendarGrid.addEventListener('touchmove', (e) => {
+      // Отменяем long press при движении
       if(longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
+        const currentX = e.changedTouches[0].clientX;
+        const currentY = e.changedTouches[0].clientY;
+        const moved = Math.abs(currentX - cellTouchStartX) > 10 || Math.abs(currentY - cellTouchStartY) > 10;
+        if (moved) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
       }
     }, { passive: true });
 
@@ -2476,24 +2530,9 @@
         clearTimeout(longPressTimer);
         longPressTimer = null;
       }
-
-      touchEndX = e.changedTouches[0].clientX;
-      touchEndY = e.changedTouches[0].clientY;
-
-      const swipeThreshold = 100;
-      const diffX = touchStartX - touchEndX;
-      const diffY = touchStartY - touchEndY;
-
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > swipeThreshold) {
-        if (diffX > 0) {
-          changeMonth(1);
-        } else {
-          changeMonth(-1);
-        }
-      }
     }, { passive: true });
 
-    // Click handler
+    // Click handler для выбора даты
     calendarGrid.addEventListener('click', (e) => {
       const cell = e.target.closest('.calendar-cell');
       if(cell && cell.dataset.date) {
