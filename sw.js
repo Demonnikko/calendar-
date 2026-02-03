@@ -1,11 +1,10 @@
-// Service Worker для Illusionist OS Calendar
-const CACHE_NAME = 'illusionist-calendar-v6-final';
+const CACHE_NAME = 'illusionist-calendar-v5';
 const urlsToCache = [
   './',
   './index.html',
-  './manifest.json',
   './lucide.min.js',
   './tailwind.min.js',
+  './manifest.json',
   './icons/icon-72.png',
   './icons/icon-96.png',
   './icons/icon-128.png',
@@ -16,39 +15,63 @@ const urlsToCache = [
   './icons/icon-512.png'
 ];
 
-// Установка Service Worker
 self.addEventListener('install', event => {
+  // Сразу активируем новый SW
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// Активация Service Worker
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
-
-// Обработка запросов
 self.addEventListener('fetch', event => {
+  // Игнорируем запросы к Firebase и другим внешним сервисам
+  if (event.request.url.includes('firebase') ||
+      event.request.url.includes('gstatic.com') ||
+      event.request.url.includes('googleapis.com')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Возвращаем из кэша если есть, иначе делаем запрос
-        return response || fetch(event.request);
+        if (response) {
+          return response;
+        }
+        return fetch(event.request).then(fetchResponse => {
+          // Кэшируем новые запросы (только GET и успешные)
+          if (event.request.method === 'GET' && fetchResponse.status === 200) {
+            const responseClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return fetchResponse;
+        }).catch(() => {
+          // Офлайн fallback - возвращаем главную страницу
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
       })
+  );
+});
+
+self.addEventListener('activate', event => {
+  // Берём контроль над всеми вкладками
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
   );
 });
