@@ -868,6 +868,44 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 10px 12px;
+      margin: -10px -12px 16px -12px;
+      border-radius: 10px;
+      transition: background 0.2s ease;
+    }
+
+    .form-section-title:hover {
+      background: rgba(245,158,11,0.1);
+    }
+
+    .form-section-title:active {
+      background: rgba(245,158,11,0.15);
+    }
+
+    .form-section-title .chevron {
+      margin-left: auto;
+      width: 18px;
+      height: 18px;
+      transition: transform 0.3s ease;
+      opacity: 0.6;
+    }
+
+    .form-section.collapsed .form-section-title .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .form-section-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      max-height: 2000px;
+      opacity: 1;
+    }
+
+    .form-section.collapsed .form-section-content {
+      max-height: 0;
+      opacity: 0;
     }
 
     .form-group {
@@ -2774,126 +2812,144 @@
 
       <div class="modal-body">
         <!-- СЕКЦИЯ: ОСНОВНОЕ -->
-        <div class="form-section">
-          <div class="form-section-title">📋 Основное</div>
-
-          <div class="form-group">
-            <label class="form-label">Название события</label>
-            <input type="text" id="event-title" class="form-input" placeholder="Юбилей 50 лет">
+        <div class="form-section" id="section-basic">
+          <div class="form-section-title" onclick="toggleSection('section-basic')">
+            📋 Основное
+            <i data-lucide="chevron-down" class="chevron"></i>
           </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-section-content">
             <div class="form-group">
-              <label class="form-label">Дата</label>
-              <input type="date" id="event-date" class="form-input">
+              <label class="form-label">Название события</label>
+              <input type="text" id="event-title" class="form-input" placeholder="Юбилей 50 лет">
             </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Дата</label>
+                <input type="date" id="event-date" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Статус</label>
+                <select id="event-status" class="form-select">
+                  <option value="pending">Предварительная</option>
+                  <option value="confirmed">Подтверждено</option>
+                  <option value="completed">Выполнено</option>
+                  <option value="rehearsal">Репетиция</option>
+                </select>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label class="form-label">Статус</label>
-              <select id="event-status" class="form-select">
-                <option value="pending">Предварительная</option>
-                <option value="confirmed">Подтверждено</option>
-                <option value="completed">Выполнено</option>
-                <option value="rehearsal">Репетиция</option>
-              </select>
+              <label class="form-label">Локация</label>
+              <input type="text" id="event-location" class="form-input" placeholder="Ресторан XYZ">
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">Локация</label>
-            <input type="text" id="event-location" class="form-input" placeholder="Ресторан XYZ">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Адрес</label>
-            <input type="text" id="event-address" class="form-input" placeholder="Москва, ул. Пушкина, д. 10">
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group">
-              <label class="form-label">Клиент</label>
-              <input type="text" id="event-client" class="form-input" placeholder="Иван Иванов">
+              <label class="form-label">Адрес</label>
+              <input type="text" id="event-address" class="form-input" placeholder="Москва, ул. Пушкина, д. 10">
             </div>
-            <div class="form-group">
-              <label class="form-label">Телефон</label>
-              <input type="tel" id="event-phone" class="form-input" placeholder="+7 900 123-45-67">
-            </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">Количество гостей</label>
-            <input type="number" id="event-guests" class="form-input" placeholder="0" min="0">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Клиент</label>
+                <input type="text" id="event-client" class="form-input" placeholder="Иван Иванов">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Телефон</label>
+                <input type="tel" id="event-phone" class="form-input" placeholder="+7 900 123-45-67">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Количество гостей</label>
+              <input type="number" id="event-guests" class="form-input" placeholder="0" min="0">
+            </div>
           </div>
         </div>
 
         <!-- СЕКЦИЯ: РАСПИСАНИЕ -->
-        <div class="form-section">
-          <div class="form-section-title">🎭 Расписание выходов</div>
-          <div class="schedule-section">
-            <div class="schedule-header">
-              <div class="schedule-title">Выходы</div>
-              <button class="schedule-add" onclick="addScheduleItem()">
-                <i data-lucide="plus"></i>
-                <span>Добавить</span>
-              </button>
+        <div class="form-section collapsed" id="section-schedule">
+          <div class="form-section-title" onclick="toggleSection('section-schedule')">
+            🎭 Расписание выходов
+            <i data-lucide="chevron-down" class="chevron"></i>
+          </div>
+          <div class="form-section-content">
+            <div class="schedule-section">
+              <div class="schedule-header">
+                <div class="schedule-title">Выходы</div>
+                <button class="schedule-add" onclick="addScheduleItem()">
+                  <i data-lucide="plus"></i>
+                  <span>Добавить</span>
+                </button>
+              </div>
+              <div class="schedule-list" id="schedule-list"></div>
             </div>
-            <div class="schedule-list" id="schedule-list"></div>
           </div>
         </div>
 
         <!-- СЕКЦИЯ: ФИНАНСЫ -->
-        <div class="form-section">
-          <div class="form-section-title">💰 Финансы</div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Доход</label>
-              <input type="number" id="event-income" class="form-input" placeholder="0" oninput="calculateBalance()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Предоплата</label>
-              <input type="number" id="event-prepay" class="form-input" placeholder="0" oninput="calculateBalance()">
-            </div>
+        <div class="form-section collapsed" id="section-finance">
+          <div class="form-section-title" onclick="toggleSection('section-finance')">
+            💰 Финансы
+            <i data-lucide="chevron-down" class="chevron"></i>
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Налог (%)</label>
-            <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
-          </div>
-
-          <div class="form-group">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-              <label class="form-label" style="margin-bottom: 0;">Расходы</label>
-              <button type="button" onclick="addExpenseRow()" style="padding: 8px 14px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; font-size: 13px; font-weight: 600; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
-                Добавить
-              </button>
+          <div class="form-section-content">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Доход</label>
+                <input type="number" id="event-income" class="form-input" placeholder="0" oninput="calculateBalance()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Предоплата</label>
+                <input type="number" id="event-prepay" class="form-input" placeholder="0" oninput="calculateBalance()">
+              </div>
             </div>
-            <div id="expenses-list"></div>
-          </div>
 
-          <div id="custom-expense-form" style="display: none;">
             <div class="form-group">
-              <label class="form-label">Название категории</label>
-              <input type="text" id="custom-expense-name" class="form-input" placeholder="Например: Костюмы">
+              <label class="form-label">Налог (%)</label>
+              <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
             </div>
-            <div class="form-group">
-              <label class="form-label">Эмодзи</label>
-              <input type="text" id="custom-expense-emoji" class="form-input" placeholder="🎭" maxlength="2" style="font-size: 24px; text-align: center;">
-            </div>
-            <button type="button" onclick="saveCustomExpenseCategory()" class="btn-primary" style="margin-bottom: 16px;">Сохранить</button>
-          </div>
 
-          <div class="balance-group" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05)); border: 1px solid rgba(34,197,94,0.2); border-radius: 14px;">
-            <div class="balance-label" style="font-size: 12px; color: rgba(34,197,94,0.8);">К получению</div>
-            <div class="balance-value" id="balance-display" style="font-size: 24px; font-weight: 900; color: #22c55e;">0 ₽</div>
+            <div class="form-group">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <label class="form-label" style="margin-bottom: 0;">Расходы</label>
+                <button type="button" onclick="addExpenseRow()" style="padding: 8px 14px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; font-size: 13px; font-weight: 600; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                  Добавить
+                </button>
+              </div>
+              <div id="expenses-list"></div>
+            </div>
+
+            <div id="custom-expense-form" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Название категории</label>
+                <input type="text" id="custom-expense-name" class="form-input" placeholder="Например: Костюмы">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Эмодзи</label>
+                <input type="text" id="custom-expense-emoji" class="form-input" placeholder="🎭" maxlength="2" style="font-size: 24px; text-align: center;">
+              </div>
+              <button type="button" onclick="saveCustomExpenseCategory()" class="btn-primary" style="margin-bottom: 16px;">Сохранить</button>
+            </div>
+
+            <div class="balance-group" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05)); border: 1px solid rgba(34,197,94,0.2); border-radius: 14px;">
+              <div class="balance-label" style="font-size: 12px; color: rgba(34,197,94,0.8);">К получению</div>
+              <div class="balance-value" id="balance-display" style="font-size: 24px; font-weight: 900; color: #22c55e;">0 ₽</div>
+            </div>
           </div>
         </div>
 
         <!-- СЕКЦИЯ: ЗАМЕТКИ -->
-        <div class="form-section">
-          <div class="form-section-title">📝 Заметки</div>
-          <div class="form-group">
-            <textarea id="event-notes" class="form-textarea" placeholder="Внутренние заметки..." style="min-height: 80px;"></textarea>
+        <div class="form-section collapsed" id="section-notes">
+          <div class="form-section-title" onclick="toggleSection('section-notes')">
+            📝 Заметки
+            <i data-lucide="chevron-down" class="chevron"></i>
+          </div>
+          <div class="form-section-content">
+            <div class="form-group">
+              <textarea id="event-notes" class="form-textarea" placeholder="Внутренние заметки..." style="min-height: 80px;"></textarea>
+            </div>
           </div>
         </div>
 
@@ -4388,6 +4444,7 @@
       document.getElementById('delete-btn').style.display = 'none';
 
       resetForm();
+      resetSectionStates();
       updateExpenseCategorySelect();
 
       const dateInput = document.getElementById('event-date');
@@ -4409,6 +4466,7 @@
       document.getElementById('modal-title').textContent = 'Редактировать';
       document.getElementById('delete-btn').style.display = 'block';
 
+      resetSectionStates();
       updateExpenseCategorySelect();
 
       document.getElementById('event-title').value = event.title || '';
@@ -4434,6 +4492,31 @@
 
       document.getElementById('event-modal').classList.add('show');
       lucide.createIcons();
+    }
+
+    // === СВОРАЧИВАНИЕ СЕКЦИЙ В ФОРМЕ ===
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.classList.toggle('collapsed');
+        // Обновляем иконку после переключения
+        setTimeout(() => lucide.createIcons(), 10);
+      }
+    }
+
+    // Сбросить секции к начальному состоянию (Основное открыто, остальные закрыты)
+    function resetSectionStates() {
+      const basicSection = document.getElementById('section-basic');
+      const scheduleSection = document.getElementById('section-schedule');
+      const financeSection = document.getElementById('section-finance');
+      const notesSection = document.getElementById('section-notes');
+
+      if (basicSection) basicSection.classList.remove('collapsed');
+      if (scheduleSection) scheduleSection.classList.add('collapsed');
+      if (financeSection) financeSection.classList.add('collapsed');
+      if (notesSection) notesSection.classList.add('collapsed');
+
+      setTimeout(() => lucide.createIcons(), 10);
     }
 
     function closeEventModal() {
