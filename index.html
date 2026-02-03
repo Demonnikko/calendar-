@@ -5069,18 +5069,26 @@
       container.innerHTML = '';
 
       expenses.forEach((item, index) => {
+        const catInfo = EXPENSE_CATEGORIES[item.category] || { emoji: '📌', label: 'Другое', color: '#64748b' };
+
         const div = document.createElement('div');
-        div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);';
+        div.style.cssText = 'margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);';
 
         div.innerHTML = `
-          <input type="number" value="${escapeHtml(String(item.amount))}" onchange="updateExpenseAmount(${index}, this.value)" placeholder="Сумма" min="0" style="width: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
-          <select onchange="updateExpenseCategory(${index}, this.value)" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
-            ${getExpenseCategoryOptions(item.category)}
-          </select>
-          <input type="text" value="${escapeHtml(item.note)}" onchange="updateExpenseNote(${index}, this.value)" placeholder="Примечание" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 14px;">
-          <button type="button" onclick="removeExpense(${index})" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: ${catInfo.color}20; border: 1px solid ${catInfo.color}40; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+              ${escapeHtml(catInfo.emoji)}
+            </div>
+            <select onchange="updateExpenseCategory(${index}, this.value)" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; color: #e2e8f0; font-size: 14px; min-width: 0;">
+              ${getExpenseCategoryOptions(item.category)}
+            </select>
+            <input type="number" value="${escapeHtml(String(item.amount))}" onchange="updateExpenseAmount(${index}, this.value)" placeholder="0" min="0" style="width: 80px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; color: #e2e8f0; font-size: 14px; text-align: right; flex-shrink: 0;">
+            <span style="color: rgba(148,163,184,0.6); font-size: 13px; flex-shrink: 0;">₽</span>
+            <button type="button" onclick="removeExpense(${index})" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
+          <input type="text" value="${escapeHtml(item.note)}" onchange="updateExpenseNote(${index}, this.value)" placeholder="Комментарий (необязательно)" style="width: 100%; margin-top: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: rgba(226,232,240,0.8); font-size: 13px;">
         `;
 
         container.appendChild(div);
