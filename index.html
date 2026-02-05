@@ -409,6 +409,14 @@
       background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.08) 100%);
     }
 
+    .calendar-cell.longpress-active {
+      border-color: rgba(245,158,11,0.7);
+      background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.1) 100%);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+      transform: scale(0.92);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
     .date-number {
       font-size: 12px;
       font-weight: 700;
@@ -694,6 +702,11 @@
     .modal-overlay.show {
       opacity: 1;
       visibility: visible;
+    }
+
+    body.modal-open {
+      overflow: hidden !important;
+      touch-action: none;
     }
 
     .modal-content {
@@ -2365,7 +2378,7 @@
         button.textContent = 'Активировать';
         button.disabled = false;
         input.disabled = false;
-        error.textContent = 'Произошла ошибка. Попробуйте снова.';
+        error.textContent = 'Произошла ошибка. Попробуйте ввести ключ снова.';
       }
     });
 
@@ -2542,7 +2555,9 @@
       const cell = e.target.closest('.calendar-cell');
       if(cell && cell.dataset.date) {
         touchedCell = cell;
+        cell.classList.add('longpress-active');
         longPressTimer = setTimeout(() => {
+          cell.classList.remove('longpress-active');
           const dateStr = cell.dataset.date;
           const [y, m, d] = dateStr.split('-');
           openEventModal(new Date(y, m - 1, d));
@@ -2559,6 +2574,7 @@
         if (moved) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
+          if(touchedCell) { touchedCell.classList.remove('longpress-active'); touchedCell = null; }
         }
       }
     }, { passive: true });
@@ -2568,6 +2584,7 @@
         clearTimeout(longPressTimer);
         longPressTimer = null;
       }
+      if(touchedCell) { touchedCell.classList.remove('longpress-active'); touchedCell = null; }
     }, { passive: true });
 
     // Click handler для выбора даты
@@ -2815,7 +2832,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title" id="modal-title">Новое событие</h2>
-        <button class="modal-close" onclick="closeEventModal()">
+        <button class="modal-close" onclick="tryCloseEventModal()">
           <i data-lucide="x"></i>
         </button>
       </div>
@@ -2866,13 +2883,13 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Телефон</label>
-                <input type="tel" id="event-phone" class="form-input" placeholder="+7 900 123-45-67">
+                <input type="tel" id="event-phone" class="form-input" placeholder="+7 900 123-45-67" autocomplete="tel" inputmode="tel">
               </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Количество гостей</label>
-              <input type="number" id="event-guests" class="form-input" placeholder="0" min="0">
+              <input type="number" id="event-guests" class="form-input" placeholder="0" min="0" inputmode="numeric">
             </div>
           </div>
         </div>
@@ -2939,17 +2956,17 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="form-group">
                 <label class="form-label">Доход</label>
-                <input type="number" id="event-income" class="form-input" placeholder="0" oninput="calculateBalance()">
+                <input type="number" id="event-income" class="form-input" placeholder="0" inputmode="decimal" oninput="calculateBalance()">
               </div>
               <div class="form-group">
                 <label class="form-label">Предоплата</label>
-                <input type="number" id="event-prepay" class="form-input" placeholder="0" oninput="calculateBalance()">
+                <input type="number" id="event-prepay" class="form-input" placeholder="0" inputmode="decimal" oninput="calculateBalance()">
               </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Налог (%)</label>
-              <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" oninput="calculateBalance()">
+              <input type="number" id="event-tax" class="form-input" placeholder="0" min="0" max="100" inputmode="numeric" oninput="calculateBalance()">
             </div>
 
             <div class="form-group">
@@ -2975,9 +2992,23 @@
               <button type="button" onclick="saveCustomExpenseCategory()" class="btn-primary" style="margin-bottom: 16px;">Сохранить</button>
             </div>
 
-            <div class="balance-group" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05)); border: 1px solid rgba(34,197,94,0.2); border-radius: 14px;">
-              <div class="balance-label" style="font-size: 12px; color: rgba(34,197,94,0.8);">К получению</div>
-              <div class="balance-value" id="balance-display" style="font-size: 24px; font-weight: 900; color: #22c55e;">0 ₽</div>
+            <div style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, rgba(15,15,20,0.6), rgba(15,15,20,0.4)); border: 1px solid rgba(245,158,11,0.15); border-radius: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 13px; color: rgba(148,163,184,0.8);">К получению</span>
+                <span id="balance-to-receive" style="font-size: 14px; font-weight: 700; color: #fff;">0 ₽</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 13px; color: rgba(148,163,184,0.8);">Расходы</span>
+                <span id="balance-expenses" style="font-size: 14px; font-weight: 700; color: #ef4444;">0 ₽</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 13px; color: rgba(148,163,184,0.8);">Налог</span>
+                <span id="balance-tax" style="font-size: 14px; font-weight: 700; color: #ef4444;">0 ₽</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0 2px;">
+                <span style="font-size: 14px; font-weight: 800; color: rgba(245,158,11,0.9);">Прибыль</span>
+                <span id="balance-display" style="font-size: 20px; font-weight: 900; color: #22c55e; font-family: 'JetBrains Mono', monospace;">0 ₽</span>
+              </div>
             </div>
           </div>
         </div>
@@ -2997,7 +3028,7 @@
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button class="btn-primary" onclick="saveEvent()" style="flex: 1; min-width: 45%;">Сохранить</button>
-          <button class="btn-secondary" onclick="closeEventModal()" style="flex: 1; min-width: 45%;">Отмена</button>
+          <button class="btn-secondary" onclick="tryCloseEventModal()" style="flex: 1; min-width: 45%;">Отмена</button>
           <button id="copy-btn" onclick="copyEvent()" style="display: none; flex: 1; min-width: 45%; border-radius: 16px; padding: 14px 18px; font-size: 14px; font-weight: 700; background: rgba(96,165,250,0.12); border: 1.5px solid rgba(96,165,250,0.3); color: #60a5fa; cursor: pointer;">Копировать</button>
           <button class="btn-danger" id="delete-btn" onclick="deleteEvent()" style="display: none; flex: 1; min-width: 45%;">Удалить</button>
         </div>
@@ -3030,7 +3061,12 @@
             <div id="license-status-badge" style="font-size: 13px; font-weight: 700; color: #34d399;">Активирована ✓</div>
           </div>
           <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; margin-bottom: 12px;">
-            <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 6px;">Ключ активации</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7);">Ключ активации</div>
+              <button id="btn-show-key" onclick="toggleKeyVisibility()" style="background: none; border: none; color: rgba(148,163,184,0.6); cursor: pointer; padding: 2px; display: flex; align-items: center;">
+                <i data-lucide="eye" id="key-eye-icon" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
             <div id="license-key-display" style="font-family: monospace; font-size: 12px; color: rgba(148,163,184,0.9);">****-****-****-****</div>
           </div>
           <button id="btn-reset-license" onclick="resetLicense()" style="width: 100%; padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; color: #ef4444; font-weight: 700; cursor: pointer; font-size: 13px;">Сбросить активацию</button>
@@ -3042,7 +3078,7 @@
             <i data-lucide="target" style="width: 20px; height: 20px; color: #f59e0b;"></i>
             <div style="font-size: 12px; color: rgba(245,158,11,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">Цель месяца</div>
           </div>
-          <input type="number" id="goal-input" class="form-input" placeholder="200000" style="margin-bottom: 12px;">
+          <input type="number" id="goal-input" class="form-input" placeholder="200000" inputmode="numeric" style="margin-bottom: 12px;">
           <button onclick="saveGoal()" class="btn-primary">Сохранить цель</button>
         </div>
 
@@ -3163,7 +3199,7 @@
             <button class="color-btn" data-color="#34d399" onclick="selectColor('#34d399')" style="background: #34d399;"></button>
             <button class="color-btn" data-color="#60a5fa" onclick="selectColor('#60a5fa')" style="background: #60a5fa;"></button>
             <button class="color-btn" data-color="#ef4444" onclick="selectColor('#ef4444')" style="background: #ef4444;"></button>
-            <button class="color-btn" data-color="#f59e0b" onclick="selectColor('#f59e0b')" style="background: #f59e0b;"></button>
+            <button class="color-btn" data-color="#f97316" onclick="selectColor('#f97316')" style="background: #f97316;"></button>
             <button class="color-btn" data-color="#ec4899" onclick="selectColor('#ec4899')" style="background: #ec4899;"></button>
             <button class="color-btn" data-color="#8b5cf6" onclick="selectColor('#8b5cf6')" style="background: #8b5cf6;"></button>
             <button class="color-btn" data-color="#10b981" onclick="selectColor('#10b981')" style="background: #10b981;"></button>
@@ -3369,6 +3405,9 @@
     let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
     let expenses = []; // Новый массив расходов для текущего события
     let editingEventId = null;
+    let formDirty = false;
+    let storedLicenseKey = '';
+    let keyVisible = false;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
     let currentType = 'rabbit';
@@ -3414,6 +3453,21 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function escapeOnclick(str) {
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '\\x3c').replace(/>/g, '\\x3e');
+    }
+
+    function sanitizeImportKeys(obj) {
+      if (!obj || typeof obj !== 'object') return {};
+      const safe = {};
+      Object.keys(obj).forEach(key => {
+        if (/^[a-zA-Z0-9_]+$/.test(key)) {
+          safe[key] = obj[key];
+        }
+      });
+      return safe;
     }
 
     // ==========================================
@@ -3641,7 +3695,18 @@
       const dayEvents = events.filter(e => e.date === dateStr);
 
       if(dayEvents.length === 0) {
-        container.innerHTML = '';
+        container.innerHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(245,158,11,0.08); border: 1.5px dashed rgba(245,158,11,0.3); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="plus" style="width: 24px; height: 24px; color: rgba(245,158,11,0.6);"></i>
+            </div>
+            <div style="font-size: 13px; color: rgba(148,163,184,0.7); text-align: center; line-height: 1.5;">
+              Нет событий на эту дату.<br>
+              <span style="color: rgba(245,158,11,0.7); font-weight: 600; cursor: pointer;" onclick="openEventModal(selectedDate)">Добавить событие</span>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
         return;
       }
 
@@ -3701,6 +3766,15 @@
 
         container.appendChild(row);
       });
+
+      // Подсказка для свайпа (показываем один раз)
+      if (!localStorage.getItem('swipe_hint_shown')) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; margin-top: 4px;';
+        hint.innerHTML = `<span style="font-size: 12px; color: rgba(148,163,184,0.5); display: flex; align-items: center; gap: 6px;"><i data-lucide="move-horizontal" style="width: 14px; height: 14px;"></i> Свайп по событию для действий</span>`;
+        container.appendChild(hint);
+        localStorage.setItem('swipe_hint_shown', '1');
+      }
 
       // Добавляем итоговую карточку за месяц (только в последний день месяца)
       const year = selectedDate.getFullYear();
@@ -4165,18 +4239,32 @@
       if (stored) {
         try {
           const data = JSON.parse(atob(stored));
-          document.getElementById('license-key-display').textContent = data.key || '****-****-****-****';
+          storedLicenseKey = data.key || '';
+          keyVisible = false;
+          document.getElementById('license-key-display').textContent = '****-****-****-****';
           document.getElementById('license-status-badge').textContent = 'Активирована ✓';
           document.getElementById('license-status-badge').style.color = '#34d399';
         } catch(e) {
+          storedLicenseKey = '';
           document.getElementById('license-key-display').textContent = '****-****-****-****';
           document.getElementById('license-status-badge').textContent = 'Не активирована';
           document.getElementById('license-status-badge').style.color = '#ef4444';
         }
       } else {
+        storedLicenseKey = '';
         document.getElementById('license-key-display').textContent = '****-****-****-****';
         document.getElementById('license-status-badge').textContent = 'Не активирована';
         document.getElementById('license-status-badge').style.color = '#ef4444';
+      }
+    }
+
+    function toggleKeyVisibility() {
+      keyVisible = !keyVisible;
+      document.getElementById('license-key-display').textContent = keyVisible && storedLicenseKey ? storedLicenseKey : '****-****-****-****';
+      const icon = document.getElementById('key-eye-icon');
+      if (icon) {
+        icon.setAttribute('data-lucide', keyVisible ? 'eye-off' : 'eye');
+        lucide.createIcons();
       }
     }
 
@@ -4251,12 +4339,12 @@
           }
 
           if(data.customTypes) {
-            customTypes = data.customTypes;
+            customTypes = sanitizeImportKeys(data.customTypes);
             saveCustomTypes();
           }
 
           if(data.expenseCategories) {
-            EXPENSE_CATEGORIES = data.expenseCategories;
+            EXPENSE_CATEGORIES = sanitizeImportKeys(data.expenseCategories);
             saveCustomExpenseCategories();
           }
 
@@ -4477,12 +4565,12 @@
           <div style="width: 40px; height: 40px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <i data-lucide="${type.icon}" style="width: 20px; height: 20px; color: ${type.color};"></i>
           </div>
-          <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openTypeEditor('${key}')">
+          <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openTypeEditor('${escapeOnclick(key)}')">
             <div style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(type.label)}</div>
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-top: 2px;">${isDefault ? 'По умолчанию' : 'Пользовательский'}</div>
           </div>
           <div style="width: 24px; height: 24px; border-radius: 6px; background: ${type.color}; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
-          <button onclick="event.stopPropagation(); deleteTypeFromList('${key}')" style="width: 36px; height: 36px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.3s; flex-shrink: 0;" onmouseenter="this.style.background='rgba(239,68,68,0.2)'; this.style.transform='scale(1.05)';" onmouseleave="this.style.background='rgba(239,68,68,0.1)'; this.style.transform='scale(1)';">
+          <button onclick="event.stopPropagation(); deleteTypeFromList('${escapeOnclick(key)}')" style="width: 36px; height: 36px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.3s; flex-shrink: 0;" onmouseenter="this.style.background='rgba(239,68,68,0.2)'; this.style.transform='scale(1.05)';" onmouseleave="this.style.background='rgba(239,68,68,0.1)'; this.style.transform='scale(1)';">
             <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
           </button>
         `;
@@ -4627,6 +4715,7 @@
 
       document.getElementById('event-modal').classList.add('show');
       lucide.createIcons();
+      formDirty = false;
     }
 
     function editEvent(eventId) {
@@ -4676,6 +4765,7 @@
 
       document.getElementById('event-modal').classList.add('show');
       lucide.createIcons();
+      formDirty = false;
     }
 
     // === СВОРАЧИВАНИЕ СЕКЦИЙ В ФОРМЕ ===
@@ -4705,9 +4795,34 @@
       setTimeout(() => lucide.createIcons(), 10);
     }
 
+    function tryCloseEventModal() {
+      if (!formDirty) {
+        closeEventModal();
+        return;
+      }
+      const dlg = document.createElement('div');
+      dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
+      dlg.innerHTML = `
+        <div style="width:100%;max-width:320px;background:rgba(15,15,20,0.98);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1.5px solid rgba(245,158,11,0.35);border-radius:24px;padding:24px;">
+          <p style="color:#fff;font-size:15px;font-weight:700;text-align:center;margin:0 0 6px;">Несохранённые изменения</p>
+          <p style="color:rgba(255,255,255,0.55);font-size:13px;text-align:center;margin:0 0 20px;">Сохранить изменения перед выходом?</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button id="dlg-save" style="height:48px;border-radius:14px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#0a0a0f;cursor:pointer;">Сохранить</button>
+            <button id="dlg-discard" style="height:48px;border-radius:14px;font-size:14px;font-weight:700;background:rgba(239,68,68,0.12);border:1.5px solid rgba(239,68,68,0.3);color:#ef4444;cursor:pointer;">Сбросить</button>
+            <button id="dlg-back" style="height:48px;border-radius:14px;font-size:14px;font-weight:700;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;">Отмена</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(dlg);
+      dlg.querySelector('#dlg-save').onclick = () => { dlg.remove(); saveEvent(); };
+      dlg.querySelector('#dlg-discard').onclick = () => { dlg.remove(); closeEventModal(); };
+      dlg.querySelector('#dlg-back').onclick = () => { dlg.remove(); };
+    }
+
     function closeEventModal() {
       document.getElementById('event-modal').classList.remove('show');
       resetForm();
+      formDirty = false;
     }
 
     function resetForm() {
@@ -4724,7 +4839,7 @@
       expenses = [];
       renderExpenses();
       document.getElementById('event-notes').value = '';
-      document.getElementById('balance-display').textContent = '0 ₽';
+      calculateBalance();
 
       const customExpenseForm = document.getElementById('custom-expense-form');
       if(customExpenseForm) customExpenseForm.style.display = 'none';
@@ -4775,7 +4890,9 @@
 
     function generateRepeatDates(startDate, repeatType, count) {
       const dates = [];
-      let current = new Date(startDate);
+      const [sy, sm, sd] = startDate.split('-').map(Number);
+      let current = new Date(sy, sm - 1, sd);
+      const originalDay = current.getDate();
 
       for (let i = 0; i < count; i++) {
         dates.push(formatDateInput(current));
@@ -4790,9 +4907,14 @@
           case 'biweekly':
             current.setDate(current.getDate() + 14);
             break;
-          case 'monthly':
-            current.setMonth(current.getMonth() + 1);
+          case 'monthly': {
+            let nextMonth = current.getMonth() + 1;
+            let nextYear = current.getFullYear();
+            if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+            const lastDayOfMonth = new Date(nextYear, nextMonth + 1, 0).getDate();
+            current = new Date(nextYear, nextMonth, Math.min(originalDay, lastDayOfMonth));
             break;
+          }
         }
       }
 
@@ -4800,9 +4922,9 @@
     }
 
     function formatDateRu(dateStr) {
-      const d = new Date(dateStr);
+      const [y, m, d] = dateStr.split('-').map(Number);
       const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-      return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      return `${d} ${months[m - 1]} ${y}`;
     }
 
     // Слушатель для обновления превью при изменении даты или количества
@@ -4967,7 +5089,7 @@
                   ${escapeHtml(cat.emoji)}
                 </div>
                 <div style="flex: 1; font-size: 14px; color: #fff; font-weight: 600;">${escapeHtml(cat.label)}</div>
-                <button onclick="deleteExpenseCategory('${key}')" style="padding: 6px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-size: 12px; font-weight: 600; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;">
+                <button onclick="deleteExpenseCategory('${escapeOnclick(key)}')" style="padding: 6px 10px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; font-size: 12px; font-weight: 600; color: #ef4444; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;">
                   <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                   Удалить
                 </button>
@@ -5040,7 +5162,7 @@
           const checkItem = document.createElement('div');
           checkItem.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
           checkItem.innerHTML = `
-            <input type="checkbox" ${check.done ? 'checked' : ''} onchange="toggleChecklistItem(${index}, ${checkIndex})" style="width: 16px; height: 16px; cursor: pointer;">
+            <input type="checkbox" ${check.done ? 'checked' : ''} onchange="toggleChecklistItem(${index}, ${checkIndex})" style="width: 22px; height: 22px; cursor: pointer; accent-color: #f59e0b; flex-shrink: 0;">
             <input type="text" value="${escapeHtml(check.text)}" onchange="updateChecklistItem(${index}, ${checkIndex}, this.value)" placeholder="Пункт программы" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; color: #e2e8f0; font-size: 13px;">
             <button type="button" onclick="removeChecklistItem(${index}, ${checkIndex})" style="width: 28px; height: 28px; border-radius: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer;">
               <i data-lucide="x" style="width: 14px; height: 14px;"></i>
@@ -5080,13 +5202,13 @@
             <select onchange="updateExpenseCategory(${index}, this.value)" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; color: #e2e8f0; font-size: 14px; min-width: 0;">
               ${getExpenseCategoryOptions(item.category)}
             </select>
-            <input type="number" value="${escapeHtml(String(item.amount))}" onchange="updateExpenseAmount(${index}, this.value)" placeholder="0" min="0" style="width: 80px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; color: #e2e8f0; font-size: 14px; text-align: right; flex-shrink: 0;">
+            <input type="number" value="${escapeHtml(String(item.amount))}" oninput="updateExpenseAmount(${index}, this.value)" placeholder="0" min="0" inputmode="decimal" style="width: 80px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; color: #e2e8f0; font-size: 14px; text-align: right; flex-shrink: 0;">
             <span style="color: rgba(148,163,184,0.6); font-size: 13px; flex-shrink: 0;">₽</span>
             <button type="button" onclick="removeExpense(${index})" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
               <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>
           </div>
-          <input type="text" value="${escapeHtml(item.note)}" onchange="updateExpenseNote(${index}, this.value)" placeholder="Комментарий (необязательно)" style="width: 100%; margin-top: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: rgba(226,232,240,0.8); font-size: 13px;">
+          <input type="text" value="${escapeHtml(item.note)}" oninput="updateExpenseNote(${index}, this.value)" placeholder="Комментарий (необязательно)" style="width: 100%; margin-top: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: rgba(226,232,240,0.8); font-size: 13px;">
         `;
 
         container.appendChild(div);
@@ -5105,6 +5227,7 @@
     function addExpenseRow() {
       expenses.push({ amount: 0, category: '', note: '' });
       renderExpenses();
+      calculateBalance();
     }
 
     function removeExpense(index) {
@@ -5120,6 +5243,7 @@
 
     function updateExpenseCategory(index, value) {
       expenses[index].category = value;
+      renderExpenses();
     }
 
     function updateExpenseNote(index, value) {
@@ -5151,11 +5275,20 @@
     function calculateBalance() {
       const income = parseFloat(document.getElementById('event-income').value) || 0;
       const prepay = parseFloat(document.getElementById('event-prepay').value) || 0;
+      const tax = parseFloat(document.getElementById('event-tax').value) || 0;
 
-      // "К получению" = сколько осталось получить от клиента
-      const balance = income - prepay;
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const taxAmount = Math.round((income * tax) / 100);
+      const profit = income - totalExpenses - taxAmount;
+      const toReceive = income - prepay;
 
-      document.getElementById('balance-display').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('balance-to-receive').textContent = `${toReceive.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('balance-expenses').textContent = `${totalExpenses.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('balance-tax').textContent = `${taxAmount.toLocaleString('ru-RU')} ₽`;
+
+      const profitEl = document.getElementById('balance-display');
+      profitEl.textContent = `${profit.toLocaleString('ru-RU')} ₽`;
+      profitEl.style.color = profit >= 0 ? '#22c55e' : '#ef4444';
     }
 
     function saveEvent() {
@@ -5222,7 +5355,7 @@
         guests: parseInt(document.getElementById('event-guests').value) || 0,
         income: income,
         prepay: prepay,
-        expenses: expenses.map(e => ({ amount: e.amount, category: e.category, note: e.note })),
+        expenses: expenses.filter(e => e.amount > 0).map(e => ({ amount: e.amount, category: e.category, note: e.note })),
         tax: tax,
         notes: document.getElementById('event-notes').value.trim()
       };
@@ -6391,6 +6524,8 @@
     window.openSettingsModal = openSettingsModal;
     window.switchTab = switchTab;
     window.closeEventModal = closeEventModal;
+    window.toggleKeyVisibility = toggleKeyVisibility;
+    window.tryCloseEventModal = tryCloseEventModal;
     window.closePreview = closePreview;
     window.openEventModal = openEventModal;
     window.toggleRepeatOptions = toggleRepeatOptions;
@@ -6406,6 +6541,13 @@
       renderCalendar();
       renderSchedule();
       setupCalendarSwipe();
+
+      // Отслеживание изменений формы события
+      const eventModalBody = document.querySelector('#event-modal .modal-body');
+      if (eventModalBody) {
+        eventModalBody.addEventListener('input', () => { formDirty = true; });
+        eventModalBody.addEventListener('change', () => { formDirty = true; });
+      }
 
       // Регистрируем обработчики скролла для bottom-nav
       const dashContainer = document.querySelector('.dashboard-container');
@@ -6447,21 +6589,35 @@
         navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
       }
 
-      // Handle Android/iOS back button for modals
-      window.addEventListener('popstate', () => {
-        const eventModal = document.getElementById('event-modal');
-        const confirmModal = document.getElementById('confirm-modal');
-        const previewModal = document.getElementById('preview-modal');
+      // Auto block/unblock body scroll when any modal is open
+      const modalObserver = new MutationObserver(() => {
+        const anyOpen = [...document.querySelectorAll('.modal-overlay')].some(m => m.classList.contains('show'));
+        document.body.classList.toggle('modal-open', anyOpen);
+      });
+      document.querySelectorAll('.modal-overlay').forEach(m => {
+        modalObserver.observe(m, { attributes: true, attributeFilter: ['class'] });
+      });
 
-        if(eventModal && eventModal.classList.contains('show')) {
-          closeEventModal();
-          history.pushState(null, '', location.href);
-        } else if(confirmModal && confirmModal.classList.contains('show')) {
-          confirmModal.classList.remove('show');
-          history.pushState(null, '', location.href);
-        } else if(previewModal && previewModal.classList.contains('show')) {
-          closePreview();
-          history.pushState(null, '', location.href);
+      // Handle Android/iOS back button for modals (priority: top layer first)
+      window.addEventListener('popstate', () => {
+        const modals = [
+          { id: 'type-picker-modal', close: () => closeTypePicker() },
+          { id: 'confirm-modal', close: () => document.getElementById('confirm-modal').classList.remove('show') },
+          { id: 'preview-modal', close: () => closePreview() },
+          { id: 'type-editor-modal', close: () => closeTypeEditor() },
+          { id: 'category-manager-modal', close: () => closeCategoryManager() },
+          { id: 'month-picker-modal', close: () => closeMonthPicker() },
+          { id: 'settings-modal', close: () => closeSettingsModal() },
+          { id: 'event-modal', close: () => tryCloseEventModal() }
+        ];
+
+        for (const modal of modals) {
+          const el = document.getElementById(modal.id);
+          if (el && el.classList.contains('show')) {
+            modal.close();
+            history.pushState(null, '', location.href);
+            return;
+          }
         }
       });
       history.pushState(null, '', location.href);

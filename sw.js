@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illusionist-calendar-v5';
+const CACHE_NAME = 'illusionist-calendar-v7';
 const urlsToCache = [
   './',
   './index.html',
