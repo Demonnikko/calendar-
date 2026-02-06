@@ -3795,35 +3795,54 @@
       loadCustomExpenseCategories();
     }
 
-    // Импорт событий из Калькулятора через Firebase
+    // Импорт событий из Калькулятора через Firebase (одноразовый + реалтайм)
+    var _firebaseSyncListenerActive = false;
+
+    function _mergeFirebaseEvents(syncedEvents) {
+      if (!syncedEvents) return;
+      var existingIds = new Set(events.map(function (e) { return e.id; }));
+      var importCount = 0;
+
+      Object.values(syncedEvents).forEach(function (se) {
+        if (existingIds.has(se.id)) return;
+        var clean = Object.assign({}, se);
+        delete clean._source;
+        delete clean._createdAt;
+        if (!clean.expenses) clean.expenses = [];
+        events.push(clean);
+        existingIds.add(clean.id);
+        importCount++;
+      });
+
+      if (importCount > 0) {
+        saveEvents();
+        renderCalendar();
+        renderSchedule();
+        showToast('📅 Импорт из Калькулятора: ' + importCount);
+      }
+    }
+
     async function importEventsFromFirebase() {
-      if (!window.firebaseEnabled || !window.firebaseDB) return;
+      if (!window.firebaseEnabled || !window.firebaseDB) {
+        console.warn('⚠️ Firebase не доступен для импорта. enabled:', window.firebaseEnabled, 'db:', !!window.firebaseDB);
+        return;
+      }
       try {
         var deviceKey = getBrowserFingerprint();
+        console.log('🔍 Firebase import: deviceKey =', deviceKey);
         var syncRef = window.firebaseDB.ref('sync/events/' + deviceKey);
+
+        // Одноразовое чтение при загрузке
         var snapshot = await syncRef.once('value');
-        var syncedEvents = snapshot.val();
-        if (!syncedEvents) return;
+        _mergeFirebaseEvents(snapshot.val());
 
-        var existingIds = new Set(events.map(function (e) { return e.id; }));
-        var importCount = 0;
-
-        Object.values(syncedEvents).forEach(function (se) {
-          if (existingIds.has(se.id)) return;
-          var clean = Object.assign({}, se);
-          delete clean._source;
-          delete clean._createdAt;
-          if (!clean.expenses) clean.expenses = [];
-          events.push(clean);
-          existingIds.add(clean.id);
-          importCount++;
-        });
-
-        if (importCount > 0) {
-          saveEvents();
-          renderCalendar();
-          renderSchedule();
-          showToast('📅 Импорт из Калькулятора: ' + importCount);
+        // Реалтайм-слушатель для мгновенного получения новых событий
+        if (!_firebaseSyncListenerActive) {
+          syncRef.on('value', function (snap) {
+            _mergeFirebaseEvents(snap.val());
+          });
+          _firebaseSyncListenerActive = true;
+          console.log('✅ Firebase realtime listener activated');
         }
       } catch (e) {
         console.error('⚠️ Firebase import failed:', e);

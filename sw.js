@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illusionist-calendar-v8-firebase-sync';
+const CACHE_NAME = 'illusionist-calendar-v9-firebase-sdk';
 const urlsToCache = [
   './',
   './index.html',
@@ -15,21 +15,40 @@ const urlsToCache = [
   './icons/icon-512.png'
 ];
 
+// Firebase SDK — кешируем для работы в PWA
+const FIREBASE_SDK_URLS = [
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
+];
+
 self.addEventListener('install', event => {
-  // Сразу активируем новый SW
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => cache.addAll([...urlsToCache, ...FIREBASE_SDK_URLS]))
   );
 });
 
 self.addEventListener('fetch', event => {
-  // Игнорируем запросы к Firebase и другим внешним сервисам
-  if (event.request.url.includes('firebase') ||
-      event.request.url.includes('gstatic.com') ||
+  // Firebase API запросы — всегда через сеть
+  if (event.request.url.includes('firebaseio.com') ||
+      event.request.url.includes('firebaseapp.com') ||
       event.request.url.includes('googleapis.com')) {
+    return;
+  }
+
+  // Firebase SDK (gstatic.com/firebasejs) — кешируем
+  if (event.request.url.includes('gstatic.com/firebasejs')) {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request).then(fetchResponse => {
+          const clone = fetchResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return fetchResponse;
+        });
+      })
+    );
     return;
   }
 
@@ -40,7 +59,6 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(fetchResponse => {
-          // Кэшируем новые запросы (только GET и успешные)
           if (event.request.method === 'GET' && fetchResponse.status === 200) {
             const responseClone = fetchResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
@@ -49,7 +67,6 @@ self.addEventListener('fetch', event => {
           }
           return fetchResponse;
         }).catch(() => {
-          // Офлайн fallback - возвращаем главную страницу
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
@@ -59,7 +76,6 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('activate', event => {
-  // Берём контроль над всеми вкладками
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
