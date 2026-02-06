@@ -2340,6 +2340,14 @@
       const encoded = btoa(JSON.stringify(data));
       localStorage.setItem('illusionist_calendar_license', encoded);
 
+      // Маркер для синхронизации — Калькулятор проверяет наличие Календаря через Firebase
+      if (window.firebaseEnabled && window.firebaseDB) {
+        try {
+          var fp = getBrowserFingerprint();
+          window.firebaseDB.ref('sync/devices/' + fp).set({ calendar_active: true });
+        } catch (e) { }
+      }
+
       return { success: true };
     }
 
@@ -6931,7 +6939,13 @@
         }
 
         // ===== ПОВТОРНЫЙ ЗАПУСК (уже активирован) =====
-        // Splash уже виден, загружаем контент в фоне
+        // Записываем маркер в Firebase — Калькулятор проверяет наличие Календаря
+        if (window.firebaseEnabled && window.firebaseDB) {
+          try {
+            var fp = getBrowserFingerprint();
+            window.firebaseDB.ref('sync/devices/' + fp).set({ calendar_active: true });
+          } catch (e) { }
+        }
 
         // Инициализируем приложение пока показывается splash
         initializeApp();
