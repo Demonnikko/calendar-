@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illusionist-calendar-v7';
+const CACHE_NAME = 'illusionist-calendar-v8-firebase-sync';
 const urlsToCache = [
   './',
   './index.html',

@@ -2177,6 +2177,21 @@
       return id;
     }
 
+    // Детерминированный fingerprint — совпадает с Калькулятором для Firebase-синхронизации
+    function getBrowserFingerprint() {
+      var nav = navigator;
+      var scr = window.screen;
+      var components = [nav.userAgent, nav.language, scr.colorDepth, scr.width + 'x' + scr.height];
+      var hash = 0;
+      var str = components.join('|');
+      for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return 'DEV-' + Math.abs(hash).toString(36).toUpperCase();
+    }
+
     function getInstallationId() {
       let id = localStorage.getItem('illusionist_install_id');
       if (!id) {
@@ -3770,6 +3785,41 @@
       }
 
       loadCustomExpenseCategories();
+    }
+
+    // Импорт событий из Калькулятора через Firebase
+    async function importEventsFromFirebase() {
+      if (!window.firebaseEnabled || !window.firebaseDB) return;
+      try {
+        var deviceKey = getBrowserFingerprint();
+        var syncRef = window.firebaseDB.ref('sync/events/' + deviceKey);
+        var snapshot = await syncRef.once('value');
+        var syncedEvents = snapshot.val();
+        if (!syncedEvents) return;
+
+        var existingIds = new Set(events.map(function (e) { return e.id; }));
+        var importCount = 0;
+
+        Object.values(syncedEvents).forEach(function (se) {
+          if (existingIds.has(se.id)) return;
+          var clean = Object.assign({}, se);
+          delete clean._source;
+          delete clean._createdAt;
+          if (!clean.expenses) clean.expenses = [];
+          events.push(clean);
+          existingIds.add(clean.id);
+          importCount++;
+        });
+
+        if (importCount > 0) {
+          saveEvents();
+          renderCalendar();
+          renderSchedule();
+          showToast('📅 Импорт из Калькулятора: ' + importCount);
+        }
+      } catch (e) {
+        console.error('⚠️ Firebase import failed:', e);
+      }
     }
 
     function saveGoalToStorage() {
@@ -6785,6 +6835,9 @@
       renderCalendar();
       renderSchedule();
       setupCalendarSwipe();
+
+      // Импорт событий из Калькулятора (асинхронно, не блокирует UI)
+      setTimeout(function () { importEventsFromFirebase(); }, 2000);
 
       // Отслеживание изменений формы события
       const eventModalBody = document.querySelector('#event-modal .modal-body');
