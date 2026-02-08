@@ -1,10 +1,18 @@
-const CACHE_NAME = 'illusionist-calendar-v9-firebase-sdk';
-const urlsToCache = [
+// Service Worker для Illusionist Calendar
+// Версия: 10.0 (OPTIMIZED OFFLINE + FAST START)
+const CACHE_NAME = 'illusionist-calendar-v10-fast';
+
+// Критические ресурсы для мгновенного старта
+const CORE_ASSETS = [
   './',
   './index.html',
   './lucide.min.js',
   './tailwind.min.js',
-  './manifest.json',
+  './manifest.json'
+];
+
+// Иконки
+const ICON_ASSETS = [
   './icons/icon-72.png',
   './icons/icon-96.png',
   './icons/icon-128.png',
@@ -15,79 +23,100 @@ const urlsToCache = [
   './icons/icon-512.png'
 ];
 
-// Firebase SDK — кешируем для работы в PWA
-const FIREBASE_SDK_URLS = [
+// Firebase SDK
+const FIREBASE_SDK = [
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
 ];
 
+// Tailwind CDN
+const CDN_ASSETS = [
+  'https://cdn.tailwindcss.com'
+];
+
+const ALL_ASSETS = [...CORE_ASSETS, ...ICON_ASSETS, ...FIREBASE_SDK, ...CDN_ASSETS];
+
+// Установка: кэшируем все ресурсы
 self.addEventListener('install', event => {
   self.skipWaiting();
-
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll([...urlsToCache, ...FIREBASE_SDK_URLS]))
+    caches.open(CACHE_NAME).then(cache => {
+      return Promise.allSettled(
+        ALL_ASSETS.map(url =>
+          cache.add(url).catch(err => console.warn('[SW] Не удалось кэшировать:', url))
+        )
+      );
+    })
   );
 });
 
+// Активация: очистка старых кэшей
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then(names =>
+        Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+      )
+    ])
+  );
+});
+
+// Fetch: стратегии кэширования
 self.addEventListener('fetch', event => {
-  // Firebase API запросы — всегда через сеть
-  if (event.request.url.includes('firebaseio.com') ||
-      event.request.url.includes('firebaseapp.com') ||
-      event.request.url.includes('googleapis.com')) {
+  const url = event.request.url;
+
+  // Firebase API — только сеть
+  if (url.includes('firebaseio.com') ||
+    url.includes('firebaseapp.com') ||
+    url.includes('googleapis.com')) {
     return;
   }
 
-  // Firebase SDK (gstatic.com/firebasejs) — кешируем
-  if (event.request.url.includes('gstatic.com/firebasejs')) {
+  // Навигация — Cache First для мгновенного старта
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match(event.request).then(response => {
-        return response || fetch(event.request).then(fetchResponse => {
-          const clone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return fetchResponse;
-        });
+      caches.match('./index.html').then(cached => {
+        return cached || fetch(event.request);
       })
     );
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
+  // CDN и SDK — Stale-While-Revalidate
+  if (url.includes('gstatic.com') || url.includes('cdn.tailwindcss.com')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
           return response;
-        }
-        return fetch(event.request).then(fetchResponse => {
-          if (event.request.method === 'GET' && fetchResponse.status === 200) {
-            const responseClone = fetchResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return fetchResponse;
-        }).catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-        });
-      })
-  );
-});
+        }).catch(() => cached);
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              return caches.delete(cacheName);
-            }
-          })
-        );
+        return cached || fetchPromise;
       })
-    ])
+    );
+    return;
+  }
+
+  // Остальные ресурсы — Cache First
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(event.request).then(response => {
+        if (event.request.method === 'GET' && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
+    })
   );
 });
