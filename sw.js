@@ -1,19 +1,18 @@
-// Service Worker для Illusionist Calculator
+// Service Worker для Illusionist Calendar
 // Версия: 11.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
-const CACHE_NAME = 'illusionist-calc-v11-offline';
+const CACHE_NAME = 'illusionist-calendar-v11-offline';
 
-// Критические ресурсы
+// Критические ресурсы для мгновенного старта
 const CORE_ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest',
+  './lucide.min.js',
   './tailwind.min.js',
-  './lucide.min.js'
+  './manifest.json'
 ];
 
 // Иконки
 const ICON_ASSETS = [
-  './icons/icon-32.png',
   './icons/icon-72.png',
   './icons/icon-96.png',
   './icons/icon-128.png',
@@ -21,9 +20,7 @@ const ICON_ASSETS = [
   './icons/icon-152.png',
   './icons/icon-192.png',
   './icons/icon-384.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-192.png',
-  './icons/icon-maskable-512.png'
+  './icons/icon-512.png'
 ];
 
 // Firebase SDK
