@@ -1,18 +1,19 @@
-// Service Worker для Illusionist Calendar
-// Версия: 10.0 (OPTIMIZED OFFLINE + FAST START)
-const CACHE_NAME = 'illusionist-calendar-v10-fast';
+// Service Worker для Illusionist Calculator
+// Версия: 11.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
+const CACHE_NAME = 'illusionist-calc-v11-offline';
 
-// Критические ресурсы для мгновенного старта
+// Критические ресурсы
 const CORE_ASSETS = [
   './',
   './index.html',
-  './lucide.min.js',
+  './manifest.webmanifest',
   './tailwind.min.js',
-  './manifest.json'
+  './lucide.min.js'
 ];
 
 // Иконки
 const ICON_ASSETS = [
+  './icons/icon-32.png',
   './icons/icon-72.png',
   './icons/icon-96.png',
   './icons/icon-128.png',
@@ -20,7 +21,9 @@ const ICON_ASSETS = [
   './icons/icon-152.png',
   './icons/icon-192.png',
   './icons/icon-384.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-maskable-192.png',
+  './icons/icon-maskable-512.png'
 ];
 
 // Firebase SDK
@@ -29,12 +32,7 @@ const FIREBASE_SDK = [
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
 ];
 
-// Tailwind CDN
-const CDN_ASSETS = [
-  'https://cdn.tailwindcss.com'
-];
-
-const ALL_ASSETS = [...CORE_ASSETS, ...ICON_ASSETS, ...FIREBASE_SDK, ...CDN_ASSETS];
+const ALL_ASSETS = [...CORE_ASSETS, ...ICON_ASSETS, ...FIREBASE_SDK];
 
 // Установка: кэшируем все ресурсы
 self.addEventListener('install', event => {
@@ -83,8 +81,8 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // CDN и SDK — Stale-While-Revalidate
-  if (url.includes('gstatic.com') || url.includes('cdn.tailwindcss.com')) {
+  // Firebase SDK — Stale-While-Revalidate
+  if (url.includes('gstatic.com')) {
     event.respondWith(
       caches.match(event.request).then(cached => {
         const fetchPromise = fetch(event.request).then(response => {
