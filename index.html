@@ -3878,6 +3878,30 @@
       }
     }
 
+    // Удаление события из Firebase (чтобы оно не возвращалось при импорте)
+    async function deleteEventFromFirebase(eventId) {
+      if (!window.firebaseEnabled || !window.firebaseDB) {
+        console.log('Firebase не доступен для удаления события:', eventId);
+        return;
+      }
+      try {
+        const deviceKey = getBrowserFingerprint();
+        const eventRef = window.firebaseDB.ref('sync/events/' + deviceKey + '/' + eventId);
+        await eventRef.remove();
+        console.log('✅ Событие удалено из Firebase:', eventId);
+      } catch (e) {
+        console.error('⚠️ Ошибка удаления из Firebase:', e);
+      }
+    }
+
+    // Удаление нескольких событий из Firebase (для серии)
+    async function deleteMultipleEventsFromFirebase(eventIds) {
+      if (!window.firebaseEnabled || !window.firebaseDB) return;
+      for (const eventId of eventIds) {
+        await deleteEventFromFirebase(eventId);
+      }
+    }
+
     function saveGoalToStorage() {
       safeLocalStorageSet('illusionist_goal', monthlyGoal.toString());
     }
@@ -5843,8 +5867,10 @@
         showSeriesDeleteModal(event, seriesEvents.length);
       } else {
         customConfirm('Удалить это событие?', () => {
+          const eventIdToDelete = editingEventId;
           events = events.filter(e => e.id !== editingEventId);
           saveEvents();
+          deleteEventFromFirebase(eventIdToDelete); // Удаляем из Firebase
           closeEventModal();
           renderCalendar();
           renderDayList();
@@ -5886,8 +5912,10 @@
       const closeModal = () => modal.remove();
 
       modal.querySelector('#delete-single').onclick = () => {
+        const eventIdToDelete = event.id;
         events = events.filter(e => e.id !== event.id);
         saveEvents();
+        deleteEventFromFirebase(eventIdToDelete); // Удаляем из Firebase
         closeEventModal();
         renderCalendar();
         renderDayList();
@@ -5897,8 +5925,11 @@
       };
 
       modal.querySelector('#delete-series').onclick = () => {
+        // Собираем ID всех событий серии для удаления из Firebase
+        const seriesEventIds = events.filter(e => e.seriesId === event.seriesId).map(e => e.id);
         events = events.filter(e => e.seriesId !== event.seriesId);
         saveEvents();
+        deleteMultipleEventsFromFirebase(seriesEventIds); // Удаляем всю серию из Firebase
         closeEventModal();
         renderCalendar();
         renderDayList();
@@ -6176,8 +6207,10 @@
         } else if (diff < -130 && swipeDirection === 'left') {
           // Длинный свайп влево - удаление
           customConfirm(`Удалить "${event.title}"?`, () => {
+            const eventIdToDelete = event.id;
             events = events.filter(e => e.id !== event.id);
             saveEvents();
+            deleteEventFromFirebase(eventIdToDelete); // Удаляем из Firebase
             renderCalendar();
             showToast('Событие удалено');
           });
