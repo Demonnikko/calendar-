@@ -1,9 +1,0 @@
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
-  authDomain: "calc76.firebaseapp.com",
-  databaseURL: "https://calc76-default-rtdb.firebaseio.com",
-  projectId: "calc76",
-  storageBucket: "calc76.firebasestorage.app",
-  messagingSenderId: "972929668805",
-  appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
-};
