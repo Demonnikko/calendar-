@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILLUSIONIST OS - Animated Logo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 800px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        .logo {
+            font-family: 'Arial Black', 'Helvetica Neue', sans-serif;
+            font-weight: 900;
+            font-size: 72px;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg,
+                    #f59e0b 0%,
+                    #fbbf24 20%,
+                    #fef3c7 40%,
+                    #fbbf24 60%,
+                    #f59e0b 80%,
+                    #d97706 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .logo .os {
+            color: #fff;
+            -webkit-text-fill-color: #fff;
+            background: none;
+            margin-left: 10px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% center;
+            }
+
+            100% {
+                background-position: -200% center;
+            }
+        }
+
+        /* Версия 2: Более плавное переливание */
+        .logo-v2 {
+            font-family: 'Arial Black', 'Helvetica Neue', sans-serif;
+            font-weight: 900;
+            font-size: 72px;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .logo-v2 .text {
+            background: linear-gradient(120deg,
+                    #f97316 0%,
+                    #f59e0b 25%,
+                    #fbbf24 50%,
+                    #fef3c7 75%,
+                    #fbbf24 100%);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: flow 4s linear infinite;
+        }
+
+        .logo-v2 .os {
+            -webkit-text-fill-color: #fff;
+            background: none;
+        }
+
+        @keyframes flow {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 300% center;
+            }
+        }
+
+        /* Инструкция */
+        .instruction {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .instruction a {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo-v2">
+            <span class="text">ILLUSIONIST</span><span class="os"> OS</span>
+        </div>
+    </div>
+
+    <div class="instruction">
+        Запиши эту анимацию как GIF через <a href="https://www.screentogif.com/" target="_blank">ScreenToGif</a>
+        или встроенную запись экрана на Mac (Cmd+Shift+5)
+    </div>
+</body>
+
+</html>
