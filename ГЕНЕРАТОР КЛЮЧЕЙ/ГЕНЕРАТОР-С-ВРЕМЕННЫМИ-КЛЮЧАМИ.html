@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔑 Генератор ключей Firebase - Illusionist OS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: rgba(26,26,46,0.95);
+      border: 2px solid rgba(245,158,11,0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 32px;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: rgba(148,163,184,0.8);
+      font-size: 14px;
+    }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 20px;
+    }
+    
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .panel {
+      background: rgba(26,26,46,0.95);
+      border: 2px solid rgba(245,158,11,0.3);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    
+    .panel-title {
+      color: #f59e0b;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      color: rgba(148,163,184,0.9);
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: rgba(245,158,11,0.5);
+    }
+    
+    input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      border: none;
+      border-radius: 8px;
+      color: #0a0a0f;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-bottom: 12px;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    button.secondary {
+      background: rgba(245,158,11,0.2);
+      color: #f59e0b;
+    }
+    
+    button.danger {
+      background: rgba(239,68,68,0.2);
+      color: #ef4444;
+    }
+    
+    .key-display {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: bold;
+      color: #f59e0b;
+      letter-spacing: 2px;
+      word-break: break-all;
+      text-align: center;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #f59e0b;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: rgba(148,163,184,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      text-align: left;
+      color: #f59e0b;
+      font-size: 13px;
+      border-bottom: 2px solid rgba(245,158,11,0.3);
+      position: sticky;
+      top: 0;
+    }
+    
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(245,158,11,0.1);
+      font-size: 13px;
+    }
+    
+    tr:hover {
+      background: rgba(245,158,11,0.05);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .status-active {
+      background: rgba(34,197,94,0.2);
+      color: #22c55e;
+    }
+    
+    .status-pending {
+      background: rgba(234,179,8,0.2);
+      color: #eab308;
+    }
+    
+    .alert {
+      background: rgba(245,158,11,0.1);
+      border: 2px solid rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .alert.error {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.3);
+    }
+    
+    .alert.success {
+      background: rgba(34,197,94,0.1);
+      border-color: rgba(34,197,94,0.3);
+    }
+    
+    .alert-title {
+      color: #f59e0b;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .alert.error .alert-title {
+      color: #ef4444;
+    }
+    
+    .alert.success .alert-title {
+      color: #22c55e;
+    }
+    
+    .alert-text {
+      color: rgba(148,163,184,0.9);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .table-container {
+      max-height: 600px;
+      overflow-y: auto;
+      border-radius: 8px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(148,163,184,0.5);
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    code {
+      background: rgba(0,0,0,0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #fbbf24;
+    }
+    
+    hr {
+      border: none;
+      border-top: 1px solid rgba(245,158,11,0.2);
+      margin: 24px 0;
+    }
+  </style>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔑 Генератор ключей Firebase</h1>
+      <div class="subtitle">Создание и управление лицензионными ключами для Illusionist OS</div>
+    </div>
+
+    <!-- Статус Firebase -->
+    <div class="alert" id="firebase-status">
+      <div class="alert-title">⚙️ Статус Firebase</div>
+      <div class="alert-text" id="firebase-status-text">
+        Проверка подключения...
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- Левая панель - создание ключа -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">📝 Новый ключ</div>
+          
+          <div class="form-group">
+            <label>Имя покупателя *</label>
+            <input type="text" id="buyerName" placeholder="Иван Иванов">
+          </div>
+
+          <div class="form-group">
+            <label>Приложение *</label>
+            <input type="text" id="appName" placeholder="Календарь Premium">
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="buyerEmail" placeholder="ivan@example.com">
+          </div>
+          
+          <div class="form-group">
+            <label>Телефон</label>
+            <input type="tel" id="buyerPhone" placeholder="+7 900 123-45-67">
+          </div>
+          
+          <div class="form-group">
+            <label>Сумма оплаты</label>
+            <input type="text" id="paymentAmount" placeholder="3500" value="3500">
+          </div>
+          
+          <div class="form-group">
+            <label>⏰ Срок действия ключа</label>
+            <select id="licenseExpiry" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+              <option value="30">30 дней (месяц)</option>
+              <option value="90">90 дней (3 месяца)</option>
+              <option value="180">180 дней (6 месяцев)</option>
+              <option value="365" selected>365 дней (год)</option>
+              <option value="730">730 дней (2 года)</option>
+              <option value="999999">Бессрочный</option>
+            </select>
+          </div>
+          
+          <button onclick="generateKey()" id="generateBtn">🎯 Создать ключ</button>
+          
+          <div class="key-display" id="keyDisplay">Ключ появится здесь</div>
+          
+          <button class="secondary" id="copyKeyBtn" style="display:none;" onclick="copyKey()">📋 Копировать ключ</button>
+          
+          <hr>
+          
+          <div class="panel-title" style="font-size: 15px; margin-top: 0;">💾 Резервное копирование</div>
+          <button class="secondary" onclick="exportDatabase()">📤 Экспорт базы (JSON)</button>
+          <button class="secondary" onclick="importDatabase()">📥 Импорт базы</button>
+          <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImportFile(event)">
+        </div>
+      </div>
+
+      <!-- Правая панель - статистика и список -->
+      <div>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="totalCount">-</div>
+            <div class="stat-label">Всего ключей</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="activeCount">-</div>
+            <div class="stat-label">Активировано</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="pendingCount">-</div>
+            <div class="stat-label">Ожидают</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalRevenue">-</div>
+            <div class="stat-label">Общий доход</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            📊 Лицензии
+            <button class="secondary" onclick="refreshLicenses()" style="width: auto; padding: 8px 16px; margin: 0 0 0 auto; font-size: 13px;">🔄 Обновить</button>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label>🔍 Поиск по фамилии</label>
+            <input type="text" id="searchInput" placeholder="Введите фамилию покупателя..." oninput="filterLicenses()">
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Приложение</th>
+                  <th>Покупатель</th>
+                  <th>Ключ</th>
+                  <th>Срок</th>
+                  <th>Цена</th>
+                  <th>Статус</th>
+                  <th>Device ID</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody id="licensesTable">
+                <tr>
+                  <td colspan="6" class="empty-state">
+                    <div class="empty-state-icon">🔑</div>
+                    <div>Загрузка данных...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Аналитика по приложениям -->
+        <div class="panel" style="margin-top: 20px;">
+          <div class="panel-title">📈 Аналитика по приложениям</div>
+          <div id="appStats" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="color: rgba(148,163,184,0.5); text-align: center; padding: 20px;">Загрузка данных...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // FIREBASE CONFIGURATION
+    // ============================================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBEL4XCzjmHaqu4RbTqNzEKPi2Vfc4LXSI",
+      authDomain: "calc76.firebaseapp.com",
+      databaseURL: "https://calc76-default-rtdb.firebaseio.com",
+      projectId: "calc76",
+      storageBucket: "calc76.firebasestorage.app",
+      messagingSenderId: "972929668805",
+      appId: "1:972929668805:web:de4aa4097f03b97d39c2ac"
+    };
+    
+    let firebaseDB = null;
+    let firebaseEnabled = false;
+    let currentKey = '';
+    let allLicenses = [];
+    
+    // ============================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ============================================
+    async function initFirebase() {
+      const statusEl = document.getElementById('firebase-status');
+      const statusText = document.getElementById('firebase-status-text');
+      
+      if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY_HERE") {
+        statusEl.className = 'alert error';
+        statusText.innerHTML = `
+          <strong>❌ Firebase не настроен!</strong><br><br>
+          Замените конфигурацию в коде (строки 333-340).<br>
+          Смотрите инструкцию: <code>ИНСТРУКЦИЯ-FIREBASE.md</code>
+        `;
+        document.getElementById('generateBtn').disabled = true;
+        return;
+      }
+      
+      try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        firebaseDB = firebase.database();
+        
+        // Проверяем подключение
+        await firebaseDB.ref('.info/connected').once('value');
+        
+        firebaseEnabled = true;
+        statusEl.className = 'alert success';
+        statusText.innerHTML = `
+          <strong>✅ Firebase подключён!</strong><br>
+          База данных работает. Можно создавать ключи.
+        `;
+        
+        // Загружаем лицензии
+        await refreshLicenses();
+        
+      } catch (error) {
+        console.error('Firebase init error:', error);
+        statusEl.className = 'alert error';
+        statusText.innerHTML = `
+          <strong>❌ Ошибка подключения к Firebase!</strong><br>
+          ${error.message}<br><br>
+          Проверьте настройки и правила безопасности.
+        `;
+        document.getElementById('generateBtn').disabled = true;
+      }
+    }
+    
+    // ============================================
+    // ГЕНЕРАЦИЯ КЛЮЧА
+    // ============================================
+    function generateLicenseKey() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let key = '';
+      
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 4; j++) {
+          key += chars[Math.floor(Math.random() * chars.length)];
+        }
+        if (i < 2) key += '-';
+      }
+      
+      let sum = 0;
+      const data = key.replace(/-/g, '');
+      for (let i = 0; i < data.length; i++) {
+        sum += data.charCodeAt(i);
+      }
+      
+      const check = (sum % 10000).toString(36).toUpperCase().padStart(4, '0');
+      key += '-' + check;
+      
+      return key;
+    }
+    
+    // ============================================
+    // СОЗДАНИЕ КЛЮЧА
+    // ============================================
+    async function generateKey() {
+      const name = document.getElementById('buyerName').value.trim();
+      const appName = document.getElementById('appName').value.trim();
+
+      if (!name) {
+        alert('⚠️ Введите имя покупателя!');
+        document.getElementById('buyerName').focus();
+        return;
+      }
+
+      if (!appName) {
+        alert('⚠️ Укажите название приложения!');
+        document.getElementById('appName').focus();
+        return;
+      }
+
+      if (!firebaseEnabled) {
+        alert('❌ Firebase не подключён!\nНастройте Firebase для работы генератора.');
+        return;
+      }
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Создание...';
+
+      try {
+        currentKey = generateLicenseKey();
+
+        const licenseData = {
+          key: currentKey,
+          appName: appName,
+          buyer: {
+            name: name,
+            email: document.getElementById('buyerEmail').value.trim(),
+            phone: document.getElementById('buyerPhone').value.trim()
+          },
+          payment: document.getElementById('paymentAmount').value.trim() || '3500',
+          expiryDays: parseInt(document.getElementById('licenseExpiry').value) || 365,
+          created: new Date().toISOString(),
+          activated: false,
+          deviceId: null,
+          installId: null,
+          activatedDate: null,
+          lastCheck: null
+        };
+        
+        // Сохраняем в Firebase
+        const keyRef = firebaseDB.ref('licenses/' + currentKey.replace(/[\.#$\[\]]/g, '-'));
+        await keyRef.set(licenseData);
+        
+        // Показываем ключ
+        document.getElementById('keyDisplay').textContent = currentKey;
+        document.getElementById('copyKeyBtn').style.display = 'block';
+        
+        // Обновляем список
+        await refreshLicenses();
+        
+        // Успех
+        btn.textContent = '✅ Ключ создан!';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+        
+        setTimeout(() => {
+          btn.textContent = '🎯 Создать ключ';
+          btn.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Generate key error:', error);
+        alert('❌ Ошибка создания ключа:\n' + error.message);
+        btn.textContent = '🎯 Создать ключ';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    
+    // ============================================
+    // КОПИРОВАНИЕ КЛЮЧА
+    // ============================================
+    function copyKey() {
+      navigator.clipboard.writeText(currentKey).then(() => {
+        const btn = document.getElementById('copyKeyBtn');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Скопировано!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+    
+    // ============================================
+    // ОБНОВЛЕНИЕ СПИСКА ЛИЦЕНЗИЙ
+    // ============================================
+    async function refreshLicenses() {
+      if (!firebaseEnabled) return;
+
+      try {
+        const snapshot = await firebaseDB.ref('licenses').once('value');
+        const licenses = snapshot.val() || {};
+
+        const licensesArray = Object.values(licenses);
+        allLicenses = licensesArray;
+        
+        // Обновляем статистику
+        document.getElementById('totalCount').textContent = licensesArray.length;
+        document.getElementById('activeCount').textContent = licensesArray.filter(l => l.activated).length;
+        document.getElementById('pendingCount').textContent = licensesArray.filter(l => !l.activated).length;
+
+        // Подсчитываем общий доход
+        const totalRevenue = licensesArray.reduce((sum, l) => sum + (parseInt(l.payment) || 0), 0);
+        document.getElementById('totalRevenue').textContent = `${totalRevenue.toLocaleString('ru-RU')} ₽`;
+
+        // Аналитика по приложениям
+        const appStatsData = {};
+        licensesArray.forEach(l => {
+          const appName = l.appName || 'Не указано';
+          if(!appStatsData[appName]) {
+            appStatsData[appName] = { count: 0, revenue: 0, activated: 0 };
+          }
+          appStatsData[appName].count++;
+          appStatsData[appName].revenue += parseInt(l.payment) || 0;
+          if(l.activated) appStatsData[appName].activated++;
+        });
+
+        const appStatsHTML = Object.keys(appStatsData).length > 0
+          ? Object.entries(appStatsData)
+              .sort((a, b) => b[1].revenue - a[1].revenue)
+              .map(([app, stats]) => `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; padding: 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: 600; color: #f59e0b; font-size: 15px;">${app}</div>
+                    <div style="font-weight: 700; color: #22c55e; font-size: 16px;">${stats.revenue.toLocaleString('ru-RU')} ₽</div>
+                  </div>
+                  <div style="display: flex; gap: 16px; font-size: 13px; color: rgba(148,163,184,0.8);">
+                    <div>Продано: <span style="color: #fff; font-weight: 600;">${stats.count}</span></div>
+                    <div>Активировано: <span style="color: #22c55e; font-weight: 600;">${stats.activated}</span></div>
+                  </div>
+                </div>
+              `).join('')
+          : '<div style="color: rgba(148,163,184,0.5); text-align: center; padding: 20px;">Нет данных</div>';
+
+        document.getElementById('appStats').innerHTML = appStatsHTML;
+
+        // Отрисовываем таблицу
+        renderLicensesTable(licensesArray);
+
+      } catch (error) {
+        console.error('Refresh licenses error:', error);
+        alert('❌ Ошибка загрузки лицензий:\n' + error.message);
+      }
+    }
+
+    function renderLicensesTable(licensesArray) {
+      const tbody = document.getElementById('licensesTable');
+
+      if (licensesArray.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="empty-state">
+              <div class="empty-state-icon">🔑</div>
+              <div>Ключей не найдено</div>
+              <div style="font-size: 12px; margin-top: 8px;">Попробуйте изменить параметры поиска</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      // Сортируем по дате создания (новые сверху)
+      licensesArray.sort((a, b) => new Date(b.created) - new Date(a.created));
+
+      tbody.innerHTML = licensesArray.map(license => {
+        const date = new Date(license.created);
+        const dateStr = date.toLocaleDateString('ru-RU') + ' ' +
+                       date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+        // Формируем срок действия
+        const expiryDays = license.expiryDays || 365;
+        let expiryText = '';
+        if (expiryDays >= 999999) {
+          expiryText = '∞ Бессрочный';
+        } else if (expiryDays >= 365) {
+          const years = Math.floor(expiryDays / 365);
+          expiryText = years === 1 ? '1 год' : `${years} года`;
+        } else if (expiryDays >= 30) {
+          const months = Math.floor(expiryDays / 30);
+          expiryText = `${months} мес`;
+        } else {
+          expiryText = `${expiryDays} дн`;
+        }
+
+        const status = license.activated
+          ? '<span class="status-badge status-active">✅ Активирован</span>'
+          : '<span class="status-badge status-pending">⏳ Ожидает</span>';
+
+        const deviceId = license.deviceId
+          ? `<code style="font-size: 10px;">${license.deviceId.substring(0, 12)}...</code>`
+          : '<span style="color: rgba(148,163,184,0.5);">-</span>';
+
+        const appName = license.appName || '<span style="color: rgba(148,163,184,0.5);">-</span>';
+        const price = license.payment ? `${parseInt(license.payment).toLocaleString('ru-RU')} ₽` : '<span style="color: rgba(148,163,184,0.5);">-</span>';
+
+        return `
+          <tr>
+            <td style="white-space: nowrap;">${dateStr}</td>
+            <td>${appName}</td>
+            <td>${license.buyer.name}</td>
+            <td style="font-family: monospace; font-size: 11px;">${license.key}</td>
+            <td style="white-space: nowrap;">${expiryText}</td>
+            <td style="color: #22c55e; font-weight: 600;">${price}</td>
+            <td>${status}</td>
+            <td>${deviceId}</td>
+            <td>
+              <button class="secondary" onclick="editLicense('${license.key}')" style="width: auto; padding: 6px 12px; margin: 0 4px 0 0; font-size: 12px;">✏️</button>
+              <button class="danger" onclick="deleteLicense('${license.key}')" style="width: auto; padding: 6px 12px; margin: 0; font-size: 12px;">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterLicenses() {
+      const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      if (!searchValue) {
+        // Если поиск пустой - показываем все
+        renderLicensesTable(allLicenses);
+        return;
+      }
+
+      // Фильтруем по фамилии
+      const filtered = allLicenses.filter(license => {
+        const buyerName = (license.buyer && license.buyer.name) ? license.buyer.name.toLowerCase() : '';
+        return buyerName.includes(searchValue);
+      });
+
+      renderLicensesTable(filtered);
+    }
+    
+    // ============================================
+    // ЭКСПОРТ/ИМПОРТ (локальный бэкап)
+    // ============================================
+    async function exportDatabase() {
+      if (!firebaseEnabled) {
+        alert('❌ Firebase не подключён!');
+        return;
+      }
+      
+      try {
+        const snapshot = await firebaseDB.ref('licenses').once('value');
+        const licenses = snapshot.val() || {};
+        
+        if (Object.keys(licenses).length === 0) {
+          alert('⚠️ База данных пуста! Нечего экспортировать.');
+          return;
+        }
+        
+        const exportData = {
+          version: '2.0-firebase',
+          exported: new Date().toISOString(),
+          totalLicenses: Object.keys(licenses).length,
+          licenses: licenses
+        };
+        
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `illusionist-firebase-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        
+        alert(`✅ База данных экспортирована!\n\nВсего записей: ${Object.keys(licenses).length}\n\nФайл сохранён в Downloads.`);
+        
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('❌ Ошибка экспорта:\n' + error.message);
+      }
+    }
+    
+    function importDatabase() {
+      alert('⚠️ Импорт для Firebase временно недоступен.\n\nИспользуйте Firebase Console для импорта данных.');
+    }
+    
+    function handleImportFile(event) {
+      // Reserved for future implementation
+    }
+
+    // ============================================
+    // РЕДАКТИРОВАНИЕ ЛИЦЕНЗИИ
+    // ============================================
+    async function editLicense(key) {
+      if (!firebaseEnabled) {
+        alert('❌ Firebase не подключён!');
+        return;
+      }
+
+      try {
+        const keyRef = firebaseDB.ref('licenses/' + key.replace(/[\.#$\[\]]/g, '-'));
+        const snapshot = await keyRef.once('value');
+        const license = snapshot.val();
+
+        if (!license) {
+          alert('❌ Лицензия не найдена!');
+          return;
+        }
+
+        const newAppName = prompt('Название приложения:', license.appName || '');
+        if (newAppName === null) return;
+
+        const newName = prompt('Имя покупателя:', license.buyer.name);
+        if (newName === null) return;
+
+        const newEmail = prompt('Email:', license.buyer.email || '');
+        if (newEmail === null) return;
+
+        const newPhone = prompt('Телефон:', license.buyer.phone || '');
+        if (newPhone === null) return;
+
+        await keyRef.update({
+          'appName': newAppName.trim() || license.appName,
+          'buyer/name': newName.trim() || license.buyer.name,
+          'buyer/email': newEmail.trim(),
+          'buyer/phone': newPhone.trim()
+        });
+
+        await refreshLicenses();
+        alert('✅ Данные обновлены!');
+
+      } catch (error) {
+        console.error('Edit license error:', error);
+        alert('❌ Ошибка редактирования:\n' + error.message);
+      }
+    }
+
+    // ============================================
+    // УДАЛЕНИЕ ЛИЦЕНЗИИ
+    // ============================================
+    async function deleteLicense(key) {
+      if (!firebaseEnabled) {
+        alert('❌ Firebase не подключён!');
+        return;
+      }
+
+      if (!confirm(`⚠️ Удалить ключ ${key}?\n\nЭто действие нельзя отменить!`)) {
+        return;
+      }
+
+      try {
+        const keyRef = firebaseDB.ref('licenses/' + key.replace(/[\.#$\[\]]/g, '-'));
+        await keyRef.remove();
+        await refreshLicenses();
+        alert('✅ Ключ удалён!');
+      } catch (error) {
+        console.error('Delete license error:', error);
+        alert('❌ Ошибка удаления:\n' + error.message);
+      }
+    }
+
+    // ============================================
+    // ЗАПУСК
+    // ============================================
+    window.addEventListener('load', () => {
+      initFirebase();
+    });
+  </script>
+</body>
+</html>

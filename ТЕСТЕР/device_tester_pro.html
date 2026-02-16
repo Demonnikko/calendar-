@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 PWA Device Tester</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0e1a;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid rgba(245,158,11,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .layout {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    .sidebar {
+      width: 320px;
+      background: rgba(30,41,59,0.95);
+      overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-section {
+      padding: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f59e0b;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .upload-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .upload-btn {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #cbd5e1;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .url-input {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .load-btn {
+      padding: 10px;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .device-item {
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .device-item:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: #f59e0b;
+    }
+
+    .device-item.active {
+      background: rgba(245,158,11,0.15);
+      border-color: #f59e0b;
+    }
+
+    .device-item-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 3px;
+    }
+
+    .device-item-specs {
+      font-size: 10px;
+      color: #64748b;
+      font-family: monospace;
+    }
+
+    .control-btn {
+      width: 100%;
+      padding: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 6px;
+    }
+
+    .control-btn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: #f59e0b;
+    }
+
+    .control-btn.active {
+      background: rgba(245,158,11,0.2);
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+      background: #0a0e1a;
+    }
+
+    .phone-frame {
+      position: relative;
+      background: #1a1a1a;
+      border-radius: 55px;
+      padding: 12px;
+      box-shadow:
+        0 0 0 2px #2a2a2a,
+        0 0 0 8px #1a1a1a,
+        0 20px 60px rgba(0,0,0,0.8);
+      margin-bottom: 20px;
+    }
+
+    .phone-screen {
+      position: relative;
+      background: #000;
+      border-radius: 47px;
+      overflow: hidden;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .notch-classic {
+      width: 180px;
+      height: 30px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .notch-dynamic-island {
+      width: 126px;
+      height: 37px;
+      background: #000;
+      border-radius: 19px;
+      top: 11px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .notch-pill {
+      width: 100px;
+      height: 28px;
+      background: #000;
+      border-radius: 14px;
+      top: 8px;
+    }
+
+    .safe-area-guides {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .safe-top, .safe-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      background: rgba(239,68,68,0.15);
+    }
+
+    .safe-top {
+      top: 0;
+      border-bottom: 2px dashed #ef4444;
+    }
+
+    .safe-bottom {
+      bottom: 0;
+      border-top: 2px dashed #ef4444;
+    }
+
+    .safe-label {
+      position: absolute;
+      font-size: 9px;
+      font-weight: 700;
+      color: #ef4444;
+      background: rgba(0,0,0,0.9);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    /* PWA IFRAME WRAPPER */
+    .pwa-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+
+    .pwa-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    .info-card {
+      background: rgba(30,41,59,0.8);
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .info-card-label {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .info-card-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #f59e0b;
+      font-family: monospace;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .pwa-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: rgba(34,197,94,0.2);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #22c55e;
+      margin-top: 8px;
+    }
+
+    /* TEST PANEL */
+    .test-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .test-modal.active {
+      display: flex;
+    }
+
+    .test-content {
+      background: #1e293b;
+      border: 2px solid rgba(245,158,11,0.3);
+      border-radius: 20px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .test-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f59e0b;
+    }
+
+    .test-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #94a3b8;
+    }
+
+    .test-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .test-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .test-item.checked {
+      background: rgba(34,197,94,0.15);
+      border-color: rgba(34,197,94,0.3);
+    }
+
+    .test-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .test-item.checked .test-checkbox {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .test-item-text {
+      flex: 1;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .test-progress {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .test-progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .test-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #22c55e);
+      transition: width 0.3s;
+    }
+
+    .test-progress-text {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .test-auto-result {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 12px;
+    }
+
+    .test-auto-result.fail {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.2);
+    }
+
+    .test-result-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #22c55e;
+      margin-bottom: 8px;
+    }
+
+    .test-auto-result.fail .test-result-title {
+      color: #ef4444;
+    }
+
+    .test-result-item {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .test-result-item:before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #22c55e;
+    }
+
+    .test-auto-result.fail .test-result-item:before {
+      content: '✗';
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎯 PWA Device Tester</h1>
+    <p class="subtitle">Точная проверка в PWA режиме с реальными safe-area</p>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-title">📁 Загрузка</div>
+        <div class="upload-area">
+          <label for="file-upload" class="upload-btn">Выбрать HTML файл</label>
+          <input type="file" id="file-upload" class="file-input" accept=".html">
+          <input type="text" id="url-input" class="url-input" placeholder="Или введи путь (file:///...)">
+          <button class="load-btn" onclick="loadFromURL()">Загрузить</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">📱 Устройства (36 моделей)</div>
+        <div class="device-list" id="device-list"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">🛠 Инструменты</div>
+        <button class="control-btn active" id="safe-btn" onclick="toggleSafeArea()">🔴 Safe Area Guides: ON</button>
+        <button class="control-btn" onclick="toggleOrientation()">🔄 Повернуть экран</button>
+        <button class="control-btn" onclick="reloadApp()">↻ Перезагрузить</button>
+        <div class="pwa-badge">✓ PWA режим активен</div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">✅ Тестирование</div>
+        <button class="control-btn" onclick="toggleTestPanel()">📋 Чек-лист функций</button>
+        <button class="control-btn" onclick="runAutoTest()">⚡ Авто-тест</button>
+        <button class="control-btn" onclick="showReadinessReport()">📊 Отчёт готовности</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div id="phone-frame" class="phone-frame">
+        <div id="phone-screen" class="phone-screen">
+          <div id="phone-notch" class="phone-notch"></div>
+
+          <div id="safe-area-guides" class="safe-area-guides">
+            <div class="safe-top">
+              <span class="safe-label" style="top: 2px; left: 50%; transform: translateX(-50%);">safe-area-inset-top</span>
+            </div>
+            <div class="safe-bottom">
+              <span class="safe-label" style="bottom: 2px; left: 50%; transform: translateX(-50%);">safe-area-inset-bottom</span>
+            </div>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon">📱</div>
+            <div class="empty-text">Загрузи PWA приложение</div>
+          </div>
+          <div id="pwa-wrapper" class="pwa-wrapper" style="display: none;">
+            <iframe id="app-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-storage-access-by-user-activation" allow="storage-access"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="info-card-label">Устройство</div>
+          <div class="info-card-value" id="info-device" style="font-size: 13px; color: #cbd5e1;">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Размер</div>
+          <div class="info-card-value" id="info-size">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Safe Top</div>
+          <div class="info-card-value" id="info-safe-top">—</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Safe Bottom</div>
+          <div class="info-card-value" id="info-safe-bottom">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST MODALS -->
+  <div id="test-modal" class="test-modal">
+    <div class="test-content">
+      <div class="test-header">
+        <div class="test-title" id="modal-title">📋 Чек-лист функций</div>
+        <div class="test-close" onclick="closeTestModal()">✕</div>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const devices = [
+      // iPhone с Dynamic Island (2024-2026)
+      { name: 'iPhone 17 Pro Max', width: 430, height: 932, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 17 Pro', width: 393, height: 852, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 17 Plus', width: 430, height: 932, safeTop: 47, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 17', width: 393, height: 852, safeTop: 47, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 15 Pro Max', width: 430, height: 932, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 15 Pro', width: 393, height: 852, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 15', width: 393, height: 852, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 14 Pro Max', width: 430, height: 932, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+      { name: 'iPhone 14 Pro', width: 393, height: 852, safeTop: 59, safeBottom: 34, notch: 'dynamic-island', ppi: 460 },
+
+      // iPhone с notch
+      { name: 'iPhone 14 Plus', width: 428, height: 926, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 458 },
+      { name: 'iPhone 14', width: 390, height: 844, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 460 },
+      { name: 'iPhone 13 Pro Max', width: 428, height: 926, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 458 },
+      { name: 'iPhone 13 Pro', width: 390, height: 844, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 460 },
+      { name: 'iPhone 13', width: 390, height: 844, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 460 },
+      { name: 'iPhone 13 mini', width: 375, height: 812, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 476 },
+      { name: 'iPhone 12 Pro Max', width: 428, height: 926, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 458 },
+      { name: 'iPhone 12 Pro', width: 390, height: 844, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 460 },
+      { name: 'iPhone 12', width: 390, height: 844, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 460 },
+      { name: 'iPhone 12 mini', width: 375, height: 812, safeTop: 47, safeBottom: 34, notch: 'classic', ppi: 476 },
+      { name: 'iPhone 11 Pro Max', width: 414, height: 896, safeTop: 44, safeBottom: 34, notch: 'classic', ppi: 458 },
+      { name: 'iPhone 11', width: 414, height: 896, safeTop: 44, safeBottom: 34, notch: 'classic', ppi: 326 },
+      { name: 'iPhone XS Max', width: 414, height: 896, safeTop: 44, safeBottom: 34, notch: 'classic', ppi: 458 },
+      { name: 'iPhone XR', width: 414, height: 896, safeTop: 44, safeBottom: 34, notch: 'classic', ppi: 326 },
+      { name: 'iPhone X', width: 375, height: 812, safeTop: 44, safeBottom: 34, notch: 'classic', ppi: 458 },
+
+      // iPhone без notch
+      { name: 'iPhone SE 2022', width: 375, height: 667, safeTop: 20, safeBottom: 0, notch: 'none', ppi: 326 },
+      { name: 'iPhone 8 Plus', width: 414, height: 736, safeTop: 20, safeBottom: 0, notch: 'none', ppi: 401 },
+      { name: 'iPhone 8', width: 375, height: 667, safeTop: 20, safeBottom: 0, notch: 'none', ppi: 326 },
+
+      // Android
+      { name: 'Galaxy S24 Ultra', width: 412, height: 915, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 505 },
+      { name: 'Galaxy S24+', width: 384, height: 854, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 425 },
+      { name: 'Galaxy S23 Ultra', width: 412, height: 915, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 500 },
+      { name: 'Pixel 8 Pro', width: 412, height: 915, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 489 },
+      { name: 'Pixel 8', width: 412, height: 915, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 428 },
+      { name: 'Pixel 7a', width: 412, height: 915, safeTop: 32, safeBottom: 24, notch: 'pill', ppi: 429 },
+      { name: 'OnePlus 11', width: 412, height: 919, safeTop: 38, safeBottom: 28, notch: 'pill', ppi: 525 },
+      { name: 'Xiaomi 13 Pro', width: 412, height: 915, safeTop: 36, safeBottom: 28, notch: 'pill', ppi: 522 },
+      { name: 'Galaxy Z Fold 5', width: 344, height: 882, safeTop: 32, safeBottom: 24, notch: 'pill', ppi: 374 },
+    ];
+
+    let currentDevice = null;
+    let currentFileContent = null;
+    let safeAreaVisible = true;
+
+    function init() {
+      renderDeviceList();
+      setupFileUpload();
+      selectDevice(devices[5]); // iPhone 14 Plus по умолчанию
+    }
+
+    function renderDeviceList() {
+      const list = document.getElementById('device-list');
+      devices.forEach((device, i) => {
+        const item = document.createElement('div');
+        item.className = 'device-item';
+        item.innerHTML = `
+          <div class="device-item-name">${device.name}</div>
+          <div class="device-item-specs">${device.width}×${device.height} · ${device.ppi}ppi</div>
+        `;
+        item.onclick = () => selectDevice(device);
+        list.appendChild(item);
+      });
+    }
+
+    function selectDevice(device) {
+      currentDevice = device;
+
+      document.querySelectorAll('.device-item').forEach((item, i) => {
+        item.classList.toggle('active', devices[i] === device);
+      });
+
+      const screen = document.getElementById('phone-screen');
+      const notch = document.getElementById('phone-notch');
+      const safeGuides = document.getElementById('safe-area-guides');
+
+      screen.style.width = device.width + 'px';
+      screen.style.height = device.height + 'px';
+
+      notch.className = 'phone-notch';
+      if (device.notch === 'dynamic-island') {
+        notch.className += ' notch-dynamic-island';
+        notch.style.display = 'block';
+      } else if (device.notch === 'classic') {
+        notch.className += ' notch-classic';
+        notch.style.display = 'block';
+      } else if (device.notch === 'pill') {
+        notch.className += ' notch-pill';
+        notch.style.display = 'block';
+      } else {
+        notch.style.display = 'none';
+      }
+
+      const topGuide = safeGuides.querySelector('.safe-top');
+      const bottomGuide = safeGuides.querySelector('.safe-bottom');
+      topGuide.style.height = device.safeTop + 'px';
+      bottomGuide.style.height = device.safeBottom + 'px';
+
+      document.getElementById('info-device').textContent = device.name;
+      document.getElementById('info-size').textContent = `${device.width}×${device.height}`;
+      document.getElementById('info-safe-top').textContent = device.safeTop + 'px';
+      document.getElementById('info-safe-bottom').textContent = device.safeBottom + 'px';
+
+      if (currentFileContent) {
+        injectPWAContent();
+      }
+    }
+
+    function setupFileUpload() {
+      document.getElementById('file-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            currentFileContent = event.target.result;
+            injectPWAContent();
+          };
+          reader.readAsText(file);
+        }
+      });
+    }
+
+    function loadFromURL() {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) {
+        alert('Введи путь к файлу!');
+        return;
+      }
+
+      fetch(url)
+        .then(response => response.text())
+        .then(html => {
+          currentFileContent = html;
+          injectPWAContent();
+        })
+        .catch(err => {
+          alert('Ошибка загрузки файла. Для локальных файлов используй выбор файла.');
+        });
+    }
+
+    function injectPWAContent() {
+      if (!currentDevice || !currentFileContent) return;
+
+      const iframe = document.getElementById('app-iframe');
+      const wrapper = document.getElementById('pwa-wrapper');
+      const emptyState = document.getElementById('empty-state');
+
+      // ========== ТОЧНАЯ ЭМУЛЯЦИЯ PWA ==========
+      // На реальном iPhone в PWA режиме env() возвращает точные значения.
+      // Мы заменяем ВСЕ вхождения env() на реальные пиксели для выбранного устройства.
+
+      let modifiedHTML = currentFileContent;
+
+      // 1. Заменяем env() БЕЗ fallback значений
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-top\s*\)/gi, `${currentDevice.safeTop}px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-bottom\s*\)/gi, `${currentDevice.safeBottom}px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-left\s*\)/gi, `0px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-right\s*\)/gi, `0px`);
+
+      // 2. Заменяем env() С fallback значениями: env(safe-area-inset-top, 0px)
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-top\s*,\s*[^)]*\)/gi, `${currentDevice.safeTop}px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-bottom\s*,\s*[^)]*\)/gi, `${currentDevice.safeBottom}px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-left\s*,\s*[^)]*\)/gi, `0px`);
+      modifiedHTML = modifiedHTML.replace(/env\(\s*safe-area-inset-right\s*,\s*[^)]*\)/gi, `0px`);
+
+      // 3. Заменяем max() с env() внутри: max(16px, env(safe-area-inset-top))
+      // Ищем все max(Xpx, env(...))
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*(\d+)px\s*,\s*env\(\s*safe-area-inset-top[^)]*\)\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(parseInt(fallback), currentDevice.safeTop);
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*(\d+)px\s*,\s*env\(\s*safe-area-inset-bottom[^)]*\)\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(parseInt(fallback), currentDevice.safeBottom);
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*(\d+)px\s*,\s*env\(\s*safe-area-inset-left[^)]*\)\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(parseInt(fallback), 0);
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*(\d+)px\s*,\s*env\(\s*safe-area-inset-right[^)]*\)\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(parseInt(fallback), 0);
+          return `${result}px`;
+        }
+      );
+
+      // 4. Заменяем max() с env() в другом порядке: max(env(...), 16px)
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*env\(\s*safe-area-inset-top[^)]*\)\s*,\s*(\d+)px\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(currentDevice.safeTop, parseInt(fallback));
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*env\(\s*safe-area-inset-bottom[^)]*\)\s*,\s*(\d+)px\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(currentDevice.safeBottom, parseInt(fallback));
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*env\(\s*safe-area-inset-left[^)]*\)\s*,\s*(\d+)px\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(0, parseInt(fallback));
+          return `${result}px`;
+        }
+      );
+
+      modifiedHTML = modifiedHTML.replace(
+        /max\(\s*env\(\s*safe-area-inset-right[^)]*\)\s*,\s*(\d+)px\s*\)/gi,
+        (match, fallback) => {
+          const result = Math.max(0, parseInt(fallback));
+          return `${result}px`;
+        }
+      );
+
+      // 5. Инжектим CSS переменные в :root для полной совместимости
+      const pwaSimulatorCSS = `
+        <style id="pwa-simulator-env">
+          /* 🎯 PWA Simulator - Точная эмуляция env() */
+          :root {
+            --safe-area-inset-top: ${currentDevice.safeTop}px;
+            --safe-area-inset-bottom: ${currentDevice.safeBottom}px;
+            --safe-area-inset-left: 0px;
+            --safe-area-inset-right: 0px;
+            --safe-top: ${currentDevice.safeTop}px;
+            --safe-bottom: ${currentDevice.safeBottom}px;
+            --safe-left: 0px;
+            --safe-right: 0px;
+          }
+        </style>
+      `;
+
+      modifiedHTML = modifiedHTML.replace('<head>', '<head>' + pwaSimulatorCSS);
+
+      // 6. Загружаем модифицированный HTML в iframe
+      iframe.srcdoc = modifiedHTML;
+
+      // 7. После загрузки проверяем результат
+      iframe.onload = function() {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          const iframeBody = iframeDoc.body;
+
+          if (!iframeBody) return;
+
+          // Ждем рендеринга
+          setTimeout(() => {
+            const computedBody = iframeDoc.defaultView.getComputedStyle(iframeBody);
+            const computedRoot = iframeDoc.defaultView.getComputedStyle(iframeDoc.documentElement);
+
+            const actualPaddingTop = parseInt(computedBody.paddingTop) || 0;
+            const actualPaddingBottom = parseInt(computedBody.paddingBottom) || 0;
+
+            console.log('✅ PWA Simulation Active:', {
+              device: currentDevice.name,
+              screen: `${currentDevice.width}×${currentDevice.height}`,
+              safeTop: currentDevice.safeTop + 'px',
+              safeBottom: currentDevice.safeBottom + 'px',
+              actualBodyPaddingTop: actualPaddingTop + 'px',
+              actualBodyPaddingBottom: actualPaddingBottom + 'px',
+              rootVars: {
+                '--safe-area-inset-top': computedRoot.getPropertyValue('--safe-area-inset-top').trim(),
+                '--safe-area-inset-bottom': computedRoot.getPropertyValue('--safe-area-inset-bottom').trim()
+              }
+            });
+
+          }, 50);
+
+        } catch(e) {
+          console.error('❌ Iframe access error:', e);
+        }
+      };
+
+      emptyState.style.display = 'none';
+      wrapper.style.display = 'block';
+    }
+
+    function toggleSafeArea() {
+      safeAreaVisible = !safeAreaVisible;
+      const guides = document.getElementById('safe-area-guides');
+      const btn = document.getElementById('safe-btn');
+      guides.style.display = safeAreaVisible ? 'block' : 'none';
+      btn.textContent = safeAreaVisible ? '🔴 Safe Area Guides: ON' : '⚪ Safe Area Guides: OFF';
+      btn.classList.toggle('active', safeAreaVisible);
+    }
+
+    function toggleOrientation() {
+      if (!currentDevice) return;
+      const temp = currentDevice.width;
+      currentDevice.width = currentDevice.height;
+      currentDevice.height = temp;
+      selectDevice(currentDevice);
+    }
+
+    function reloadApp() {
+      if (currentFileContent) {
+        injectPWAContent();
+      }
+    }
+
+    // ========== TESTING FEATURES ==========
+
+    const testChecklist = [
+      // Основные функции
+      { id: 'create', text: '✅ Создание события', checked: false, category: 'core' },
+      { id: 'edit', text: '✅ Редактирование события', checked: false, category: 'core' },
+      { id: 'delete', text: '✅ Удаление события', checked: false, category: 'core' },
+      { id: 'status', text: '✅ Изменение статуса', checked: false, category: 'core' },
+      { id: 'types', text: '✅ Типы событий (иконки)', checked: false, category: 'core' },
+      { id: 'schedule', text: '✅ Расписание выходов', checked: false, category: 'core' },
+      { id: 'finance', text: '✅ Финансовый трекинг', checked: false, category: 'core' },
+      { id: 'goal', text: '✅ Цель месяца', checked: false, category: 'core' },
+      { id: 'stats', text: '✅ Статистика дашборда', checked: false, category: 'core' },
+      { id: 'calendar', text: '✅ Календарь', checked: false, category: 'core' },
+      { id: 'dayview', text: '✅ События дня', checked: false, category: 'core' },
+      { id: 'export', text: '✅ Экспорт JSON', checked: false, category: 'core' },
+      { id: 'import', text: '✅ Импорт JSON', checked: false, category: 'core' },
+
+      // UI/UX
+      { id: 'safearea', text: '📱 Safe Area (iPhone)', checked: false, category: 'ui' },
+      { id: 'responsive', text: '📱 Адаптивность', checked: false, category: 'ui' },
+      { id: 'navigation', text: '📱 Навигация', checked: false, category: 'ui' },
+      { id: 'swipe', text: '📱 Свайпы (звонок/просмотр)', checked: false, category: 'ui' },
+      { id: 'modal', text: '📱 Модальные окна', checked: false, category: 'ui' },
+      { id: 'toast', text: '📱 Уведомления (toast)', checked: false, category: 'ui' },
+
+      // PWA & Storage
+      { id: 'pwa', text: '🚀 PWA манифест', checked: false, category: 'pwa' },
+      { id: 'install', text: '🚀 Установка на главный экран', checked: false, category: 'pwa' },
+      { id: 'offline', text: '🚀 Работа offline', checked: false, category: 'pwa' },
+      { id: 'storage', text: '💾 LocalStorage сохранение', checked: false, category: 'pwa' },
+      { id: 'storage-persist', text: '💾 Данные не теряются при перезагрузке', checked: false, category: 'pwa' },
+      { id: 'storage-clear', text: '💾 Очистка данных работает', checked: false, category: 'pwa' },
+
+      // Безопасность
+      { id: 'sec-xss', text: '🔒 Защита от XSS (инъекции в поля)', checked: false, category: 'security' },
+      { id: 'sec-keys', text: '🔒 API ключи скрыты', checked: false, category: 'security' },
+      { id: 'sec-data', text: '🔒 Личные данные защищены', checked: false, category: 'security' },
+      { id: 'sec-console', text: '🔒 Нет ошибок в консоли', checked: false, category: 'security' },
+
+      // Производительность
+      { id: 'perf-load', text: '⚡ Быстрая загрузка (<3 сек)', checked: false, category: 'performance' },
+      { id: 'perf-smooth', text: '⚡ Плавная прокрутка', checked: false, category: 'performance' },
+      { id: 'perf-lag', text: '⚡ Нет лагов при свайпах', checked: false, category: 'performance' },
+      { id: 'perf-battery', text: '⚡ Не жрёт батарею', checked: false, category: 'performance' },
+
+      // Доступность
+      { id: 'a11y-contrast', text: '♿ Контрастность текста', checked: false, category: 'accessibility' },
+      { id: 'a11y-buttons', text: '♿ Кнопки ≥44px', checked: false, category: 'accessibility' },
+      { id: 'a11y-text', text: '♿ Размер текста ≥14px', checked: false, category: 'accessibility' },
+
+      // Интеграции
+      { id: 'int-phone', text: '📞 Звонок клиенту (tel:)', checked: false, category: 'integrations' },
+      { id: 'int-nav', text: '🗺️ Яндекс.Навигатор', checked: false, category: 'integrations' },
+      { id: 'int-share', text: '📤 Возможность поделиться', checked: false, category: 'integrations' },
+    ];
+
+    function toggleTestPanel() {
+      const modal = document.getElementById('test-modal');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+
+      title.textContent = '📋 Чек-лист функций';
+
+      const categories = {
+        core: '✅ Основные функции',
+        ui: '📱 UI/UX',
+        pwa: '🚀 PWA & Хранение',
+        security: '🔒 Безопасность',
+        performance: '⚡ Производительность',
+        accessibility: '♿ Доступность',
+        integrations: '🔗 Интеграции'
+      };
+
+      let html = '';
+      Object.keys(categories).forEach(cat => {
+        const items = testChecklist.filter(t => t.category === cat);
+        const checked = items.filter(t => t.checked).length;
+
+        html += `
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 13px; font-weight: 700; color: #f59e0b; margin-bottom: 10px; padding: 8px; background: rgba(245,158,11,0.1); border-radius: 6px;">
+              ${categories[cat]} (${checked}/${items.length})
+            </div>
+            <div class="test-checklist">
+              ${items.map((item, i) => {
+                const globalIndex = testChecklist.findIndex(t => t.id === item.id);
+                return `
+                  <div class="test-item ${item.checked ? 'checked' : ''}" onclick="toggleChecklistItem(${globalIndex})">
+                    <div class="test-checkbox">
+                      ${item.checked ? '✓' : ''}
+                    </div>
+                    <div class="test-item-text">${item.text}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      body.innerHTML = `
+        ${html}
+        <div class="test-progress" style="position: sticky; bottom: 0; background: #0a0e1a; padding: 15px 0; margin-top: 20px; border-top: 2px solid rgba(245,158,11,0.3);">
+          <div class="test-progress-bar">
+            <div class="test-progress-fill" style="width: ${(testChecklist.filter(t => t.checked).length / testChecklist.length * 100).toFixed(0)}%"></div>
+          </div>
+          <div class="test-progress-text">
+            Проверено: ${testChecklist.filter(t => t.checked).length} / ${testChecklist.length} (${((testChecklist.filter(t => t.checked).length / testChecklist.length) * 100).toFixed(0)}%)
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function toggleChecklistItem(index) {
+      testChecklist[index].checked = !testChecklist[index].checked;
+      toggleTestPanel(); // Refresh
+    }
+
+    function runAutoTest() {
+      const modal = document.getElementById('test-modal');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+
+      title.textContent = '⚡ Автоматический тест';
+
+      // Simulate auto-test
+      const iframe = document.getElementById('app-iframe');
+      let results = [];
+
+      if (!currentFileContent) {
+        body.innerHTML = `
+          <div class="test-auto-result fail">
+            <div class="test-result-title">❌ Тест не пройден</div>
+            <div class="test-result-item">Приложение не загружено</div>
+          </div>
+        `;
+        modal.classList.add('active');
+        return;
+      }
+
+      try {
+        // Check 1: HTML structure
+        if (currentFileContent.includes('<!DOCTYPE html>')) {
+          results.push({ pass: true, text: 'HTML структура корректна' });
+        } else {
+          results.push({ pass: false, text: 'Некорректная HTML структура' });
+        }
+
+        // Check 2: Meta viewport
+        if (currentFileContent.includes('viewport-fit=cover')) {
+          results.push({ pass: true, text: 'viewport-fit=cover установлен' });
+        } else {
+          results.push({ pass: false, text: 'viewport-fit=cover отсутствует' });
+        }
+
+        // Check 3: Safe area usage
+        if (currentFileContent.includes('env(safe-area-inset') || currentFileContent.includes('--safe-')) {
+          results.push({ pass: true, text: 'Safe Area используется' });
+        } else {
+          results.push({ pass: false, text: 'Safe Area не используется' });
+        }
+
+        // Check 4: LocalStorage usage
+        if (currentFileContent.includes('localStorage')) {
+          results.push({ pass: true, text: 'LocalStorage используется' });
+        } else {
+          results.push({ pass: false, text: 'LocalStorage не используется' });
+        }
+
+        // Check 5: PWA manifest
+        if (currentFileContent.includes('manifest')) {
+          results.push({ pass: true, text: 'PWA Manifest подключен' });
+        } else {
+          results.push({ pass: false, text: 'PWA Manifest отсутствует' });
+        }
+
+        // Check 6: Icon references
+        if (currentFileContent.includes('icon-192') || currentFileContent.includes('icon-512')) {
+          results.push({ pass: true, text: 'PWA иконки подключены' });
+        } else {
+          results.push({ pass: false, text: 'PWA иконки отсутствуют' });
+        }
+
+        // Check 7: JavaScript presence
+        if (currentFileContent.includes('<script>') || currentFileContent.includes('<script ')) {
+          results.push({ pass: true, text: 'JavaScript присутствует' });
+        } else {
+          results.push({ pass: false, text: 'JavaScript отсутствует' });
+        }
+
+        const allPassed = results.every(r => r.pass);
+
+        body.innerHTML = `
+          <div class="test-auto-result ${allPassed ? '' : 'fail'}">
+            <div class="test-result-title">${allPassed ? '✅ Все тесты пройдены' : '⚠️ Некоторые тесты не пройдены'}</div>
+            ${results.map(r => `
+              <div class="test-result-item">${r.text}</div>
+            `).join('')}
+          </div>
+          <div class="test-progress" style="margin-top: 20px;">
+            <div class="test-progress-bar">
+              <div class="test-progress-fill" style="width: ${(results.filter(r => r.pass).length / results.length * 100).toFixed(0)}%"></div>
+            </div>
+            <div class="test-progress-text">
+              Пройдено: ${results.filter(r => r.pass).length} / ${results.length}
+            </div>
+          </div>
+        `;
+
+      } catch(e) {
+        body.innerHTML = `
+          <div class="test-auto-result fail">
+            <div class="test-result-title">❌ Ошибка выполнения теста</div>
+            <div class="test-result-item">${e.message}</div>
+          </div>
+        `;
+      }
+
+      modal.classList.add('active');
+    }
+
+    function showReadinessReport() {
+      const modal = document.getElementById('test-modal');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+
+      title.textContent = '📊 Отчёт готовности к продакшну';
+
+      const checkedCount = testChecklist.filter(t => t.checked).length;
+      const totalCount = testChecklist.length;
+      const percentage = (checkedCount / totalCount * 100).toFixed(0);
+
+      let readinessLevel = '';
+      let readinessColor = '';
+      let recommendation = '';
+
+      if (percentage >= 90) {
+        readinessLevel = '🟢 Готово к запуску';
+        readinessColor = '#22c55e';
+        recommendation = 'Приложение полностью протестировано и готово к публикации в App Store.';
+      } else if (percentage >= 70) {
+        readinessLevel = '🟡 Почти готово';
+        readinessColor = '#f59e0b';
+        recommendation = 'Осталось протестировать несколько функций перед запуском.';
+      } else if (percentage >= 50) {
+        readinessLevel = '🟠 Требуется тестирование';
+        readinessColor = '#f97316';
+        recommendation = 'Необходимо выполнить больше тестов перед публикацией.';
+      } else {
+        readinessLevel = '🔴 Не готово';
+        readinessColor = '#ef4444';
+        recommendation = 'Приложение не готово к публикации. Проведите полное тестирование.';
+      }
+
+      body.innerHTML = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="font-size: 48px; font-weight: 900; color: ${readinessColor}; margin-bottom: 12px;">
+            ${percentage}%
+          </div>
+          <div style="font-size: 16px; font-weight: 700; color: ${readinessColor}; margin-bottom: 8px;">
+            ${readinessLevel}
+          </div>
+          <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+            ${recommendation}
+          </div>
+        </div>
+
+        <div class="test-progress">
+          <div class="test-progress-bar" style="height: 12px;">
+            <div class="test-progress-fill" style="width: ${percentage}%; background: ${readinessColor};"></div>
+          </div>
+          <div class="test-progress-text" style="margin-top: 12px;">
+            Протестировано функций: ${checkedCount} / ${totalCount}
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+          <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">
+            📋 ЧТО ПРОВЕРЕНО:
+          </div>
+          ${testChecklist.filter(t => t.checked).map(item => `
+            <div style="font-size: 11px; color: #22c55e; margin-bottom: 4px;">
+              ✓ ${item.text}
+            </div>
+          `).join('')}
+        </div>
+
+        ${testChecklist.filter(t => !t.checked).length > 0 ? `
+          <div style="margin-top: 16px; padding: 16px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.1); border-radius: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: #ef4444; margin-bottom: 8px;">
+              ⚠️ ОСТАЛОСЬ ПРОВЕРИТЬ:
+            </div>
+            ${testChecklist.filter(t => !t.checked).map(item => `
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
+                ○ ${item.text}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 24px; padding: 16px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px;">
+          <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">
+            📱 ТЕСТИРОВАНИЕ УСТРОЙСТВ:
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+            • 36 моделей iPhone и Android<br>
+            • Safe Area поддержка (Dynamic Island, Notch)<br>
+            • PWA режим с точной эмуляцией env()<br>
+            • Landscape и Portrait ориентация
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function closeTestModal() {
+      document.getElementById('test-modal').classList.remove('active');
+    }
+
+    // Close modal on outside click
+    document.getElementById('test-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeTestModal();
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

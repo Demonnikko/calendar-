@@ -1,0 +1,501 @@
+const { Telegraf, Markup } = require("telegraf");
+const { initializeApp } = require("firebase/app");
+const { getDatabase, ref, set, get, child } = require("firebase/database");
+const fs = require("fs");
+const path = require("path");
+const { FIREBASE_CONFIG, token, ADMIN_ID } = require("./config");
+
+// Инициализация Firebase
+const firebaseApp = initializeApp(FIREBASE_CONFIG);
+const firebaseDB = getDatabase(firebaseApp);
+
+// Инициализация бота
+const bot = new Telegraf(token);
+
+// ТОКЕН ПЛАТЕЖНОЙ СИСТЕМЫ (Получить в @BotFather -> Payments)
+const PAYMENT_TOKEN = "YOUR_PAYMENT_TOKEN_FROM_BOTFATHER";
+
+if (PAYMENT_TOKEN === "YOUR_PAYMENT_TOKEN_FROM_BOTFATHER") {
+  console.warn(
+    "⚠️ ПРЕДУПРЕЖДЕНИЕ: Вы не заменили PAYMENT_TOKEN! Оплата не будет работать, но бот запустится.",
+  );
+}
+
+// ССЫЛКА НА ВАШ MINI APP (Вставьте сюда ссылку из GitHub Pages)
+const WEB_APP_URL = "https://demonnikko.github.io/botos/";
+
+// --- База данных приложений ---
+// Загружаем каталог приложений из JSON-файла
+const apps = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "products.json"), "utf-8"),
+);
+
+// --- Функция генерации ключа ---
+function generateLicenseKey() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let key = "";
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 4; j++) {
+      key += chars[Math.floor(Math.random() * chars.length)];
+    }
+    if (i < 2) key += "-";
+  }
+  let sum = 0;
+  const data = key.replace(/-/g, "");
+  for (let i = 0; i < data.length; i++) {
+    sum += data.charCodeAt(i);
+  }
+  const check = (sum % 10000).toString(36).toUpperCase().padStart(4, "0");
+  key += "-" + check;
+  return key;
+}
+
+// --- Клавиатуры ---
+const getMainMenu = () =>
+  Markup.inlineKeyboard([
+    [Markup.button.webApp("✨ Открыть магазин (Mini App)", WEB_APP_URL)],
+    [Markup.button.callback("👤 Мой профиль", "profile")],
+    [Markup.button.callback("🆘 Поддержка", "support")],
+  ]);
+
+// --- Обработчики команд ---
+bot.start((ctx) => {
+  ctx.replyWithMarkdown(
+    "🎩 *Добро пожаловать в Illusionist OS*\n\nЭто экосистема для артистов.\n\nВыберите раздел:",
+    getMainMenu(),
+  );
+});
+
+// ============================================
+// СИСТЕМА УВЕДОМЛЕНИЙ ОБ ОШИБКАХ
+// ============================================
+// Специальная команда для получения ошибок из приложений
+// Формат: /app_error <JSON с данными ошибки>
+bot.command("app_error", async (ctx) => {
+  try {
+    // Проверяем что это не простой пользователь пытается отправить ошибку вручную
+    const text = ctx.message.text;
+    if (!text.includes("{") || !text.includes("}")) {
+      return; // Игнорируем если это не JSON
+    }
+
+    // Парсим JSON из сообщения
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (!jsonMatch) return;
+
+    const errorData = JSON.parse(jsonMatch[0]);
+
+    // Формируем красивое сообщение для админа
+    let message = "🚨 <b>ОШИБКА В КАЛЬКУЛЯТОРЕ</b>\n\n";
+
+    if (errorData.type === "js_error") {
+      message += `<b>Тип:</b> JavaScript Error\n`;
+      message += `<b>Ошибка:</b> ${errorData.message || "Неизвестная ошибка"}\n`;
+      if (errorData.file) message += `<b>Файл:</b> ${errorData.file}\n`;
+      if (errorData.line) message += `<b>Строка:</b> ${errorData.line}\n`;
+    } else if (errorData.type === "promise_error") {
+      message += `<b>Тип:</b> Promise Rejection\n`;
+      message += `<b>Причина:</b> ${errorData.reason || "Неизвестно"}\n`;
+    }
+
+    if (errorData.userAgent) {
+      message += `<b>Устройство:</b> ${errorData.userAgent.substring(0, 100)}...\n`;
+    }
+
+    if (errorData.url) {
+      message += `<b>URL:</b> ${errorData.url}\n`;
+    }
+
+    if (errorData.timestamp) {
+      const date = new Date(errorData.timestamp);
+      message += `<b>Время:</b> ${date.toLocaleString("ru-RU")}\n`;
+    }
+
+    // Отправляем уведомление ТОЛЬКО админу
+    if (ADMIN_ID && ADMIN_ID !== 0) {
+      await ctx.telegram.sendMessage(ADMIN_ID, message, { parse_mode: "HTML" });
+      console.log("✅ Error notification sent to admin:", errorData.message);
+    } else {
+      console.warn("⚠️ ADMIN_ID не установлен в config.js! Ошибка не отправлена.");
+    }
+
+  } catch (error) {
+    console.error("Ошибка при обработке app_error:", error);
+  }
+});
+
+// Команда для логирования событий (активация, создание КП и т.д.)
+bot.command("app_event", async (ctx) => {
+  try {
+    const text = ctx.message.text;
+    if (!text.includes("{") || !text.includes("}")) {
+      return;
+    }
+
+    const jsonMatch = text.match(/\{.*\}/s);
+    if (!jsonMatch) return;
+
+    const eventData = JSON.parse(jsonMatch[0]);
+
+    let message = "📊 <b>СОБЫТИЕ В КАЛЬКУЛЯТОРЕ</b>\n\n";
+    message += `<b>Событие:</b> ${eventData.event || "Неизвестно"}\n`;
+
+    if (eventData.data) {
+      message += `<b>Данные:</b>\n`;
+      Object.entries(eventData.data).forEach(([key, value]) => {
+        message += `  • ${key}: ${value}\n`;
+      });
+    }
+
+    if (eventData.timestamp) {
+      const date = new Date(eventData.timestamp);
+      message += `<b>Время:</b> ${date.toLocaleString("ru-RU")}\n`;
+    }
+
+    // Отправляем ТОЛЬКО админу
+    if (ADMIN_ID && ADMIN_ID !== 0) {
+      await ctx.telegram.sendMessage(ADMIN_ID, message, { parse_mode: "HTML" });
+      console.log("✅ Event notification sent to admin:", eventData.event);
+    }
+
+  } catch (error) {
+    console.error("Ошибка при обработке app_event:", error);
+  }
+});
+
+// ============================================
+// АДМИН ПАНЕЛЬ
+// ============================================
+
+// Проверка что это админ
+function isAdmin(ctx) {
+  return ctx.from.id === ADMIN_ID && ADMIN_ID !== 0;
+}
+
+// Состояние для multi-step диалогов админки
+const adminState = {};
+
+// Middleware для проверки админа
+bot.use(async (ctx, next) => {
+  // Если команда начинается с admin_ или /admin
+  if (ctx.message?.text?.startsWith('/admin') ||
+      ctx.callbackQuery?.data?.startsWith('admin_')) {
+    if (!isAdmin(ctx)) {
+      if (ctx.callbackQuery) {
+        await ctx.answerCbQuery('❌ Доступ запрещен');
+      } else {
+        await ctx.reply('❌ Доступ запрещен. Эта функция только для администратора.');
+      }
+      return;
+    }
+  }
+  return next();
+});
+
+// Команда /admin - главное меню
+bot.command('admin', async (ctx) => {
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback('📊 Статистика', 'admin_stats')],
+    [Markup.button.callback('🔑 Управление лицензиями', 'admin_licenses')],
+    [Markup.button.callback('👥 Управление пользователями', 'admin_users')],
+    [Markup.button.callback('📨 Рассылка сообщений', 'admin_broadcast')],
+  ]);
+
+  await ctx.reply(
+    '🔐 *АДМИН ПАНЕЛЬ*\n\nВыберите раздел:',
+    { ...keyboard, parse_mode: 'Markdown' }
+  );
+});
+
+// Возврат в админ меню
+bot.action('admin_menu', async (ctx) => {
+  await ctx.answerCbQuery();
+
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback('📊 Статистика', 'admin_stats')],
+    [Markup.button.callback('🔑 Управление лицензиями', 'admin_licenses')],
+    [Markup.button.callback('👥 Управление пользователями', 'admin_users')],
+    [Markup.button.callback('📨 Рассылка сообщений', 'admin_broadcast')],
+  ]);
+
+  await ctx.editMessageText(
+    '🔐 *АДМИН ПАНЕЛЬ*\n\nВыберите раздел:',
+    { ...keyboard, parse_mode: 'Markdown' }
+  );
+});
+
+// Обработчик данных от Web App
+bot.on("web_app_data", async (ctx) => {
+  await ctx.replyWithChatAction("typing");
+  try {
+    const data = JSON.parse(ctx.message.web_app_data.data);
+    if (data.action === "buy") {
+      const app = apps.find((a) => a.id === data.id);
+      if (app) {
+        if (PAYMENT_TOKEN === "YOUR_PAYMENT_TOKEN_FROM_BOTFATHER") {
+          return ctx.reply(
+            "⚠️ Ошибка конфигурации: Токен оплаты не установлен в коде бота. Замените YOUR_PAYMENT_TOKEN_FROM_BOTFATHER на реальный токен.",
+          );
+        }
+        return ctx.replyWithInvoice({
+          title: app.name,
+          description: "Лицензионный ключ доступа к приложению Illusionist OS",
+          payload: app.id,
+          provider_token: PAYMENT_TOKEN,
+          currency: "RUB",
+          prices: [{ label: app.name, amount: app.price * 100 }],
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Ошибка обработки данных Web App", e);
+    ctx.reply(`❌ Ошибка при создании счета: ${e.message}`);
+  }
+});
+
+// --- Обработчики кнопок ---
+bot.action("menu", (ctx) => {
+  ctx.editMessageText(
+    "🎩 *Добро пожаловать в Illusionist OS*\n\nЭто экосистема для артистов.\n\nВыберите раздел:",
+    { ...getMainMenu(), parse_mode: "Markdown" },
+  );
+});
+
+bot.action("catalog", (ctx) => {
+  const keyboard = apps.map((app) => [
+    Markup.button.callback(app.name, `view_${app.id}`),
+  ]);
+  keyboard.push([Markup.button.callback("🔙 Назад в меню", "menu")]);
+  ctx.editMessageText(
+    "📱 *Каталог Illusionist OS*\n\nВыберите инструмент для вашего выступления:",
+    {
+      reply_markup: { inline_keyboard: keyboard },
+      parse_mode: "Markdown",
+    },
+  );
+});
+
+bot.action(/view_(.+)/, (ctx) => {
+  const appId = ctx.match[1];
+  const app = apps.find((a) => a.id === appId);
+  if (app) {
+    // Берём минимальную цену для отображения "от..."
+    const minPrice = Math.min(...app.plans.map(p => p.price));
+
+    const text = `*${app.name}*\n\n${app.description}\n\n💎 *Стоимость:* от ${minPrice} ₽`;
+    ctx.editMessageText(text, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [Markup.button.callback("💳 Купить подписку", `plans_${app.id}`)],
+          [Markup.button.callback("🔙 К списку", "catalog")],
+        ],
+      },
+    });
+  }
+});
+
+// Выбор плана подписки
+bot.action(/plans_(.+)/, (ctx) => {
+  const appId = ctx.match[1];
+  const app = apps.find((a) => a.id === appId);
+
+  if (app) {
+    const buttons = app.plans.map(plan => [
+      Markup.button.callback(`${plan.label} — ${plan.price} ₽`, `buy_${app.id}_${plan.id}`)
+    ]);
+    buttons.push([Markup.button.callback("🔙 Назад", `view_${app.id}`)]);
+
+    ctx.editMessageText(`📋 *Выберите тариф для "${app.name}":*`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: buttons
+      }
+    });
+  }
+});
+
+bot.action("profile", async (ctx) => {
+  const userId = ctx.from.id;
+  const dbRef = ref(getDatabase());
+
+  try {
+    await ctx.answerCbQuery("Загружаю ваш профиль...");
+    await ctx.replyWithChatAction("typing");
+
+    const snapshot = await get(child(dbRef, `users/${userId}/purchases`));
+
+    let message = `👤 *Профиль иллюзиониста*\n\nИмя: ${ctx.from.first_name}\nID: \`${userId}\`\n\n---`;
+
+    if (snapshot.exists()) {
+      message += "\n\n*🛒 Ваши покупки:*\n";
+      const purchases = snapshot.val();
+      Object.values(purchases).forEach((purchase) => {
+        message += `\n*${purchase.appName}* (${purchase.planLabel || 'Без тарифа'})\n🔑 Ключ: \`${purchase.key}\`\n*Дата:* ${new Date(purchase.purchaseDate).toLocaleDateString(
+          "ru-RU",
+        )}\n`;
+      });
+    } else {
+      message += "\n\nВы еще ничего не приобрели. Время это исправить! 😉";
+    }
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[Markup.button.callback("🔙 Назад в меню", "menu")]],
+      },
+    });
+  } catch (error) {
+    console.error("Firebase profile read error:", error);
+    await ctx.editMessageText("❌ Не удалось загрузить ваш профиль. Попробуйте позже.", {
+      reply_markup: {
+        inline_keyboard: [[Markup.button.callback("🔙 Назад в меню", "menu")]],
+      },
+    });
+  }
+});
+
+bot.action("support", (ctx) => {
+  ctx.editMessageText(
+    "🆘 *Поддержка*\n\nЕсли у вас возникли вопросы по установке или использованию приложений, свяжитесь с администратором: @admin_username",
+    {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[Markup.button.callback("🔙 Назад", "menu")]],
+      },
+    },
+  );
+});
+
+bot.action(/buy_(.+)_(.+)/, async (ctx) => {
+  await ctx.replyWithChatAction("typing");
+  const appId = ctx.match[1];
+  const planId = ctx.match[2];
+
+  const app = apps.find((a) => a.id === appId);
+  const plan = app ? app.plans.find(p => p.id === planId) : null;
+
+  if (app && plan) {
+    if (PAYMENT_TOKEN === "YOUR_PAYMENT_TOKEN_FROM_BOTFATHER") {
+      return ctx.reply("⚠️ ПРЕДУПРЕЖДЕНИЕ: Оплата не настроена (тестовый режим).");
+    }
+
+    return ctx.replyWithInvoice({
+      title: `${app.name} (${plan.label})`,
+      description: `Лицензионный ключ доступа на ${plan.label}`,
+      payload: `${app.id}_${plan.id}`, // Передаем ID приложения и ID плана
+      provider_token: PAYMENT_TOKEN,
+      currency: "RUB",
+      prices: [{ label: `${app.name} - ${plan.label}`, amount: plan.price * 100 }],
+    });
+  }
+});
+
+
+// --- Обработка платежей ---
+bot.on("pre_checkout_query", (ctx) => ctx.answerPreCheckoutQuery(true));
+
+bot.on("successful_payment", async (ctx) => {
+  await ctx.replyWithChatAction("typing");
+  const payment = ctx.message.successful_payment;
+
+  // Парсим payload: "appId_planId"
+  const [appId, planId] = payment.invoice_payload.split('_');
+  const userId = ctx.from.id;
+
+  const app = apps.find((a) => a.id === appId);
+  const plan = app ? app.plans.find(p => p.id === planId) : null;
+
+  if (app && plan) {
+    const newKey = generateLicenseKey();
+    const purchaseDate = new Date().toISOString();
+
+    // Данные для общей таблицы лицензий
+    const licenseData = {
+      key: newKey,
+      appName: app.name,
+      buyer: {
+        id: userId,
+        firstName: ctx.from.first_name,
+        lastName: ctx.from.last_name || "",
+        username: ctx.from.username || "",
+      },
+      payment: payment.total_amount / 100,
+      currency: payment.currency,
+      expiryDays: plan.duration, // Берем срок из плана
+      created: purchaseDate,
+      activated: false,
+      deviceId: null,
+      installId: null,
+      activatedDate: null,
+      lastCheck: null,
+      planLabel: plan.label // Сохраняем название тарифа
+    };
+
+    // Данные для профиля пользователя
+    const userPurchaseData = {
+      appName: app.name,
+      appId: app.id,
+      key: newKey,
+      purchaseDate: purchaseDate,
+      price: payment.total_amount / 100,
+      currency: payment.currency,
+      expiryDays: plan.duration,
+      planLabel: plan.label
+    };
+
+    try {
+      // Сохраняем данные в обе таблицы параллельно
+      await Promise.all([
+        set(ref(firebaseDB, "licenses/" + newKey.replace(/[.#$[]]/g, "-")), licenseData),
+        set(ref(firebaseDB, `users/${userId}/purchases/${newKey.replace(/[.#$[]]/g, "-")}`), userPurchaseData) // Сохраняем по ключу, чтобы можно было иметь несколько лицензий одного продукта
+      ]);
+
+      let successMessage = `✅ *Оплата прошла успешно!*\n\n`;
+      successMessage += `Тариф: *${plan.label}*\n`;
+      successMessage += `Спасибо за покупку *${app.name}*.\n\n`;
+      successMessage += `🔑 Ваш ключ активации:\n\`${newKey}\`\n\n`;
+      successMessage += `(Нажмите на ключ, чтобы скопировать)\n\n`;
+      successMessage += `⬇️ *Что делать дальше?*`;
+
+      const keyboard = [];
+
+      // Ссылка на видео-обучение
+      if (app.videoUrl) {
+        keyboard.push([Markup.button.url("🎓 Смотреть обучение", app.videoUrl)]);
+      }
+
+      // Ссылка на Web App (если нужно сразу открыть)
+      if (app.appUrl) {
+        keyboard.push([Markup.button.url("🚀 Открыть приложение", app.appUrl)]);
+      } else {
+        keyboard.push([Markup.button.webApp("🚀 Открыть приложение", WEB_APP_URL)]);
+      }
+
+      await ctx.replyWithMarkdown(successMessage, Markup.inlineKeyboard(keyboard));
+
+      // Отправляем текстовую инструкцию, если есть
+      if (app.training) {
+        await ctx.replyWithMarkdown("📋 *Инструкция:*\n\n" + app.training);
+      }
+
+    } catch (error) {
+      console.error("Firebase save error:", error);
+      ctx.reply("⚠️ Оплата прошла, но возникла ошибка при генерации ключа. Пожалуйста, напишите в поддержку (@admin_username), мы выдадим ключ вручную.");
+    }
+  }
+});
+
+
+// Запуск бота
+bot.launch();
+console.log("Бот успешно запущен на Telegraf!");
+
+// Обработка ошибок
+bot.catch((err, ctx) => {
+  console.log(`Ooops, encountered an error for ${ctx.updateType}`, err);
+});
+
+// Включаем graceful stop
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));

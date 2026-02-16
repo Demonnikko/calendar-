@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Illusionist Store</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #000000;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --text-color: #ffffff;
+      --accent-color: #ffc107;
+      --secondary-text: #a0a0a0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-top: 10px;
+    }
+
+    h1 {
+      font-family: "Montserrat", sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+      background: linear-gradient(45deg, #fff, #ffc107);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      color: var(--secondary-text);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 0;
+      /* Убрали лишний отступ, так как у нас грид */
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      align-items: center;
+      text-align: center;
+      align-items: center;
+      text-align: center;
+      /* Анимация появления - начальное состояние */
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+      /* Сразу сдвигаем, чтобы не моргало */
+    }
+
+    /* Класс для запуска анимации */
+    .card.animate {
+      animation: fadeInUpCard 0.6s ease-out forwards;
+    }
+
+    /* Задержки для каскадного появления */
+    /* Задержки для каскадного появления */
+    .card:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.5s;
+    }
+
+    /* Все остальные появляются хором 3-м этапом */
+    .card:nth-child(n+3) {
+      animation-delay: 0.7s;
+    }
+
+    @keyframes fadeInUpCard {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card:active {
+      transform: scale(0.96) translateY(2px);
+      box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 20px rgba(255, 193, 7, 0.1);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      /* Анимация иконки */
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards 0.3s;
+    }
+
+    .card:active .icon {
+      transform: rotate(-10deg) scale(1.1);
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .info {
+      width: 100%;
+    }
+
+    .title {
+      font-family: "Montserrat", sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+
+    .desc {
+      font-size: 11px;
+      color: var(--secondary-text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: auto;
+    }
+
+    .price {
+      font-family: "Montserrat", sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffc107;
+    }
+
+    .btn {
+      font-family: "Montserrat", sans-serif;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Стили для анимации загрузки */
+    .btn.loading {
+      color: transparent;
+      /* Скрываем текст */
+      pointer-events: none;
+      /* Блокируем повторные нажатия */
+      position: relative;
+    }
+
+    .btn.loading::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Бейджи */
+    .badge {
+      font-family: "Montserrat", sans-serif;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      z-index: 2;
+    }
+
+    .badge.hit {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.2);
+    }
+
+    .badge.new {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+    }
+
+    .badge.business {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+    }
+
+    .badge.soon {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      backdrop-filter: blur(5px);
+    }
+
+    /* Карточка-заглушка */
+    .card.disabled {
+      opacity: 0.6;
+      filter: grayscale(0.8);
+      pointer-events: none;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Кнопка закрытия (назад) */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1002;
+      transition: all 0.2s;
+    }
+
+    .close-btn:active {
+      transform: scale(0.9);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Заставка (Splash Screen) */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease-out;
+    }
+
+    .splash-content {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #splash-screen h1 {
+      font-family: "Montserrat", sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #ffc107, #ffffff, #ffc107);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 20px rgba(255, 193, 7, 0.2);
+      animation:
+        shine 3s linear infinite,
+        fadeInUp 0.8s ease-out;
+    }
+
+    #splash-screen p {
+      font-family: "Montserrat", sans-serif;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      animation: fadeInUp 0.8s ease-out 0.3s backwards;
+    }
+
+    .loader-line {
+      width: 0;
+      height: 2px;
+      background: #ffc107;
+      margin-top: 20px;
+      border-radius: 2px;
+      box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+      animation: loadLine 2s ease-in-out forwards 0.5s;
+    }
+
+    @keyframes shine {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    @keyframes loadLine {
+
+      0%,
+      10% {
+        width: 0;
+        opacity: 0;
+      }
+
+      100% {
+        width: 60px;
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Фон с частицами */
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Кнопка поддержки */
+    /* Кнопка поддержки */
+    .support-btn {
+      font-family: "Montserrat", sans-serif;
+      margin-top: 32px;
+      margin-bottom: 24px;
+      width: 100%;
+      padding: 12px;
+      color: var(--secondary-text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .support-btn:active {
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+
+    /* Экран товара */
+    #product-view {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100dvh;
+      background: var(--bg-color);
+      z-index: 1000;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 250px;
+      /* Место под кнопку */
+      display: none;
+      flex-direction: column;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .product-video-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      height: 250px;
+      background: #111;
+      position: relative;
+    }
+
+    .product-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-content {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+
+    .product-title {
+      font-family: "Montserrat", sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .product-price {
+      font-family: "Montserrat", sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+    }
+
+    .product-description {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-color);
+      white-space: pre-wrap;
+    }
+
+    .product-buy-btn-container {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 600px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 1001;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Заставка -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <h1>Illusionist OS</h1>
+      <p>Экосистема для артистов</p>
+      <div class="loader-line"></div>
+    </div>
+  </div>
+
+  <!-- Экран просмотра товара -->
+  <div id="product-view">
+    <button class="close-btn" onclick="closeProduct()">✕</button>
+    <div class="product-video-container">
+      <video class="product-video" controls playsinline poster="">
+        <source src="" type="video/mp4" />
+        Ваш браузер не поддерживает видео.
+      </video>
+    </div>
+    <div class="product-content">
+      <div class="product-title"></div>
+      <div class="product-price"></div>
+      <div class="product-description"></div>
+      <div style="height: 150px; width: 100%;"></div> <!-- SPACER FOR SCROLLING -->
+    </div>
+    <div class="product-buy-btn-container">
+      <button class="btn" id="product-buy-btn">Купить</button>
+    </div>
+  </div>
+
+  <!-- Холст для частиц -->
+  <canvas id="particles"></canvas>
+
+  <div class="container">
+    <header>
+      <h1>Illusionist OS</h1>
+      <p class="subtitle">Цифровой арсенал</p>
+    </header>
+
+    <div class="grid">
+      <!-- Товар 1: Калькулятор -->
+      <div class="card" onclick="openProduct('calculator')">
+        <div class="badge business">Business</div>
+        <div class="card-header">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+              <line x1="8" y1="6" x2="16" y2="6"></line>
+              <line x1="16" y1="14" x2="16" y2="18"></line>
+              <path d="M16 10h.01"></path>
+              <path d="M12 10h.01"></path>
+              <path d="M8 10h.01"></path>
+              <path d="M12 14h.01"></path>
+              <path d="M8 14h.01"></path>
+              <path d="M12 18h.01"></path>
+              <path d="M8 18h.01"></path>
+            </svg>
+          </div>
+          <div class="info">
+            <div class="title">Калькулятор</div>
+            <div class="desc">
+              Мгновенные КП • Финансовая аналитика • Чистая прибыль
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="price">7 990 ₽ <span style="font-size: 12px; opacity: 0.7;">навсегда</span></div>
+          <button class="btn">Подробнее</button>
+        </div>
+      </div>
+
+      <!-- Товар 2: Календарь (Предпродажа) -->
+      <div class="card" onclick="openProduct('calendar')">
+        <div class="badge" style="background: linear-gradient(135deg, #ef4444, #f97316);">🔥 Предпродажа</div>
+        <div class="card-header">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="info">
+            <div class="title">Календарь</div>
+            <div class="desc">
+              Умный график артиста • Чек-листы реквизита • Защита от накладок
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="price">
+            <span style="text-decoration: line-through; opacity: 0.5; font-size: 14px;">6 990 ₽</span>
+            <span style="color: #22c55e; font-weight: bold;"> 3 990 ₽</span>
+          </div>
+          <button class="btn">до 28 февраля</button>
+        </div>
+      </div>
+
+      <!-- Товар 3: Комплект -->
+      <div class="card" onclick="openProduct('bundle')" style="border: 2px solid var(--accent-color);">
+        <div class="badge" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">💎 Выгодно</div>
+        <div class="card-header">
+          <div class="icon">
+            <span style="font-size: 28px;">🎁</span>
+          </div>
+          <div class="info">
+            <div class="title">Комплект</div>
+            <div class="desc">
+              Калькулятор + Календарь — полная экосистема для артиста
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="price">
+            <span style="text-decoration: line-through; opacity: 0.5; font-size: 14px;">14 980 ₽</span>
+            <span> 11 990 ₽</span>
+          </div>
+          <button class="btn" style="background: linear-gradient(135deg, #f59e0b, #f97316);">-2 990 ₽</button>
+        </div>
+      </div>
+
+      <!-- Заглушка: Скоро -->
+      <div class="card disabled">
+        <div class="badge soon">Скоро</div>
+        <div class="card-header">
+          <div class="icon">
+            <span style="font-size: 28px; color: var(--accent-color);">✨</span>
+          </div>
+          <div class="info">
+            <div class="title">Скоро</div>
+            <div class="desc">Новые инструменты уже в разработке...</div>
+          </div>
+        </div>
+        <div class="footer">
+          <button class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">Ожидается</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Кнопка поддержки -->
+    <div class="support-btn" onclick="openSupport()">
+      💬 Написать в поддержку
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Раскрыть на весь экран
+
+    // Применяем цвета темы Telegram, если они есть
+    if (tg.themeParams) {
+      if (tg.themeParams.bg_color)
+        document.documentElement.style.setProperty(
+          "--bg-color",
+          tg.themeParams.bg_color,
+        );
+      if (tg.themeParams.text_color)
+        document.documentElement.style.setProperty(
+          "--text-color",
+          tg.themeParams.text_color,
+        );
+      if (tg.themeParams.button_color)
+        document.documentElement.style.setProperty(
+          "--accent-color",
+          tg.themeParams.button_color,
+        );
+    }
+
+    // Данные о товарах
+    const productsData = {
+      calculator: {
+        name: "🧮 Калькулятор",
+        price: "7 990 ₽",
+        description: `<b style="color: var(--accent-color);">ЭТО НЕ КАЛЬКУЛЯТОР. ЭТО ВАШ БИЗНЕС-ПАРТНЁР.</b>
+
+Цифровое сердце вашего дела. Инструмент, который превращает хаос заказов в стройную систему продаж.
+
+<b style="color: var(--accent-color);">⚡ Мгновенные Коммерческие Предложения</b>
+Больше никаких "я посчитаю и напишу". Создавайте КП за секунды:
+• <b>Умная логистика:</b> Авто-расчет затрат на регионы, бензин и каршеринг.
+• <b>Динамические цены:</b> Автоматическая наценка на праздники (Новый Год х3) и горячие сезоны (майские, 8 марта).
+• <b>Система лояльности:</b> Бонусы подтягиваются сами при заказе от определенной суммы.
+
+<b style="color: var(--accent-color);">📦 Маркетинговые Инструменты</b>
+• <b>Шаблоны Пакетов:</b> "Эконом", "Стандарт", "VIP" — закрывайте все потребности клиента одним сообщением.
+• <b>Шаблоны ответов:</b> Забудьте про рутину. Отвечайте на частые вопросы в два клика, даже за рулем.
+• <b>Триггеры продаж:</b> Настройка "Предложение действует Х часов" для ускорения оплаты.
+
+<b style="color: var(--accent-color);">💼 Профессиональный Контроль</b>
+• <b>Финансы:</b> Учет комиссии агентств и наценок за безнал.
+• <b>Личный бренд:</b> Cсылки на портфолио и подпись "С уважением, Ваш Псевдоним" в каждом КП.
+• <b>Надежность:</b> Локальное хранение данных + облачная синхронизация при смене телефона.
+
+<b style="color: var(--accent-color);">📱 Технологическое Совершенство</b>
+Это <b>PWA-приложение</b>. Устанавливается на iPhone и Android как родное, работает офлайн в любой точке мира.
+
+<b style="color: var(--accent-color);">🔄 Экосистема</b>
+Нажали кнопку <b>"Забронировать"</b>? Вся информация из КП мгновенно переносится в ваш Календарь. Никакого ручного ввода.`,
+        videoUrl:
+          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      },
+      calendar: {
+        name: "📅 Календарь",
+        price: "6 990 ₽",
+        description: `<b style="color: var(--accent-color);">ТВОЙ ЛИЧНЫЙ ПРОДЮСЕР В КАРМАНЕ.</b>
+
+Это не просто планер. Это центр управления карьерой артиста. Логистика, финансы и расписание в одном супераппе.
+
+<b style="color: var(--accent-color);">🚀 Умные События</b>
+Полный контроль над выступлением:
+• <b>Статусы:</b> "Предварительно", "Подтверждено", "Выполнена репетиция".
+• <b>Тайминг:</b> Расписывайте выходы по минутам (микромагия в 13:00, шоу в 15:00) с заметками реквизита под каждый выход.
+• <b>Детали:</b> Локация, контакты клиента, количество гостей — всё под рукой.
+
+<b style="color: var(--accent-color);">💎 Дашборд Директора</b>
+Вся аналитика вашего бизнеса на одном экране:
+• <b>Финансы:</b> Чистая прибыль (за вычетом налогов и расходов), средний чек, предоплаты.
+• <b>Статистика:</b> Лучший день месяца, топ популярных шоу, сравнение доходов с прошлым годом.
+• <b>Итоги:</b> Автоматические отчеты в конце месяца и года.
+
+<b style="color: var(--accent-color);">🏎️ Киллер-фича: Логистика</b>
+• <b>Навигация в 1 клик:</b> Тапните по событию, и адрес сразу откроется в Яндекс.Навигаторе. Вы никогда не опоздаете.
+• <b>Быстрые действия:</b> Свайп вправо — звонок клиенту. Свайп влево — редактировать/удалить.
+
+<b style="color: var(--accent-color);">🎯 Мотивация и Геймификация</b>
+Ставьте финансовую цель на месяц. При достижении приложение поздравит вас красивой анимацией успеха. Добивайтесь новых высот играючи.
+
+<b style="color: var(--accent-color);">🔒 Надежность и Безопасность</b>
+• <b>Уникальный ключ:</b> Защита от пиратства. Лицензия только на ваше устройство.
+• <b>Резервные копии:</b> Полный бэкап данных. Легкий перенос всей базы при смене телефона.`,
+        videoUrl:
+          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      },
+    };
+
+    const productView = document.getElementById("product-view");
+    const mainContainer = document.querySelector(".container");
+
+    function openProduct(id) {
+      const product = productsData[id];
+      if (!product) return;
+
+      // Заполняем данные
+      productView.querySelector(".product-title").textContent = product.name;
+      productView.querySelector(".product-price").textContent = product.price;
+      productView.querySelector(".product-description").innerHTML =
+        product.description;
+
+      const video = productView.querySelector("video");
+      video.src = product.videoUrl;
+
+      // Настраиваем кнопку покупки
+      const buyBtn = document.getElementById("product-buy-btn");
+      buyBtn.onclick = () => buyItem(id, buyBtn.parentElement);
+      buyBtn.classList.remove("loading");
+
+      // Показываем экран
+      productView.style.display = "flex";
+
+      // Кнопка "Назад" от Telegram
+      tg.BackButton.show();
+      tg.BackButton.onClick(closeProduct);
+    }
+
+    function closeProduct() {
+      productView.style.display = "none";
+      const video = productView.querySelector("video");
+      video.pause();
+
+      tg.BackButton.hide();
+      tg.BackButton.offClick(closeProduct);
+    }
+
+    function buyItem(itemId, element) {
+      // Вибрация при нажатии (если поддерживается)
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+
+      // Включаем анимацию загрузки на кнопке
+      if (element) {
+        const btn = element.querySelector(".btn");
+        if (btn) btn.classList.add("loading");
+      }
+
+      // Небольшая задержка перед отправкой, чтобы пользователь увидел анимацию
+      setTimeout(() => {
+        try {
+          tg.sendData(JSON.stringify({ action: "buy", id: itemId }));
+          // На случай, если окно не закроется само (в старых версиях)
+          setTimeout(() => tg.close(), 100);
+        } catch (e) {
+          alert("Ошибка отправки данных: " + e.message);
+          if (element) {
+            const btn = element.querySelector(".btn");
+            if (btn) btn.classList.remove("loading");
+          }
+        }
+      }, 500);
+    }
+
+    function openSupport() {
+      // Замените demonnikko на ваш реальный юзернейм (без @)
+      tg.openTelegramLink("https://t.me/Dmitrokko");
+    }
+
+    // Логика заставки
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const splash = document.getElementById("splash-screen");
+        splash.style.opacity = "0";
+        setTimeout(() => {
+          splash.remove();
+          // Запуск анимации карточек
+          document.querySelectorAll(".card").forEach((card) => {
+            card.classList.add("animate");
+          });
+        }, 600);
+      }, 3500); // Заставка висит 3.5 секунды
+    });
+
+    // Магические частицы
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+
+    let width, height;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const particles = [];
+    const particleCount = 50; // Количество частиц
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5; // Скорость по X
+        this.vy = (Math.random() - 0.5) * 0.5; // Скорость по Y
+        this.size = Math.random() * 2 + 1;
+        this.alpha = Math.random() * 0.5 + 0.1;
+        this.fade = Math.random() * 0.01 + 0.005;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.fade;
+        if (this.alpha <= 0) this.reset();
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 193, 7, ${this.alpha})`; // Ваш акцентный цвет #FFC107
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+
+</html>
