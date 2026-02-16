@@ -62,18 +62,18 @@
     window.firebaseEnabled = false;
 
     function loadFirebaseSDK() {
-      return new Promise(function(resolve) {
-        var timeout = setTimeout(function() { resolve(false); }, 5000);
+      return new Promise(function (resolve) {
+        var timeout = setTimeout(function () { resolve(false); }, 5000);
         var s1 = document.createElement('script');
         s1.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js';
-        s1.onload = function() {
+        s1.onload = function () {
           var s2 = document.createElement('script');
           s2.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js';
-          s2.onload = function() { clearTimeout(timeout); resolve(true); };
-          s2.onerror = function() { clearTimeout(timeout); resolve(false); };
+          s2.onload = function () { clearTimeout(timeout); resolve(true); };
+          s2.onerror = function () { clearTimeout(timeout); resolve(false); };
           document.head.appendChild(s2);
         };
-        s1.onerror = function() { clearTimeout(timeout); resolve(false); };
+        s1.onerror = function () { clearTimeout(timeout); resolve(false); };
         document.head.appendChild(s1);
       });
     }
@@ -96,7 +96,7 @@
       }
     }
 
-    loadFirebaseSDK().then(function(loaded) {
+    loadFirebaseSDK().then(function (loaded) {
       initFirebase();
     });
   </script>
@@ -3584,43 +3584,58 @@
     // DATA
     // ==========================================
     // Available icons for selection
+
+    // Полный список доступных кнопок (PNG иконок)
+    // Имена файлов без расширения .png
     const AVAILABLE_ICONS = [
-      // Магия и шоу
-      'sparkles', 'star', 'zap', 'flame', 'wand-2',
-      'eye', 'eye-off', 'scan', 'focus', 'aperture', 'infinity',
-      // Карты и игры
-      'layers', 'copy', 'shuffle', 'dice-1', 'dice-5', 'repeat',
-      // Сцена и выступления
-      'mic', 'mic-2', 'volume-2', 'music', 'radio',
-      'video', 'camera', 'clapperboard', 'tv', 'monitor', 'projector',
-      // События
-      'party-popper', 'cake', 'gift', 'crown', 'trophy', 'award',
-      // Люди и мероприятия
-      'users', 'user', 'baby', 'smile', 'heart',
-      'building-2', 'home', 'tent',
-      // Время и планирование
-      'clock', 'timer', 'hourglass', 'calendar', 'calendar-check', 'alarm-clock',
-      // Деньги
-      'coins', 'wallet', 'banknote', 'credit-card', 'receipt',
-      // Транспорт
-      'car', 'plane', 'train', 'ship', 'bike', 'truck',
-      // Разное
-      'brain', 'lightbulb', 'key', 'compass', 'map-pin',
-      'phone', 'mail', 'message-circle', 'send', 'bookmark', 'flag',
-      'sun', 'moon', 'cloud', 'umbrella', 'graduation-cap', 'briefcase'
+      'bag', 'black-cat', 'broomstick', 'candle', 'candy', 'card-game',
+      'chalice-2', 'chalice', 'costume', 'crown', 'crystal-glass', 'crystal',
+      'curtains', 'dove', 'dream', 'eye-jar', 'fairy', 'fortune-teller',
+      'genie-lamp', 'genie', 'ghost', 'giftbox-2', 'giftbox', 'guillotine',
+      'halloween', 'hand', 'handcuffs', 'horse-car', 'juggling-ball', 'key',
+      'knife', 'lock', 'magic-book', 'magic-box', 'magic-carpet', 'magic-dust',
+      'magic-hat', 'magic-mirror-2', 'magic-mirror', 'magic-pot', 'magic-potion',
+      'magic-show', 'magic-spell-2', 'magic-spell', 'magic-trick-2',
+      'magic-trick-3', 'magic-trick-4', 'magic-trick', 'magic-wand-2',
+      'magic-wand', 'magician', 'mortar', 'oil-lamp', 'owl', 'palmistry',
+      'paper-scroll', 'papyrus', 'pendant', 'poker-cards', 'potion',
+      'prediction', 'ring', 'sandglass', 'skull-2', 'skull', 'spell-book',
+      'storytelling', 'sword', 'table-lamp', 'tapestry', 'tickets',
+      'treasure-chest', 'witch-broom', 'witch-hat'
     ];
 
-    // Default types (8 основных)
+    // Default types (8 основных) с привязкой к новым иконкам
     const DEFAULT_TYPES = {
-      rabbit: { label: 'Иллюзион', color: '#f59e0b', icon: 'wand-2' },
-      kids: { label: 'Детский праздник', color: '#f472b6', icon: 'party-popper' },
-      corporate: { label: 'Корпоратив', color: '#3b82f6', icon: 'building-2' },
-      wedding: { label: 'Свадьба', color: '#e879f9', icon: 'heart' },
-      vip: { label: 'VIP', color: '#fbbf24', icon: 'crown' },
-      workshop: { label: 'Мастер-класс', color: '#0ea5e9', icon: 'graduation-cap' },
-      rehearsal_type: { label: 'Репетиция', color: '#94a3b8', icon: 'repeat' },
-      other: { label: 'Другое', color: '#6b7280', icon: 'sparkles' }
+      rabbit: { label: 'Иллюзион', color: '#f59e0b', image: 'icons/events/magician.png' },
+      kids: { label: 'Детский праздник', color: '#f472b6', image: 'icons/events/candy.png' },
+      corporate: { label: 'Корпоратив', color: '#3b82f6', image: 'icons/events/chalice.png' },
+      wedding: { label: 'Свадьба', color: '#e879f9', image: 'icons/events/ring.png' },
+      vip: { label: 'VIP', color: '#fbbf24', image: 'icons/events/crown.png' },
+      workshop: { label: 'Мастер-класс', color: '#0ea5e9', image: 'icons/events/magic-book.png' },
+      rehearsal_type: { label: 'Репетиция', color: '#94a3b8', image: 'icons/events/magic-mirror.png' }, // Зеркало для репетиций
+      other: { label: 'Другое', color: '#6b7280', image: 'icons/events/magic-dust.png' }
     };
+
+    // Автоматически добавляем все остальные иконки как типы событий
+    AVAILABLE_ICONS.forEach(iconName => {
+      // Пропускаем те, что уже есть в DEFAULT_TYPES (по картинке)
+      const isUsed = Object.values(DEFAULT_TYPES).some(t => t.image.includes(iconName + '.png'));
+      if (!isUsed) {
+        // Создаем ключ из имени файла (заменяем дефисы на подчеркивания для надежности ключа)
+        const key = iconName.replace(/-/g, '_');
+        // Формируем читаемое название (первая буква заглавная, дефисы в пробелы)
+        const label = iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-/g, ' ');
+        // Генерируем цвет на основе хеша имени файла или случайный из палитры
+        const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444', '#f97316', '#06b6d4'];
+        const colorIndex = iconName.length % colors.length;
+
+        DEFAULT_TYPES[key] = {
+          label: label,
+          color: colors[colorIndex],
+          image: `icons/events/${iconName}.png`
+        };
+      }
+    });
 
     // Custom types storage
     let customTypes = {};
@@ -3651,7 +3666,7 @@
     const TYPES = new Proxy({}, {
       get(target, prop) {
         const allTypes = getTypes();
-        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', icon: 'sparkles' };
+        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', image: 'icons/events/sparkles.png' };
       }
     });
 
@@ -4103,7 +4118,7 @@
 
         row.innerHTML = `
           <div class="event-type-icon" style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
-            <i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 26px; height: 26px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>`}
           </div>
           <div class="day-list-info" style="flex: 1;">
             <div class="day-list-title">${escapeHtml(event.title)}</div>
@@ -4276,7 +4291,7 @@
         return `
           <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.1); border-radius: 12px; cursor: pointer;" onclick="editEvent(${event.id})">
             <div style="width: 40px; height: 40px; border-radius: 10px; background: ${typeInfo.color}15; border: 1px solid ${typeInfo.color}30; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>
+              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>`}
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(event.title)}</div>
@@ -4421,7 +4436,7 @@
         div.innerHTML = `
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>
+              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 20px; height: 20px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>`}
               <span style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(typeInfo.label)}</span>
             </div>
             <span style="font-size: 13px; font-weight: 800; color: ${typeInfo.color}; font-family: 'JetBrains Mono', monospace;">${stats.count}</span>
@@ -5358,7 +5373,9 @@
           border: 2px solid ${isActive ? type.color : 'rgba(255,255,255,0.08)'};
           box-shadow: ${isActive ? `0 0 20px ${type.color}30, inset 0 0 15px ${type.color}10` : 'none'};
         `;
-        btn.innerHTML = `<i data-lucide="${type.icon}" style="width: 26px; height: 26px; color: ${isActive ? type.color : 'rgba(255,255,255,0.5)'};"></i>`;
+        btn.innerHTML = type.image
+          ? `<img src="${type.image}" style="width: 26px; height: 26px; object-fit: contain;">`
+          : `<i data-lucide="${type.icon}" style="width: 26px; height: 26px; color: ${isActive ? type.color : 'rgba(255,255,255,0.5)'};"></i>`;
         btn.addEventListener('click', () => selectScheduleType(key));
         container.appendChild(btn);
       });
@@ -5513,7 +5530,7 @@
 
         div.innerHTML = `
           <button type="button" class="schedule-type-btn" onclick="openTypePicker(${index})" style="color: ${typeInfo.color};" title="${escapeHtml(typeInfo.label)}">
-            <i data-lucide="${typeInfo.icon}"></i>
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}"></i>`}
           </button>
 
           <div class="schedule-inputs">
@@ -6298,7 +6315,7 @@
       let content = `
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(135deg, ${typeInfo.color}15, ${typeInfo.color}08); border: 1px solid ${typeInfo.color}30; border-radius: 12px;">
-            <i data-lucide="${typeInfo.icon}" style="width: 28px; height: 28px; color: ${typeInfo.color};"></i>
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 32px; height: 32px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 28px; height: 28px; color: ${typeInfo.color};"></i>`}
             <div>
               <div style="font-size: 18px; font-weight: 700; color: #fff;">${escapeHtml(event.title)}</div>
               <div style="font-size: 13px; color: rgba(148,163,184,0.8);">${escapeHtml(typeInfo.label)}</div>
@@ -7087,7 +7104,7 @@
     // ============================================
     // ТАКТИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ (вибрация + визуальный fallback для iOS)
     // ============================================
-    (function() {
+    (function () {
       const isVibrationSupported = 'vibrate' in navigator;
 
       // CSS для визуального fallback (iOS не поддерживает navigator.vibrate)
@@ -7103,7 +7120,7 @@
       document.head.appendChild(hapticStyle);
 
       let lastTappedEl = null;
-      document.addEventListener('pointerdown', function(e) {
+      document.addEventListener('pointerdown', function (e) {
         lastTappedEl = e.target.closest('button, .day-cell, .nav-item, [role="button"], .btn-primary, .btn-secondary, .btn-danger, .modal-close');
       }, true);
 
@@ -7123,10 +7140,10 @@
         el.classList.remove('haptic-tap', 'haptic-success', 'haptic-shake');
         void el.offsetWidth;
         el.classList.add(cls);
-        setTimeout(function() { el.classList.remove(cls); }, 400);
+        setTimeout(function () { el.classList.remove(cls); }, 400);
       }
 
-      window.hapticFeedback = function(type) {
+      window.hapticFeedback = function (type) {
         type = type || 'medium';
         if (isVibrationSupported) {
           var pattern = HAPTIC[type] || HAPTIC.medium;
@@ -7153,7 +7170,7 @@
         if (window.selectDate) {
           const originalSelectDate = window.selectDate;
 
-          window.selectDate = function(date) {
+          window.selectDate = function (date) {
             // СИЛЬНАЯ ВИБРАЦИЯ С ДВОЙНЫМ ИМПУЛЬСОМ для выбора даты!
             hapticFeedback('date');
 
@@ -7166,7 +7183,7 @@
         if (window.saveEvent) {
           const originalSaveEvent = window.saveEvent;
 
-          window.saveEvent = function() {
+          window.saveEvent = function () {
             hapticFeedback('success');
             return originalSaveEvent.call(this);
           };
@@ -7176,7 +7193,7 @@
         if (window.deleteEvent) {
           const originalDeleteEvent = window.deleteEvent;
 
-          window.deleteEvent = function() {
+          window.deleteEvent = function () {
             hapticFeedback('medium');
             return originalDeleteEvent.call(this);
           };
@@ -7186,7 +7203,7 @@
         if (window.openEventModal) {
           const originalOpenEventModal = window.openEventModal;
 
-          window.openEventModal = function(date) {
+          window.openEventModal = function (date) {
             hapticFeedback('light');
             return originalOpenEventModal.call(this, date);
           };
@@ -7196,7 +7213,7 @@
         if (window.showToast) {
           const originalShowToast = window.showToast;
 
-          window.showToast = function(message) {
+          window.showToast = function (message) {
             if (message.includes('сохранено') || message.includes('Сохранено') || message.includes('удалено') || message.includes('Удалено')) {
               hapticFeedback('success');
             } else if (message.includes('ошибка') || message.includes('Ошибка') || message.includes('❌')) {
@@ -7253,15 +7270,15 @@
         });
 
         // Дополнительные функции
-        window.hapticError = function() {
+        window.hapticError = function () {
           hapticFeedback('error');
         };
 
-        window.hapticSuccess = function() {
+        window.hapticSuccess = function () {
           hapticFeedback('success');
         };
 
-        window.hapticDateSelect = function() {
+        window.hapticDateSelect = function () {
           hapticFeedback('date');
         };
       }
