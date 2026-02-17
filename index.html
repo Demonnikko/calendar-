@@ -3616,26 +3616,7 @@
       other: { label: 'Другое', color: '#6b7280', image: 'icons/events/magic-dust.png' }
     };
 
-    // Автоматически добавляем все остальные иконки как типы событий
-    AVAILABLE_ICONS.forEach(iconName => {
-      // Пропускаем те, что уже есть в DEFAULT_TYPES (по картинке)
-      const isUsed = Object.values(DEFAULT_TYPES).some(t => t.image.includes(iconName + '.png'));
-      if (!isUsed) {
-        // Создаем ключ из имени файла (заменяем дефисы на подчеркивания для надежности ключа)
-        const key = iconName.replace(/-/g, '_');
-        // Формируем читаемое название (первая буква заглавная, дефисы в пробелы)
-        const label = iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-/g, ' ');
-        // Генерируем цвет на основе хеша имени файла или случайный из палитры
-        const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444', '#f97316', '#06b6d4'];
-        const colorIndex = iconName.length % colors.length;
-
-        DEFAULT_TYPES[key] = {
-          label: label,
-          color: colors[colorIndex],
-          image: `icons/events/${iconName}.png`
-        };
-      }
-    });
+    // AVAILABLE_ICONS используются только для выбора иконки при создании/редактировании типа
 
     // Custom types storage
     let customTypes = {};
@@ -3666,7 +3647,7 @@
     const TYPES = new Proxy({}, {
       get(target, prop) {
         const allTypes = getTypes();
-        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', image: 'icons/events/sparkles.png' };
+        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', image: 'icons/events/magician.png' };
       }
     });
 
@@ -4277,7 +4258,7 @@
       }
 
       container.innerHTML = upcoming.map(event => {
-        const typeInfo = getTypes()[event.type] || getTypes()[Object.keys(getTypes())[0]] || { label: 'Событие', color: '#f59e0b', icon: 'sparkles' };
+        const typeInfo = getTypes()[event.type] || getTypes()[Object.keys(getTypes())[0]] || { label: 'Событие', color: '#f59e0b', image: 'icons/events/magician.png' };
         const eventDate = parseEventDate(event.date);
         const isToday = eventDate.toDateString() === today.toDateString();
         const tomorrow = new Date(today);
@@ -4795,14 +4776,15 @@
           document.getElementById('type-editor-title').textContent = 'Редактировать тип';
           document.getElementById('type-name').value = type.label;
           selectedColor = type.color;
-          selectedIcon = type.icon;
+          // Извлекаем имя иконки из image path (icons/events/magician.png → magician)
+          selectedIcon = type.image ? type.image.replace('icons/events/', '').replace('.png', '') : 'magician';
           document.getElementById('delete-type-btn').style.display = 'block';
         }
       } else {
         document.getElementById('type-editor-title').textContent = 'Новый тип события';
         document.getElementById('type-name').value = '';
         selectedColor = '#f59e0b';
-        selectedIcon = 'sparkles';
+        selectedIcon = 'magician';
         document.getElementById('delete-type-btn').style.display = 'none';
       }
 
@@ -4825,7 +4807,7 @@
         const btn = document.createElement('button');
         btn.className = 'icon-btn';
         if (icon === selectedIcon) btn.classList.add('selected');
-        btn.innerHTML = `<i data-lucide="${icon}"></i>`;
+        btn.innerHTML = `<img src="icons/events/${icon}.png" style="width: 24px; height: 24px; object-fit: contain;">`;
         btn.onclick = () => {
           selectedIcon = icon;
           document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
@@ -4833,8 +4815,6 @@
         };
         grid.appendChild(btn);
       });
-
-      lucide.createIcons();
     }
 
     function selectColor(color) {
@@ -4865,7 +4845,7 @@
       customTypes[key] = {
         label: name,
         color: selectedColor,
-        icon: selectedIcon
+        image: `icons/events/${selectedIcon}.png`
       };
 
       saveCustomTypes();
@@ -4953,8 +4933,8 @@
         row.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(245,158,11,0.1); border-radius: 12px; transition: all 0.3s;';
 
         row.innerHTML = `
-          <div style="width: 40px; height: 40px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i data-lucide="${type.icon}" style="width: 20px; height: 20px; color: ${type.color};"></i>
+          <div style="width: 40px; height: 40px; background: ${type.color}15; border: 1px solid ${type.color}30; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            ${type.image ? `<img src="${type.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${type.icon || 'sparkles'}" style="width: 20px; height: 20px; color: ${type.color};"></i>`}
           </div>
           <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openTypeEditor('${escapeOnclick(key)}')">
             <div style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(type.label)}</div>
