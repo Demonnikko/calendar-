@@ -3462,36 +3462,6 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Цвет</label>
-          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
-            <button class="color-btn" data-color="#f59e0b" onclick="selectColor('#f59e0b')"
-              style="background: #f59e0b;"></button>
-            <button class="color-btn" data-color="#c084fc" onclick="selectColor('#c084fc')"
-              style="background: #c084fc;"></button>
-            <button class="color-btn" data-color="#34d399" onclick="selectColor('#34d399')"
-              style="background: #34d399;"></button>
-            <button class="color-btn" data-color="#60a5fa" onclick="selectColor('#60a5fa')"
-              style="background: #60a5fa;"></button>
-            <button class="color-btn" data-color="#ef4444" onclick="selectColor('#ef4444')"
-              style="background: #ef4444;"></button>
-            <button class="color-btn" data-color="#f97316" onclick="selectColor('#f97316')"
-              style="background: #f97316;"></button>
-            <button class="color-btn" data-color="#ec4899" onclick="selectColor('#ec4899')"
-              style="background: #ec4899;"></button>
-            <button class="color-btn" data-color="#8b5cf6" onclick="selectColor('#8b5cf6')"
-              style="background: #8b5cf6;"></button>
-            <button class="color-btn" data-color="#10b981" onclick="selectColor('#10b981')"
-              style="background: #10b981;"></button>
-            <button class="color-btn" data-color="#3b82f6" onclick="selectColor('#3b82f6')"
-              style="background: #3b82f6;"></button>
-            <button class="color-btn" data-color="#cbd5e1" onclick="selectColor('#cbd5e1')"
-              style="background: #cbd5e1;"></button>
-            <button class="color-btn" data-color="#64748b" onclick="selectColor('#64748b')"
-              style="background: #64748b;"></button>
-          </div>
-        </div>
-
-        <div class="form-group">
           <label class="form-label">Иконка</label>
           <div id="icon-grid"
             style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 4px;">
@@ -4813,9 +4783,7 @@
       }
 
       renderIconGrid();
-      updateColorSelection();
       document.getElementById('type-editor-modal').classList.add('show');
-      lucide.createIcons();
     }
 
     function closeTypeEditor() {
