@@ -4932,7 +4932,6 @@
             <div style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(type.label)}</div>
             <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-top: 2px;">${isDefault ? 'По умолчанию' : 'Пользовательский'}</div>
           </div>
-          <div style="width: 24px; height: 24px; border-radius: 6px; background: ${type.color}; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;"></div>
           <button onclick="event.stopPropagation(); deleteTypeFromList('${escapeOnclick(key)}')" style="width: 36px; height: 36px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; transition: all 0.3s; flex-shrink: 0;" onmouseenter="this.style.background='rgba(239,68,68,0.2)'; this.style.transform='scale(1.05)';" onmouseleave="this.style.background='rgba(239,68,68,0.1)'; this.style.transform='scale(1)';">
             <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
           </button>
