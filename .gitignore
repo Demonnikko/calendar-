@@ -1,0 +1,16 @@
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Other projects (not calendar)
+КАЛЬКУЛЯТОР */
+БИБЛИОТЕКА/
+ГЕНЕРАТОР КЛЮЧЕЙ/
+ЗАМЕТКИ/
+ТЕЛЕГРАМ БОТ */
+ТЕСТЕР/
+
+# Instruction files
+ИНСТРУКЦИЯ_*.md
