@@ -3604,15 +3604,15 @@
       'treasure-chest', 'witch-broom', 'witch-hat'
     ];
 
-    // Default types (8 основных) с привязкой к новым иконкам
+    // Default types с привязкой к PNG иконкам
     const DEFAULT_TYPES = {
-      rabbit: { label: 'Иллюзион', color: '#f59e0b', image: 'icons/events/magician.png' },
-      kids: { label: 'Детский праздник', color: '#f472b6', image: 'icons/events/candy.png' },
-      corporate: { label: 'Корпоратив', color: '#3b82f6', image: 'icons/events/chalice.png' },
+      show: { label: 'Шоу-программа', color: '#f59e0b', image: 'icons/events/magic-show.png' },
+      kids_show: { label: 'Детское шоу', color: '#f472b6', image: 'icons/events/candy.png' },
+      micromagic: { label: 'Микромагия', color: '#8b5cf6', image: 'icons/events/poker-cards.png' },
+      concert: { label: 'Концертное шоу', color: '#3b82f6', image: 'icons/events/curtains.png' },
+      rehearsal_type: { label: 'Репетиция', color: '#94a3b8', image: 'icons/events/magic-mirror.png' },
+      corporate: { label: 'Корпоратив', color: '#0ea5e9', image: 'icons/events/chalice.png' },
       wedding: { label: 'Свадьба', color: '#e879f9', image: 'icons/events/ring.png' },
-      vip: { label: 'VIP', color: '#fbbf24', image: 'icons/events/crown.png' },
-      workshop: { label: 'Мастер-класс', color: '#0ea5e9', image: 'icons/events/magic-book.png' },
-      rehearsal_type: { label: 'Репетиция', color: '#94a3b8', image: 'icons/events/magic-mirror.png' }, // Зеркало для репетиций
       other: { label: 'Другое', color: '#6b7280', image: 'icons/events/magic-dust.png' }
     };
 
@@ -3647,7 +3647,7 @@
     const TYPES = new Proxy({}, {
       get(target, prop) {
         const allTypes = getTypes();
-        return allTypes[prop] || DEFAULT_TYPES.rabbit || { label: 'Событие', color: '#f59e0b', image: 'icons/events/magician.png' };
+        return allTypes[prop] || DEFAULT_TYPES.show || { label: 'Событие', color: '#f59e0b', image: 'icons/events/magician.png' };
       }
     });
 
@@ -3696,7 +3696,7 @@
         lucide.createIcons();
       }, 16); // ~1 кадр при 60fps
     }
-    let schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
+    let schedule = [{ type: 'show', time: '19:00', duration: 60 }];
     let expenses = []; // Новый массив расходов для текущего события
     let editingEventId = null;
     let formDirty = false;
@@ -3704,7 +3704,7 @@
     let keyVisible = false;
     let currentView = 'calendar';
     let pickerYear = new Date().getFullYear();
-    let currentType = 'rabbit';
+    let currentType = 'show';
     let monthlyGoal = 200000;
     let editingTypeKey = null;
     let selectedColor = '#f59e0b';
@@ -4089,7 +4089,7 @@
       `;
 
       dayEvents.forEach(event => {
-        const typeInfo = TYPES[event.type] || TYPES.rabbit;
+        const typeInfo = TYPES[event.type] || TYPES.show;
         const statusColor = event.status === 'confirmed' ? '#22c55e' : event.status === 'pending' ? '#f59e0b' : event.status === 'completed' ? '#3b82f6' : event.status === 'rehearsal' ? '#94a3b8' : '#ef4444';
         const eventDate = parseEventDate(event.date);
 
@@ -4387,12 +4387,12 @@
       const typeStats = {};
       monthEvents.forEach(event => {
         // Берём основной тип события (первый show в schedule или event.type)
-        let mainType = 'rabbit';
+        let mainType = 'show';
 
         if (event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          mainType = event.schedule[0].type || 'show';
         } else {
-          mainType = event.type || 'rabbit';
+          mainType = event.type || 'show';
         }
 
         if (!typeStats[mainType]) {
@@ -4876,12 +4876,12 @@
             // Update events to use default type
             events.forEach(event => {
               if (event.type === key) {
-                event.type = 'rabbit';
+                event.type = 'show';
               }
               if (event.schedule) {
                 event.schedule.forEach(s => {
                   if (s.type === key) {
-                    s.type = 'rabbit';
+                    s.type = 'show';
                   }
                 });
               }
@@ -4912,7 +4912,7 @@
         };
 
         if (eventsUsingType.length > 0) {
-          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Кролик". Продолжить?`, performDelete);
+          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Шоу-программа". Продолжить?`, performDelete);
         } else {
           performDelete();
         }
@@ -4970,12 +4970,12 @@
             // Update events to use default type
             events.forEach(event => {
               if (event.type === key) {
-                event.type = 'rabbit';
+                event.type = 'show';
               }
               if (event.schedule) {
                 event.schedule.forEach(s => {
                   if (s.type === key) {
-                    s.type = 'rabbit';
+                    s.type = 'show';
                   }
                 });
               }
@@ -5006,7 +5006,7 @@
         };
 
         if (eventsUsingType.length > 0) {
-          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Кролик". Продолжить?`, performDelete);
+          customConfirm(`${eventsUsingType.length} событий используют этот тип. Они будут изменены на "Шоу-программа". Продолжить?`, performDelete);
         } else {
           performDelete();
         }
@@ -5126,7 +5126,7 @@
       document.getElementById('event-tax').value = event.tax || '';
       document.getElementById('event-notes').value = event.notes || '';
 
-      schedule = event.schedule || [{ type: 'rabbit', time: '19:00', duration: 60 }];
+      schedule = event.schedule || [{ type: 'show', time: '19:00', duration: 60 }];
       renderSchedule();
 
       expenses = event.expenses || [];
@@ -5215,7 +5215,7 @@
       const customExpenseForm = document.getElementById('custom-expense-form');
       if (customExpenseForm) customExpenseForm.style.display = 'none';
 
-      schedule = [{ type: 'rabbit', time: '19:00', duration: 60 }];
+      schedule = [{ type: 'show', time: '19:00', duration: 60 }];
       renderSchedule();
 
       // Сброс полей повторения
@@ -5316,7 +5316,7 @@
     // ==========================================
     function addScheduleItem() {
       schedule.push({
-        type: currentType || 'rabbit',
+        type: currentType || 'show',
         time: '19:00',
         duration: 60
       });
@@ -5707,7 +5707,7 @@
         return (a.time || '').localeCompare(b.time || '');
       }) : [];
       const mainTime = sortedSchedule.length > 0 ? sortedSchedule[0].time : '';
-      const mainType = sortedSchedule.length > 0 ? sortedSchedule[0].type : 'rabbit';
+      const mainType = sortedSchedule.length > 0 ? sortedSchedule[0].type : 'show';
 
       const eventData = {
         type: mainType,
@@ -6280,7 +6280,7 @@
     }
 
     function showEventPreview(event) {
-      const typeInfo = TYPES[event.type] || TYPES.rabbit;
+      const typeInfo = TYPES[event.type] || TYPES.show;
       const statusMap = {
         'confirmed': { text: 'Подтверждено', color: '#22c55e' },
         'pending': { text: 'Ожидание', color: '#f59e0b' },
@@ -6408,11 +6408,11 @@
       // Статистика по типам
       const typeStats = {};
       monthEvents.forEach(event => {
-        let mainType = 'rabbit';
+        let mainType = 'show';
         if (event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          mainType = event.schedule[0].type || 'show';
         } else {
-          mainType = event.type || 'rabbit';
+          mainType = event.type || 'show';
         }
         if (!typeStats[mainType]) {
           typeStats[mainType] = { count: 0, income: 0 };
@@ -6424,7 +6424,7 @@
       const typeStatsHTML = Object.entries(typeStats)
         .sort((a, b) => b[1].income - a[1].income)
         .map(([type, stats]) => {
-          const typeInfo = TYPES[type] || TYPES.rabbit;
+          const typeInfo = TYPES[type] || TYPES.show;
           return `
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid ${typeInfo.color}30; border-radius: 10px;">
               <div style="width: 36px; height: 36px; border-radius: 10px; background: ${typeInfo.color}20; border: 1px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center;">
@@ -6590,11 +6590,11 @@
       // Статистика по типам
       const typeStats = {};
       yearEvents.forEach(event => {
-        let mainType = 'rabbit';
+        let mainType = 'show';
         if (event.schedule && event.schedule.length > 0) {
-          mainType = event.schedule[0].type || 'rabbit';
+          mainType = event.schedule[0].type || 'show';
         } else {
-          mainType = event.type || 'rabbit';
+          mainType = event.type || 'show';
         }
         if (!typeStats[mainType]) {
           typeStats[mainType] = { count: 0, income: 0 };
@@ -6607,7 +6607,7 @@
         .sort((a, b) => b[1].income - a[1].income)
         .slice(0, 5)
         .map(([type, stats]) => {
-          const typeInfo = TYPES[type] || TYPES.rabbit;
+          const typeInfo = TYPES[type] || TYPES.show;
           return `
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid ${typeInfo.color}30; border-radius: 10px;">
               <div style="width: 36px; height: 36px; border-radius: 10px; background: ${typeInfo.color}20; border: 1px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center;">
