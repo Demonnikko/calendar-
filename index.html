@@ -2819,10 +2819,16 @@
         </div>
       </div>
 
-      <button class="header-btn" onclick="openSettingsModal()"
-        style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.12);">
-        <i data-lucide="settings" style="width: 24px; height: 24px; color: #e2e8f0;"></i>
-      </button>
+      <div style="display: flex; gap: 8px;">
+        <button class="header-btn" onclick="openSearchModal()"
+          style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.12);">
+          <i data-lucide="search" style="width: 22px; height: 22px; color: #e2e8f0;"></i>
+        </button>
+        <button class="header-btn" onclick="openSettingsModal()"
+          style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.12);">
+          <i data-lucide="settings" style="width: 24px; height: 24px; color: #e2e8f0;"></i>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -3497,6 +3503,24 @@
         <button onclick="closeTypeEditor()" class="btn-secondary" style="margin-bottom: 12px;">Отмена</button>
         <button id="delete-type-btn" onclick="deleteCustomType()" class="btn-danger"
           style="display: none; margin-top: 20px;">Удалить тип</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH MODAL -->
+  <div id="search-modal" class="modal-overlay" style="align-items: flex-start; padding-top: calc(20px + env(safe-area-inset-top, 0px));"
+    onclick="if(event.target===this)closeSearchModal()">
+    <div style="width: 100%; max-width: 500px; margin: 0 auto; padding: 0 16px;">
+      <div style="background: rgba(15,15,20,0.98); border: 1.5px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <i data-lucide="search" style="width: 20px; height: 20px; color: #f59e0b; flex-shrink: 0;"></i>
+          <input type="text" id="search-input" class="form-input" placeholder="Название, клиент, локация..."
+            style="flex: 1; margin: 0; font-size: 16px;" oninput="performSearch(this.value)">
+          <button onclick="closeSearchModal()" style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+            <i data-lucide="x" style="width: 18px; height: 18px; color: #94a3b8;"></i>
+          </button>
+        </div>
+        <div id="search-results" style="max-height: 60vh; overflow-y: auto;"></div>
       </div>
     </div>
   </div>
@@ -5876,20 +5900,34 @@
         const seriesEvents = events.filter(e => e.seriesId === event.seriesId);
         showSeriesDeleteModal(event, seriesEvents.length);
       } else {
-        customConfirm('Удалить это событие?', () => {
-          const eventIdToDelete = editingEventId;
-          events = events.filter(e => e.id !== editingEventId);
+        // Мгновенное удаление с возможностью отмены
+        const deletedEvent = JSON.parse(JSON.stringify(event));
+        const eventIdToDelete = editingEventId;
+
+        events = events.filter(e => e.id !== eventIdToDelete);
+        saveEvents();
+        closeEventModal();
+        renderCalendar();
+        renderDayList();
+
+        if (currentView === 'dashboard') {
+          renderDashboard();
+        }
+
+        // Удаляем из Firebase через 5 сек (пока undo доступен)
+        const firebaseTimer = setTimeout(() => {
+          deleteEventFromFirebase(eventIdToDelete);
+        }, 5500);
+
+        showToastWithUndo('Событие удалено', () => {
+          // Undo — восстанавливаем
+          clearTimeout(firebaseTimer);
+          events.push(deletedEvent);
           saveEvents();
-          deleteEventFromFirebase(eventIdToDelete); // Удаляем из Firebase
-          closeEventModal();
           renderCalendar();
           renderDayList();
-
-          if (currentView === 'dashboard') {
-            renderDashboard();
-          }
-
-          showToast('Событие удалено');
+          if (currentView === 'dashboard') renderDashboard();
+          showToast('Событие восстановлено');
         });
       }
     }
@@ -5969,17 +6007,116 @@
       }, 2000);
     }
 
+    // ==========================================
+    // SEARCH
+    // ==========================================
+    function openSearchModal() {
+      document.getElementById('search-modal').classList.add('show');
+      document.getElementById('search-results').innerHTML = '';
+      setTimeout(() => {
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-input').focus();
+      }, 100);
+      lucide.createIcons();
+    }
+
+    function closeSearchModal() {
+      document.getElementById('search-modal').classList.remove('show');
+    }
+
+    function performSearch(query) {
+      const container = document.getElementById('search-results');
+      const q = query.trim().toLowerCase();
+
+      if (q.length < 2) {
+        container.innerHTML = q.length === 0 ? '' : '<div style="padding: 16px; text-align: center; color: rgba(148,163,184,0.5); font-size: 13px;">Введите минимум 2 символа</div>';
+        return;
+      }
+
+      const results = events.filter(e => {
+        return (e.title && e.title.toLowerCase().includes(q)) ||
+               (e.client && e.client.toLowerCase().includes(q)) ||
+               (e.location && e.location.toLowerCase().includes(q)) ||
+               (e.address && e.address.toLowerCase().includes(q)) ||
+               (e.notes && e.notes.toLowerCase().includes(q));
+      }).sort((a, b) => {
+        const dateA = parseEventDate(a.date);
+        const dateB = parseEventDate(b.date);
+        return dateB - dateA;
+      }).slice(0, 20);
+
+      if (results.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: rgba(148,163,184,0.5); font-size: 13px;">Ничего не найдено</div>';
+        return;
+      }
+
+      container.innerHTML = results.map(event => {
+        const typeInfo = getTypes()[event.type] || getTypes()[Object.keys(getTypes())[0]] || { label: 'Событие', color: '#f59e0b', image: 'icons/events/magic-show.png' };
+        const eventDate = parseEventDate(event.date);
+        const dateStr = eventDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        return `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer; transition: background 0.2s;"
+               onclick="closeSearchModal(); editEvent(${event.id})"
+               onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: ${typeInfo.color}15; border: 1px solid ${typeInfo.color}30; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<img src="icons/events/magic-show.png" style="width: 24px; height: 24px; object-fit: contain;">`}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(event.title)}</div>
+              <div style="font-size: 12px; color: rgba(148,163,184,0.7); margin-top: 2px;">${dateStr}${event.location ? ' • ' + escapeHtml(event.location) : ''}${event.client ? ' • ' + escapeHtml(event.client) : ''}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function showToast(message) {
       const toast = document.getElementById('toast');
       const msg = document.getElementById('toast-msg');
 
+      // Убираем кнопку undo если была
+      const oldUndo = toast.querySelector('.toast-undo-btn');
+      if (oldUndo) oldUndo.remove();
+
       msg.textContent = message;
+      toast.style.pointerEvents = 'none';
       toast.classList.add('show');
 
       clearTimeout(window.toastTimer);
       window.toastTimer = setTimeout(() => {
         toast.classList.remove('show');
       }, 2500);
+    }
+
+    function showToastWithUndo(message, undoCallback) {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-msg');
+
+      // Убираем старую кнопку undo
+      const oldUndo = toast.querySelector('.toast-undo-btn');
+      if (oldUndo) oldUndo.remove();
+
+      msg.textContent = message;
+
+      const undoBtn = document.createElement('button');
+      undoBtn.className = 'toast-undo-btn';
+      undoBtn.textContent = 'Отменить';
+      undoBtn.style.cssText = 'margin-left: 12px; padding: 5px 12px; background: rgba(245,158,11,0.2); border: 1.5px solid rgba(245,158,11,0.4); border-radius: 8px; color: #f59e0b; font-size: 13px; font-weight: 700; cursor: pointer;';
+      undoBtn.onclick = () => {
+        clearTimeout(window.toastTimer);
+        undoCallback();
+        toast.classList.remove('show');
+      };
+      toast.appendChild(undoBtn);
+
+      toast.style.pointerEvents = 'auto';
+      toast.classList.add('show');
+
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 5000);
     }
 
     // ==========================================
@@ -6915,6 +7052,9 @@
     window.changeMonth = changeMonth;
     window.openMonthPicker = openMonthPicker;
     window.openSettingsModal = openSettingsModal;
+    window.openSearchModal = openSearchModal;
+    window.closeSearchModal = closeSearchModal;
+    window.performSearch = performSearch;
     window.switchTab = switchTab;
     window.closeEventModal = closeEventModal;
     window.toggleKeyVisibility = toggleKeyVisibility;
@@ -6997,6 +7137,7 @@
       // Handle Android/iOS back button for modals (priority: top layer first)
       window.addEventListener('popstate', () => {
         const modals = [
+          { id: 'search-modal', close: () => closeSearchModal() },
           { id: 'type-picker-modal', close: () => closeTypePicker() },
           { id: 'confirm-modal', close: () => document.getElementById('confirm-modal').classList.remove('show') },
           { id: 'preview-modal', close: () => closePreview() },
