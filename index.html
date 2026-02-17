@@ -4099,7 +4099,7 @@
 
         row.innerHTML = `
           <div class="event-type-icon" style="width: 44px; height: 44px; border-radius: 12px; background: ${typeInfo.color}20; border: 1.5px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
-            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 26px; height: 26px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 22px; height: 22px; color: ${typeInfo.color};"></i>`}
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 26px; height: 26px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 22px; height: 22px; object-fit: contain;">`}
           </div>
           <div class="day-list-info" style="flex: 1;">
             <div class="day-list-title">${escapeHtml(event.title)}</div>
@@ -4272,7 +4272,7 @@
         return `
           <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.1); border-radius: 12px; cursor: pointer;" onclick="editEvent(${event.id})">
             <div style="width: 40px; height: 40px; border-radius: 10px; background: ${typeInfo.color}15; border: 1px solid ${typeInfo.color}30; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>`}
+              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 20px; height: 20px; object-fit: contain;">`}
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(event.title)}</div>
@@ -4417,7 +4417,7 @@
         div.innerHTML = `
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 20px; height: 20px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 20px; height: 20px; color: ${typeInfo.color};"></i>`}
+              ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 20px; height: 20px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 20px; height: 20px; object-fit: contain;">`}
               <span style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(typeInfo.label)}</span>
             </div>
             <span style="font-size: 13px; font-weight: 800; color: ${typeInfo.color}; font-family: 'JetBrains Mono', monospace;">${stats.count}</span>
@@ -4934,7 +4934,7 @@
 
         row.innerHTML = `
           <div style="width: 40px; height: 40px; background: ${type.color}15; border: 1px solid ${type.color}30; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            ${type.image ? `<img src="${type.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${type.icon || 'sparkles'}" style="width: 20px; height: 20px; color: ${type.color};"></i>`}
+            ${type.image ? `<img src="${type.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 20px; height: 20px; object-fit: contain;">`}
           </div>
           <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openTypeEditor('${escapeOnclick(key)}')">
             <div style="font-size: 14px; font-weight: 700; color: #fff;">${escapeHtml(type.label)}</div>
@@ -5355,7 +5355,7 @@
         `;
         btn.innerHTML = type.image
           ? `<img src="${type.image}" style="width: 26px; height: 26px; object-fit: contain;">`
-          : `<i data-lucide="${type.icon}" style="width: 26px; height: 26px; color: ${isActive ? type.color : 'rgba(255,255,255,0.5)'};"></i>`;
+          : `<img src="icons/events/magician.png" style="width: 26px; height: 26px; object-fit: contain;">`;
         btn.addEventListener('click', () => selectScheduleType(key));
         container.appendChild(btn);
       });
@@ -5510,7 +5510,7 @@
 
         div.innerHTML = `
           <button type="button" class="schedule-type-btn" onclick="openTypePicker(${index})" style="color: ${typeInfo.color};" title="${escapeHtml(typeInfo.label)}">
-            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}"></i>`}
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 24px; height: 24px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 24px; height: 24px; object-fit: contain;">`}
           </button>
 
           <div class="schedule-inputs">
@@ -6295,7 +6295,7 @@
       let content = `
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(135deg, ${typeInfo.color}15, ${typeInfo.color}08); border: 1px solid ${typeInfo.color}30; border-radius: 12px;">
-            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 32px; height: 32px; object-fit: contain;">` : `<i data-lucide="${typeInfo.icon}" style="width: 28px; height: 28px; color: ${typeInfo.color};"></i>`}
+            ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 32px; height: 32px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 28px; height: 28px; object-fit: contain;">`}
             <div>
               <div style="font-size: 18px; font-weight: 700; color: #fff;">${escapeHtml(event.title)}</div>
               <div style="font-size: 13px; color: rgba(148,163,184,0.8);">${escapeHtml(typeInfo.label)}</div>
@@ -6428,7 +6428,7 @@
           return `
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid ${typeInfo.color}30; border-radius: 10px;">
               <div style="width: 36px; height: 36px; border-radius: 10px; background: ${typeInfo.color}20; border: 1px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center;">
-                <i data-lucide="${typeInfo.icon}" style="width: 18px; height: 18px; color: ${typeInfo.color};"></i>
+                ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 22px; height: 22px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 22px; height: 22px; object-fit: contain;">`}
               </div>
               <div style="flex: 1;">
                 <div style="font-size: 13px; color: #fff; font-weight: 600;">${escapeHtml(typeInfo.label)}</div>
@@ -6611,7 +6611,7 @@
           return `
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid ${typeInfo.color}30; border-radius: 10px;">
               <div style="width: 36px; height: 36px; border-radius: 10px; background: ${typeInfo.color}20; border: 1px solid ${typeInfo.color}40; display: flex; align-items: center; justify-content: center;">
-                <i data-lucide="${typeInfo.icon}" style="width: 18px; height: 18px; color: ${typeInfo.color};"></i>
+                ${typeInfo.image ? `<img src="${typeInfo.image}" style="width: 22px; height: 22px; object-fit: contain;">` : `<img src="icons/events/magician.png" style="width: 22px; height: 22px; object-fit: contain;">`}
               </div>
               <div style="flex: 1;">
                 <div style="font-size: 13px; color: #fff; font-weight: 600;">${escapeHtml(typeInfo.label)}</div>
