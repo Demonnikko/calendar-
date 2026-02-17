@@ -1,6 +1,6 @@
 {
-  "name": "Illusionist OS - Calendar",
-  "short_name": "Illusionist",
+  "name": "Календарь",
+  "short_name": "Календарь",
   "description": "Календарь для иллюзионистов - управляй магией и прибылью",
   "start_url": "./",
   "display": "standalone",
