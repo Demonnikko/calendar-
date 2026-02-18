@@ -2286,6 +2286,14 @@
                 if (now > expiryDate) {
                   return 'expired';
                 }
+              } else if (firebaseData.expiryDays && firebaseData.expiryDays < 999999 && firebaseData.activatedDate) {
+                // Fallback для старых ключей без expiresAt
+                const activated = new Date(firebaseData.activatedDate);
+                const now = new Date();
+                const daysDiff = (now - activated) / (1000 * 60 * 60 * 24);
+                if (daysDiff > firebaseData.expiryDays) {
+                  return 'expired';
+                }
               }
 
               return true;
@@ -2323,6 +2331,7 @@
 
       const deviceId = getDeviceId();
       const installId = getInstallationId();
+      let localExpiresAt = null; // будет заполнен из Firebase
 
       if (window.firebaseEnabled && window.firebaseDB) {
         try {
@@ -2346,20 +2355,27 @@
             }
           }
 
-          // Вычисляем дату истечения на основе expiryDays
           const updateData = {
             activated: true,
             deviceId: deviceId,
             installId: installId,
-            activatedDate: new Date().toISOString(),
             lastCheck: new Date().toISOString()
           };
 
-          // Если в ключе есть срок действия - вычисляем дату истечения
-          if (existingData.expiryDays && existingData.expiryDays < 999999) {
+          // activatedDate и expiresAt устанавливаем только при первой активации
+          if (!existingData.activatedDate) {
+            updateData.activatedDate = new Date().toISOString();
+          }
+
+          if (existingData.expiresAt) {
+            // Уже есть — используем существующий (не сбрасываем срок)
+            localExpiresAt = existingData.expiresAt;
+          } else if (existingData.expiryDays && existingData.expiryDays < 999999) {
+            // Первая активация — вычисляем и сохраняем
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + existingData.expiryDays);
-            updateData.expiresAt = expiryDate.toISOString();
+            localExpiresAt = expiryDate.toISOString();
+            updateData.expiresAt = localExpiresAt;
           }
 
           await keyRef.update(updateData);
@@ -2376,7 +2392,8 @@
         key: key,
         device: deviceId,
         install: installId,
-        activated: new Date().toISOString()
+        activated: new Date().toISOString(),
+        expiresAt: localExpiresAt
       };
 
       const encoded = btoa(JSON.stringify(data));
