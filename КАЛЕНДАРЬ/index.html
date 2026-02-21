@@ -2203,6 +2203,49 @@
 
   <script>
     // ============================================
+    // BUG REPORTING
+    // ============================================
+    (function() {
+      const BUG_URL = 'https://vk-bot-illusionist.vercel.app/api/bugreport';
+      const APP_NAME = 'Календарь';
+      const reported = new Set();
+      let reportCount = 0;
+
+      function reportBug(error, stack) {
+        const key = String(error) + (stack || '').split('\n')[0];
+        if (reported.has(key) || reportCount >= 3) return;
+        reported.add(key);
+        reportCount++;
+        try {
+          fetch(BUG_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              app: APP_NAME,
+              error: String(error).slice(0, 500),
+              stack: String(stack || '').slice(0, 1000),
+              url: location.href,
+              userAgent: navigator.userAgent,
+              timestamp: Date.now()
+            })
+          }).catch(() => {});
+        } catch (_) {}
+      }
+
+      window.addEventListener('error', function(e) {
+        reportBug(e.message, e.error && e.error.stack || `${e.filename}:${e.lineno}:${e.colno}`);
+      });
+
+      window.addEventListener('unhandledrejection', function(e) {
+        const err = e.reason;
+        reportBug(
+          err && err.message || String(err),
+          err && err.stack || ''
+        );
+      });
+    })();
+
+    // ============================================
     // LICENSE SYSTEM
     // ============================================
     const DEMO_MODE = false;
@@ -2551,8 +2594,45 @@
         }
       });
 
+      const renewBtn = document.createElement('a');
+      renewBtn.href = 'https://vk.me/club236098668';
+      renewBtn.target = '_blank';
+      renewBtn.textContent = 'Купить новый ключ';
+      renewBtn.style.cssText = `
+      display: ${reason === 'expired' ? 'block' : 'none'};
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: transparent;
+      border: 2px solid rgba(245,158,11,0.5);
+      border-radius: 8px;
+      color: #f59e0b;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s;
+      box-sizing: border-box;
+    `;
+
+      const separator = document.createElement('div');
+      separator.style.cssText = `
+      display: ${reason === 'expired' ? 'flex' : 'none'};
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0 6px;
+      color: rgba(148,163,184,0.5);
+      font-size: 12px;
+    `;
+      separator.innerHTML = '<div style="flex:1;height:1px;background:rgba(148,163,184,0.2)"></div>или<div style="flex:1;height:1px;background:rgba(148,163,184,0.2)"></div>';
+
       box.appendChild(title);
       box.appendChild(subtitle);
+      if (reason === 'expired') {
+        box.appendChild(renewBtn);
+        box.appendChild(separator);
+      }
       box.appendChild(input);
       box.appendChild(button);
       box.appendChild(error);
