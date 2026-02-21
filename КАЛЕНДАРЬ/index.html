@@ -6206,51 +6206,10 @@
       const cleanAddress = address.trim();
       const encodedAddress = encodeURIComponent(cleanAddress);
 
-      // Проверка интернета
-      if (!navigator.onLine) {
-        // Fallback: открываем Яндекс.Карты с поиском по адресу
-        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
-        window.location.href = yandexMapsUrl;
-        showToast('Офлайн: открываем карты с поиском');
-        return;
-      }
-
-      showToast('⏳ Поиск адреса...');
-
-      try {
-        // Геокодирование через Nominatim (бесплатно, без ключа)
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&accept-language=ru`;
-
-        const response = await fetch(geocodeUrl, {
-          headers: {
-            'User-Agent': 'CalendarApp/1.0'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Network error');
-        }
-
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-          const lat = data[0].lat;
-          const lon = data[0].lon;
-
-          // Открываем Яндекс.Навигатор с координатами
-          const yandexNaviUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
-          window.location.href = yandexNaviUrl;
-
-        } else {
-          throw new Error('Адрес не найден');
-        }
-
-      } catch (error) {
-        // Fallback: открываем Яндекс.Карты с поиском
-        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
-        window.location.href = yandexMapsUrl;
-        showToast('Открываем карты');
-      }
+      // Открываем Яндекс.Карты с точным адресом из события (поиск по тексту)
+      // Яндекс сам геокодирует адрес точнее чем Nominatim
+      const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&z=17`;
+      window.open(yandexMapsUrl, '_blank');
     }
 
     // ==========================================
