@@ -307,16 +307,6 @@ function plansKeyboard(appId) {
     }
     buttons.push(row);
   }
-  // Кнопка обучения (если есть видео)
-  const appData = PRODUCTS.find(p => p.id === appId);
-  if (appData && appData.isBundle) {
-    const hasAnyTraining = appData.bundleApps && appData.bundleApps.some(id => TRAINING[id] && TRAINING[id].length > 0);
-    if (hasAnyTraining) {
-      buttons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_choose' }), label: '🎓 Обучение' }, color: 'positive' }]);
-    }
-  } else if (TRAINING[appId] && TRAINING[appId].length > 0) {
-    buttons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: appId }), label: '🎓 Обучение' }, color: 'positive' }]);
-  }
   buttons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← Назад' }, color: 'secondary' }]);
   return { inline: true, buttons };
 }
@@ -761,11 +751,9 @@ async function handleMessageEvent(event) {
             const p = PRODUCTS.find(x => x.id === subId);
             if (p && p.appUrl) trialBundleButtons.push([{ action: { type: 'open_link', link: p.appUrl, label: `📲 Открыть ${p.name}` } }]);
           }
-          for (const subId of app.bundleApps) {
-            if (TRAINING[subId] && TRAINING[subId].length > 0) {
-              const subApp = PRODUCTS.find(x => x.id === subId);
-              trialBundleButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: subId }), label: `🎓 Обучение ${subApp ? subApp.name : subId}` }, color: 'positive' }]);
-            }
+          const hasAnyTraining = app.bundleApps.some(id => TRAINING[id] && TRAINING[id].length > 0);
+          if (hasAnyTraining) {
+            trialBundleButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_choose' }), label: '🎓 Обучение' }, color: 'positive' }]);
           }
           trialBundleButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
           await editMessage(user_id, msg, { inline: true, buttons: trialBundleButtons });
@@ -871,12 +859,22 @@ async function handleMessageEvent(event) {
           }]);
         }
       }
-      for (const appId of appIds) {
-        if (TRAINING[appId] && TRAINING[appId].length > 0) {
-          const product = PRODUCTS.find(p => p.id === appId);
-          const eduLabel = appIds.length > 1 ? `🎓 Обучение ${product ? product.name : appId}` : '🎓 Обучение';
+      // Кнопка обучения
+      if (appIds.length > 1) {
+        // Комплект — одна кнопка, внутри выбор приложения
+        const hasAnyTraining = appIds.some(id => TRAINING[id] && TRAINING[id].length > 0);
+        if (hasAnyTraining) {
           afterPurchaseButtons.push([{
-            action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: appId }), label: eduLabel },
+            action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_choose' }), label: '🎓 Обучение' },
+            color: 'positive'
+          }]);
+        }
+      } else {
+        // Одно приложение — прямо к урокам
+        const appId = appIds[0];
+        if (TRAINING[appId] && TRAINING[appId].length > 0) {
+          afterPurchaseButtons.push([{
+            action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: appId }), label: '🎓 Обучение' },
             color: 'positive'
           }]);
         }
@@ -1220,6 +1218,29 @@ async function handleMessageEvent(event) {
 
     case 'training': {
       await answerEvent(event_id, user_id, peer_id, 'Обучение');
+
+      // Проверяем, есть ли у пользователя лицензия (платная или пробная)
+      if (user_id !== ADMIN_VK_ID) {
+        try {
+          const appProduct = PRODUCTS.find(p => p.id === data.app);
+          const licensesSnap = await get(ref(db, 'licenses'));
+          const allLicenses = licensesSnap.val() || {};
+          const hasLicense = Object.values(allLicenses).some(lic =>
+            lic.buyer && lic.buyer.id === `vk_${user_id}` &&
+            (lic.appName === (appProduct ? appProduct.name : '') || lic.appName === '🎁 Комплект')
+          );
+          const trialSnap = await get(ref(db, `vk_trials/${user_id}/${data.app}`));
+          const hasTrial = !!trialSnap.val();
+
+          if (!hasLicense && !hasTrial) {
+            await editMessage(user_id,
+              '🔒 Обучение доступно только при наличии подписки.\n\nПолучите пробный период или приобретите приложение.',
+              mainMenuKeyboard()
+            );
+            break;
+          }
+        } catch (e) { console.warn('Non-critical:', e.message); }
+      }
 
       const videos = TRAINING[data.app] || [];
       if (videos.length === 0) {
