@@ -6985,30 +6985,37 @@
     const bottomNav = document.getElementById('bottom-nav');
     const bottomFade = document.getElementById('bottom-fade');
     let lastScrollTop = 0;
-    let navVisible = true;
-    let scrollIdleTimer = null;
+    let navVisible = false;
     let autoHideTimer = null;
+    let navLockedByBottom = false; // навбар закреплён, т.к. долистали до конца
 
-    // Показать навбар на 2.5 секунды, затем скрыть
-    function showBottomNavBriefly() {
+    function showBottomNav() {
       if (!bottomNav) return;
       bottomNav.classList.add('visible');
       if (bottomFade) bottomFade.classList.add('visible');
       navVisible = true;
+    }
+
+    // Показать навбар на 3 секунды, затем скрыть
+    function showBottomNavBriefly() {
+      if (!bottomNav) return;
+      navLockedByBottom = false;
+      showBottomNav();
       clearTimeout(autoHideTimer);
       autoHideTimer = setTimeout(() => {
         hideBottomNav();
-      }, 2500);
+      }, 3000);
     }
 
     function hideBottomNav() {
       if (bottomNav) bottomNav.classList.remove('visible');
       if (bottomFade) bottomFade.classList.remove('visible');
       navVisible = false;
+      navLockedByBottom = false;
       clearTimeout(autoHideTimer);
     }
 
-    // При загрузке — скрыт, покажем кратко через 300мс
+    // При загрузке — скрыт, покажем кратко
     function initBottomNav() {
       hideBottomNav();
       setTimeout(() => showBottomNavBriefly(), 300);
@@ -7031,15 +7038,20 @@
         const scrollHeight = e.target.scrollHeight;
         const clientHeight = e.target.clientHeight;
         const delta = scrollTop - lastScrollTop;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 30;
 
         if (scrollHeight > clientHeight + 10) {
-          if (delta > 3) {
-            // Скролл вниз — прятать
-            hideBottomNav();
-          } else if (delta < -3) {
-            // Скролл вверх — показать кратко
-            showBottomNavBriefly();
+          if (atBottom) {
+            // Долистали до конца — показать и держать
+            navLockedByBottom = true;
+            clearTimeout(autoHideTimer);
+            showBottomNav();
+          } else if (delta > 5) {
+            // Скролл вниз — прятать (только если не закреплён)
+            if (!navLockedByBottom) hideBottomNav();
+            else { navLockedByBottom = false; hideBottomNav(); }
           }
+          // Скролл вверх — НЕ показываем (не мешаем при свайпах)
         }
 
         lastScrollTop = scrollTop;
@@ -7221,15 +7233,19 @@
               // Показываем нижнее меню
               setTimeout(() => initBottomNav(), 100);
 
-              // Свайп снизу экрана (зона 80px) — показать навбар
-              let touchStartY = 0;
+              // Свайп снизу экрана (зона 40px от края) — показать навбар
+              let navTouchStartY = 0;
+              let navTouchStartTime = 0;
               document.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
+                navTouchStartY = e.touches[0].clientY;
+                navTouchStartTime = Date.now();
               }, { passive: true });
               document.addEventListener('touchend', (e) => {
-                const dy = touchStartY - e.changedTouches[0].clientY;
-                const startedAtBottom = touchStartY > window.innerHeight - 80;
-                if (startedAtBottom && dy > 20) showBottomNavBriefly();
+                const dy = navTouchStartY - e.changedTouches[0].clientY;
+                const startedAtBottom = navTouchStartY > window.innerHeight - 40;
+                const elapsed = Date.now() - navTouchStartTime;
+                // Быстрый свайп вверх из самого низа экрана
+                if (startedAtBottom && dy > 40 && elapsed < 500) showBottomNavBriefly();
               }, { passive: true });
 
               // Финальный рендер иконок
