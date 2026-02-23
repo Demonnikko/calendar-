@@ -6987,7 +6987,6 @@
     let lastScrollTop = 0;
     let navVisible = false;
     let autoHideTimer = null;
-    let navLockedByBottom = false; // навбар закреплён, т.к. долистали до конца
 
     function showBottomNav() {
       if (!bottomNav) return;
@@ -6999,7 +6998,6 @@
     // Показать навбар на 3 секунды, затем скрыть
     function showBottomNavBriefly() {
       if (!bottomNav) return;
-      navLockedByBottom = false;
       showBottomNav();
       clearTimeout(autoHideTimer);
       autoHideTimer = setTimeout(() => {
@@ -7011,7 +7009,6 @@
       if (bottomNav) bottomNav.classList.remove('visible');
       if (bottomFade) bottomFade.classList.remove('visible');
       navVisible = false;
-      navLockedByBottom = false;
       clearTimeout(autoHideTimer);
     }
 
@@ -7038,20 +7035,20 @@
         const scrollHeight = e.target.scrollHeight;
         const clientHeight = e.target.clientHeight;
         const delta = scrollTop - lastScrollTop;
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 30;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 20;
 
         if (scrollHeight > clientHeight + 10) {
           if (atBottom) {
-            // Долистали до конца — показать и держать
-            navLockedByBottom = true;
-            clearTimeout(autoHideTimer);
+            // Долистали до конца — показать
             showBottomNav();
-          } else if (delta > 5) {
-            // Скролл вниз — прятать (только если не закреплён)
-            if (!navLockedByBottom) hideBottomNav();
-            else { navLockedByBottom = false; hideBottomNav(); }
+            clearTimeout(autoHideTimer);
+          } else if (delta < -3 && navVisible) {
+            // Скролл вверх — сразу прятать
+            hideBottomNav();
+          } else if (delta > 5 && navVisible) {
+            // Скролл вниз (отъехали от низа) — тоже прятать
+            hideBottomNav();
           }
-          // Скролл вверх — НЕ показываем (не мешаем при свайпах)
         }
 
         lastScrollTop = scrollTop;
