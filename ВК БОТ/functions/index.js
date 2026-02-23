@@ -18,6 +18,7 @@ const PRODUCTS = [
     id: 'calculator',
     name: '🧮 Калькулятор',
     description: 'Финансы, КП, аналитика для артистов',
+    appUrl: 'https://demonnikko.github.io/KALK-/',
     plans: [
       { id: 'trial_7d', label: '7 дней (пробный)', price: 0, days: 7 },
       { id: '1m', label: '1 месяц', price: 390, days: 30 },
@@ -25,7 +26,6 @@ const PRODUCTS = [
       { id: '6m', label: '6 месяцев', price: 1690, days: 180 },
       { id: '1y', label: '1 год', price: 2490, days: 365 },
       { id: '2y', label: '2 года', price: 3990, days: 730 },
-      { id: 'early', label: 'Ранний доступ', price: 4990, days: 36500 },
       { id: 'lifetime', label: 'Бессрочно', price: 7990, days: 36500 }
     ]
   },
@@ -33,6 +33,7 @@ const PRODUCTS = [
     id: 'calendar',
     name: '📅 Календарь',
     description: 'Расписание, логистика, финансы',
+    appUrl: 'https://demonnikko.github.io/calendar-/',
     plans: [
       { id: 'trial_7d', label: '7 дней (пробный)', price: 0, days: 7 },
       { id: '1m', label: '1 месяц', price: 390, days: 30 },
@@ -40,21 +41,67 @@ const PRODUCTS = [
       { id: '6m', label: '6 месяцев', price: 1690, days: 180 },
       { id: '1y', label: '1 год', price: 2490, days: 365 },
       { id: '2y', label: '2 года', price: 3990, days: 730 },
-      { id: 'early', label: 'Ранний доступ', price: 3990, days: 36500 },
       { id: 'lifetime', label: 'Бессрочно', price: 6990, days: 36500 }
     ]
   },
   {
     id: 'bundle',
     name: '🎁 Комплект',
-    description: 'Калькулятор + Календарь со скидкой',
+    description: 'Калькулятор + Календарь — один ключ на оба приложения',
     isBundle: true,
     bundleApps: ['calculator', 'calendar'],
     plans: [
+      { id: 'bundle_1m', label: '1 месяц', price: 590, days: 30 },
+      { id: 'bundle_3m', label: '3 месяца', price: 1490, days: 90 },
+      { id: 'bundle_6m', label: '6 месяцев', price: 2490, days: 180 },
+      { id: 'bundle_1y', label: '1 год', price: 3690, days: 365 },
+      { id: 'bundle_2y', label: '2 года', price: 5990, days: 730 },
       { id: 'bundle_lifetime', label: 'Бессрочно', price: 9990, days: 36500 }
     ]
   }
 ];
+
+// ========== FAQ ==========
+const FAQ_TEXT = `📋 Часто задаваемые вопросы\n\n` +
+  `📶 Нужен ли интернет?\n` +
+  `При первом запуске — да (для активации ключа). После этого приложения работают полностью офлайн!\n\n` +
+  `🔑 Как активировать ключ?\n` +
+  `При первом запуске появится экран активации. Вставьте ключ и нажмите «Активировать». Ключ активируется единожды. Если приложение вылетело — экран появится снова, вставьте тот же ключ.\n\n` +
+  `📱 Можно ли использовать на нескольких устройствах?\n` +
+  `Ключ привязывается к одному устройству при активации. При покупке комплекта один ключ работает сразу для двух приложений (Калькулятор и Календарь).\n\n` +
+  `🔄 Ключ не работает?\n` +
+  `Проверьте правильность ввода (без лишних пробелов). Если не помогло — напишите в поддержку.\n\n` +
+  `💳 Какие способы оплаты?\n` +
+  `Перевод на карту Т-Банка или по СБП. Другие банки НЕ принимаются.\n\n` +
+  `⏳ Сколько ждать ключ после оплаты?\n` +
+  `5-15 минут (с 09:00 до 00:00 МСК). Ночью — утром.\n\n` +
+  `🆓 Можно ли попробовать бесплатно?\n` +
+  `Да! Выберите приложение и нажмите «7 дней (пробный)». Один раз для каждого приложения.`;
+
+// ========== ОБУЧЕНИЕ (видео из плейлистов ВК) ==========
+const TRAINING = {
+  calculator: [
+    { title: '🚀 Активация приложения', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239017?linked=1' },
+    { title: '📱 Главный экран', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239018?linked=1' },
+    { title: '👤 Профиль', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239023?linked=1' },
+    { title: '🏢 Мои проекты', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239025?linked=1' },
+    { title: '📝 Создание КП', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239029?linked=1' },
+    { title: '🛠 Работа с КП', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239031?linked=1' },
+    { title: '⚙ Работа калькулятора', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239031?linked=1' },
+    { title: '✨ Доп фишки', url: 'https://vkvideo.ru/playlist/-236098668_1/video-236098668_456239033?linked=1' }
+  ],
+  calendar: [
+    { title: '🚀 Активация приложения', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239034?linked=1' },
+    { title: '📱 Главный экран', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239035?linked=1' },
+    { title: '📊 Дашборд', url: 'https://vkvideo.ru/video-236098668_456239036?linked=1' },
+    { title: '⚙️ Настройки', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239037?linked=1' },
+    { title: '📤 Экспорт и импорт', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239038?linked=1' },
+    { title: '📅 Событие: основное', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239039?linked=1' },
+    { title: '📋 Событие: расписание', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239040?linked=1' },
+    { title: '💰 Событие: финансы', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239042?linked=1' },
+    { title: '🌐 Как всё устроено', url: 'https://vkvideo.ru/playlist/-236098668_2/video-236098668_456239043?linked=1' }
+  ]
+};
 
 // ========== VK API ==========
 async function vkApi(method, params) {
@@ -491,36 +538,31 @@ async function handleMessageEvent(event) {
         const name = await getUserName(user_id);
 
         if (app.isBundle && app.bundleApps) {
-          let msg = '🎉 Пробный период активирован!\n\nВаши ключи:\n\n';
-          for (const subAppId of app.bundleApps) {
-            const key = await generateAndSaveKey({
-              appId: subAppId,
-              userId: `vk_${user_id}`,
-              buyerName: name,
-              price: 0,
-              days: plan.days,
-              planLabel: plan.label
-            });
-            const subApp = PRODUCTS.find(p => p.id === subAppId);
-            msg += `${subApp ? subApp.name : subAppId}:\n${key}\n\n`;
+          const key = await generateAndSaveKey({ appId: app.id, userId: `vk_${user_id}`, buyerName: name, price: 0, days: plan.days, planLabel: plan.label });
+          let msg = `🎉 Пробный период активирован!\n\nСрок: ${plan.days} дней\n\nВведите ключ и в Калькуляторе, и в Календаре.\n\n🔑 Ключ — в следующем сообщении (зажмите его для копирования)`;
+          const trialBundleButtons = [];
+          for (const subId of app.bundleApps) {
+            const p = PRODUCTS.find(x => x.id === subId);
+            if (p && p.appUrl) trialBundleButtons.push([{ action: { type: 'open_link', link: p.appUrl, label: `📲 Открыть ${p.name}` } }]);
           }
-          msg += `Срок: ${plan.days} дней\n\nСкопируйте ключ и вставьте в приложение при активации.`;
-          await sendMessage(user_id, msg, mainMenuKeyboard());
+          const hasAnyTraining = app.bundleApps.some(id => TRAINING[id] && TRAINING[id].length > 0);
+          if (hasAnyTraining) {
+            trialBundleButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_choose' }), label: '🎓 Обучение' }, color: 'positive' }]);
+          }
+          trialBundleButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
+          await editMessage(user_id, msg, { inline: true, buttons: trialBundleButtons });
+          await vkApi('messages.send', { user_id, message: key, random_id: Math.floor(Math.random() * 2e9) });
         } else {
-          const key = await generateAndSaveKey({
-            appId: app.id,
-            userId: `vk_${user_id}`,
-            buyerName: name,
-            price: 0,
-            days: plan.days,
-            planLabel: plan.label
-          });
-          const msg =
-            `🎉 Пробный период активирован!\n\n` +
-            `Ваш ключ для ${app.name}:\n${key}\n\n` +
-            `Срок: ${plan.days} дней\n\n` +
-            `Скопируйте ключ и вставьте в приложение при активации.`;
-          await sendMessage(user_id, msg, mainMenuKeyboard());
+          const key = await generateAndSaveKey({ appId: app.id, userId: `vk_${user_id}`, buyerName: name, price: 0, days: plan.days, planLabel: plan.label });
+          const msg = `🎉 Пробный период активирован!\n\nСрок: ${plan.days} дней\n\n🔑 Ключ — в следующем сообщении (зажмите его для копирования)`;
+          const trialButtons = [];
+          if (app.appUrl) trialButtons.push([{ action: { type: 'open_link', link: app.appUrl, label: `📲 Открыть ${app.name}` } }]);
+          if (TRAINING[app.id] && TRAINING[app.id].length > 0) {
+            trialButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: app.id }), label: '🎓 Обучение' }, color: 'positive' }]);
+          }
+          trialButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
+          await editMessage(user_id, msg, { inline: true, buttons: trialButtons });
+          await vkApi('messages.send', { user_id, message: key, random_id: Math.floor(Math.random() * 2e9) });
         }
 
         // Уведомление админу о пробном ключе
@@ -630,59 +672,57 @@ async function handleMessageEvent(event) {
       await db.ref(`vk_admin_pending/${data.id}`).remove();
       await db.ref(`vk_pending/${pending.vkUserId}`).remove();
 
-      // Генерируем ключи
-      const keys = [];
+      // Генерируем ключ
+      const key = await generateAndSaveKey({
+        appId: pending.appId,
+        userId: `vk_${pending.vkUserId}`,
+        buyerName: pending.userName,
+        price: pending.price,
+        days: pending.days,
+        planLabel: pending.planLabel
+      });
 
-      if (pending.isBundle && pending.bundleApps) {
-        for (const subAppId of pending.bundleApps) {
-          const key = await generateAndSaveKey({
-            appId: subAppId,
-            userId: `vk_${pending.vkUserId}`,
-            buyerName: pending.userName,
-            price: pending.price,
-            days: pending.days,
-            planLabel: pending.planLabel
-          });
-          const subApp = PRODUCTS.find(p => p.id === subAppId);
-          keys.push({ app: subApp ? subApp.name : subAppId, key });
-        }
-      } else {
-        const key = await generateAndSaveKey({
-          appId: pending.appId,
-          userId: `vk_${pending.vkUserId}`,
-          buyerName: pending.userName,
-          price: pending.price,
-          days: pending.days,
-          planLabel: pending.planLabel
-        });
-        keys.push({ app: pending.appName, key });
-      }
-
-      // Отправляем ключ пользователю
       const isLifetime = pending.days >= 36500;
       const durationLabel = isLifetime ? 'Бессрочно' : `${pending.days} дней`;
 
-      let userMsg = '🎉 Оплата подтверждена!\n\n';
-      if (keys.length > 1) {
-        userMsg += 'Ваши ключи:\n\n';
-        for (const { app, key } of keys) {
-          userMsg += `${app}:\n${key}\n\n`;
+      let userMsg = `🎉 Оплата подтверждена!\n\n`;
+      if (pending.isBundle) {
+        userMsg += `Тариф: ${pending.planLabel}\nСрок: ${durationLabel}\n\nВведите ключ и в Калькуляторе, и в Календаре.\n\n🔑 Ключ — в следующем сообщении (зажмите его для копирования)`;
+      } else {
+        userMsg += `Тариф: ${pending.planLabel}\nСрок: ${durationLabel}\n\n🔑 Ключ — в следующем сообщении (зажмите его для копирования)`;
+      }
+      const appIds = (pending.isBundle && pending.bundleApps) ? pending.bundleApps : [pending.appId];
+
+      const afterPurchaseButtons = [];
+      for (const appId of appIds) {
+        const product = PRODUCTS.find(p => p.id === appId);
+        if (product && product.appUrl) {
+          afterPurchaseButtons.push([{
+            action: { type: 'open_link', link: product.appUrl, label: `📲 Открыть ${product.name}` }
+          }]);
+        }
+      }
+
+      if (appIds.length > 1) {
+        const hasAnyTraining = appIds.some(id => TRAINING[id] && TRAINING[id].length > 0);
+        if (hasAnyTraining) {
+          afterPurchaseButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_choose' }), label: '🎓 Обучение' }, color: 'positive' }]);
         }
       } else {
-        userMsg += `Ваш ключ для ${keys[0].app}:\n${keys[0].key}\n\n`;
+        const appId = appIds[0];
+        if (TRAINING[appId] && TRAINING[appId].length > 0) {
+          afterPurchaseButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: appId }), label: '🎓 Обучение' }, color: 'positive' }]);
+        }
       }
-      userMsg += `Тариф: ${pending.planLabel}\n`;
-      userMsg += `Срок: ${durationLabel}\n\n`;
-      userMsg += 'Скопируйте ключ и вставьте в приложение при активации.\n';
-      userMsg += 'Если будут вопросы — пишите!';
 
-      userMsg += 'Если будут вопросы — пишите!';
+      const reviewAppId = appIds[0];
+      afterPurchaseButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'review_start', app: reviewAppId }), label: '⭐ Оставить отзыв' }, color: 'secondary' }]);
+      afterPurchaseButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
 
-      await sendMessage(pending.vkUserId, userMsg, postPurchaseKeyboard(pending.appId || pending.bundleApps[0], pending.isBundle));
+      await sendMessage(pending.vkUserId, userMsg, { inline: true, buttons: afterPurchaseButtons });
+      await vkApi('messages.send', { user_id: pending.vkUserId, message: key, random_id: Math.floor(Math.random() * 2e9) });
 
-      // Подтверждение админу
-      const allKeys = keys.map(k => k.key).join(', ');
-      await sendMessage(ADMIN_VK_ID, `✅ Ключ выдан для ${pending.userName}:\n${allKeys}`);
+      await sendMessage(ADMIN_VK_ID, `✅ Ключ выдан для ${pending.userName}:\n${key}`);
       break;
     }
 
@@ -747,6 +787,85 @@ async function handleMessageEvent(event) {
     }
 
     // ─── Поддержка ───
+    // Выбор приложения для обучения (комплект)
+    case 'training_choose': {
+      await answerEvent(event_id, user_id, peer_id, 'Обучение');
+      const chooseButtons = [];
+      for (const prod of PRODUCTS) {
+        if (prod.isBundle) continue;
+        if (TRAINING[prod.id] && TRAINING[prod.id].length > 0) {
+          chooseButtons.push([{
+            action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: prod.id }), label: `🎓 ${prod.name}` },
+            color: 'primary'
+          }]);
+        }
+      }
+      chooseButtons.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← Назад' }, color: 'secondary' }]);
+      await editMessage(user_id, '🎓 Выберите приложение для обучения:', { inline: true, buttons: chooseButtons });
+      break;
+    }
+
+    case 'training': {
+      await answerEvent(event_id, user_id, peer_id, 'Обучение');
+
+      // Проверяем, есть ли у пользователя лицензия (платная или пробная)
+      if (user_id !== ADMIN_VK_ID) {
+        try {
+          const appProduct = PRODUCTS.find(p => p.id === data.app);
+          const licensesSnap = await db.ref('licenses').once('value');
+          const allLicenses = licensesSnap.val() || {};
+          const hasLicense = Object.values(allLicenses).some(lic =>
+            lic.buyer && lic.buyer.id === `vk_${user_id}` &&
+            (lic.appName === (appProduct ? appProduct.name : '') || lic.appName === '🎁 Комплект')
+          );
+          const trialSnap = await db.ref(`vk_trials/${user_id}/${data.app}`).once('value');
+          const hasTrial = !!trialSnap.val();
+
+          if (!hasLicense && !hasTrial) {
+            await editMessage(user_id,
+              '🔒 Обучение доступно только при наличии подписки.\n\nПолучите пробный период или приобретите приложение.',
+              mainMenuKeyboard()
+            );
+            break;
+          }
+        } catch (e) { console.warn('Non-critical:', e.message); }
+      }
+
+      const videos = TRAINING[data.app] || [];
+      if (videos.length === 0) {
+        await editMessage(user_id, '🎓 Видеоуроки для этого приложения пока готовятся.\n\nСледите за обновлениями!', mainMenuKeyboard());
+        break;
+      }
+      // Страница 1: уроки 1-5
+      const page1 = videos.slice(0, 5);
+      const hasPage2 = videos.length > 5;
+      const msg1 = '🎓 Обучение (уроки 1–' + page1.length + ')\n\nНажимайте по порядку:';
+      const btns1 = page1.map((v, i) => [{
+        action: { type: 'open_link', link: v.url, label: `${i + 1}. ${v.title}` }
+      }]);
+      if (hasPage2) {
+        btns1.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training_page', app: data.app }), label: `Уроки 6–${videos.length} →` }, color: 'primary' }]);
+      } else {
+        btns1.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
+      }
+      await editMessage(user_id, msg1, { inline: true, buttons: btns1 });
+      break;
+    }
+
+    case 'training_page': {
+      await answerEvent(event_id, user_id, peer_id, 'Следующие уроки');
+      const videos2 = TRAINING[data.app] || [];
+      const page2 = videos2.slice(5);
+      const msg2 = '🎓 Обучение (уроки 6–' + videos2.length + ')\n\nНажимайте по порядку:';
+      const btns2 = page2.map((v, i) => [{
+        action: { type: 'open_link', link: v.url, label: `${5 + i + 1}. ${v.title}` }
+      }]);
+      btns2.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'training', app: data.app }), label: '← Уроки 1–5' }, color: 'secondary' }]);
+      btns2.push([{ action: { type: 'callback', payload: JSON.stringify({ cmd: 'menu' }), label: '← В меню' }, color: 'secondary' }]);
+      await editMessage(user_id, msg2, { inline: true, buttons: btns2.slice(0, 6) });
+      break;
+    }
+
     case 'support': {
       await answerEvent(event_id, user_id, peer_id, 'Поддержка');
       const msg =
