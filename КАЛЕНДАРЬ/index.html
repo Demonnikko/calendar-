@@ -6989,40 +6989,35 @@
     let scrollIdleTimer = null;
     let autoHideTimer = null;
 
-    function showBottomNav() {
-      if (bottomNav && !navVisible) {
-        bottomNav.classList.add('visible');
-        navVisible = true;
-      }
+    // Показать навбар на 2.5 секунды, затем скрыть
+    function showBottomNavBriefly() {
+      if (!bottomNav) return;
+      bottomNav.classList.add('visible');
       if (bottomFade) bottomFade.classList.add('visible');
-      clearTimeout(autoHideTimer);
-    }
-
-    function hideBottomNav() {
-      if (bottomNav && navVisible) {
-        bottomNav.classList.remove('visible');
-        navVisible = false;
-      }
-      if (bottomFade) bottomFade.classList.remove('visible');
-    }
-
-    // Показать навбар при загрузке
-    function initBottomNav() {
-      if (bottomNav) {
-        bottomNav.classList.add('visible');
-        navVisible = true;
-      }
-      if (bottomFade) bottomFade.classList.add('visible');
-    }
-
-    function checkScrollPosition(tabName) {
-      // При переключении на таб — показываем навбар, затем прячем через 3 сек
-      showBottomNav();
-      lastScrollTop = 0;
+      navVisible = true;
       clearTimeout(autoHideTimer);
       autoHideTimer = setTimeout(() => {
         hideBottomNav();
-      }, 3000);
+      }, 2500);
+    }
+
+    function hideBottomNav() {
+      if (bottomNav) bottomNav.classList.remove('visible');
+      if (bottomFade) bottomFade.classList.remove('visible');
+      navVisible = false;
+      clearTimeout(autoHideTimer);
+    }
+
+    // При загрузке — скрыт, покажем кратко через 300мс
+    function initBottomNav() {
+      hideBottomNav();
+      setTimeout(() => showBottomNavBriefly(), 300);
+    }
+
+    // При смене таба — показать кратко
+    function checkScrollPosition(tabName) {
+      lastScrollTop = 0;
+      showBottomNavBriefly();
     }
 
     let scrollTicking = false;
@@ -7035,39 +7030,20 @@
         const scrollTop = e.target.scrollTop;
         const scrollHeight = e.target.scrollHeight;
         const clientHeight = e.target.clientHeight;
+        const delta = scrollTop - lastScrollTop;
 
-        // Контент помещается без скролла — не трогаем (авто-скрытие по таймеру)
-        if (scrollHeight <= clientHeight + 10) {
-          scrollTicking = false;
-          return;
-        }
-
-        // В самом верху или в самом низу — показываем
-        const isAtTop = scrollTop <= 5;
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 20;
-
-        if (isAtTop || isAtBottom) {
-          showBottomNav();
-        } else {
-          const delta = scrollTop - lastScrollTop;
-
+        if (scrollHeight > clientHeight + 10) {
           if (delta > 3) {
-            // Скроллим вниз — прячем
+            // Скролл вниз — прятать
             hideBottomNav();
           } else if (delta < -3) {
-            // Скроллим вверх — показываем
-            showBottomNav();
+            // Скролл вверх — показать кратко
+            showBottomNavBriefly();
           }
         }
 
         lastScrollTop = scrollTop;
         scrollTicking = false;
-
-        // Показываем навбар если скролл остановился на 1.5 сек
-        clearTimeout(scrollIdleTimer);
-        scrollIdleTimer = setTimeout(() => {
-          showBottomNav();
-        }, 1500);
       });
     }
 
@@ -7244,6 +7220,17 @@
 
               // Показываем нижнее меню
               setTimeout(() => initBottomNav(), 100);
+
+              // Свайп снизу экрана (зона 80px) — показать навбар
+              let touchStartY = 0;
+              document.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+              }, { passive: true });
+              document.addEventListener('touchend', (e) => {
+                const dy = touchStartY - e.changedTouches[0].clientY;
+                const startedAtBottom = touchStartY > window.innerHeight - 80;
+                if (startedAtBottom && dy > 20) showBottomNavBriefly();
+              }, { passive: true });
 
               // Финальный рендер иконок
               setTimeout(() => {
