@@ -160,7 +160,6 @@
     /* Hide ALL app content until fully loaded */
     #calendar-tab,
     #dashboard-tab,
-    #bottom-nav,
     header {
       opacity: 0;
       visibility: hidden;
@@ -170,7 +169,6 @@
     /* Show content only when app is fully loaded */
     body.app-ready #calendar-tab,
     body.app-ready #dashboard-tab,
-    body.app-ready #bottom-nav,
     body.app-ready header {
       opacity: 1;
       visibility: visible;
@@ -651,7 +649,7 @@
     .dashboard-container {
       padding: 12px 16px;
       padding-top: 8px;
-      padding-bottom: 120px;
+      padding-bottom: 160px;
       height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
@@ -1322,12 +1320,30 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
-      transform: translateY(0);
-      opacity: 1;
+      transform: translateY(120px);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     #bottom-nav.visible {
       transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Градиентный fade под контентом перед навбаром */
+    #bottom-fade {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%);
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #bottom-fade.visible {
       opacity: 1;
     }
 
@@ -1842,23 +1858,16 @@
       transform: translateX(-50%);
       width: 110px;
       height: 15px;
-      background: linear-gradient(90deg, #ea580c, #f59e0b, #fb923c, #ea580c);
-      background-size: 200% 100%;
+      background: linear-gradient(90deg, #ea580c, #f59e0b, #fb923c);
       border-radius: 3px;
-      box-shadow:
-        0 2px 8px rgba(245, 158, 11, 0.6),
-        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-      animation: ribbonShine 2s linear infinite;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.6);
+      animation: ribbonShine 2s ease-in-out infinite;
     }
 
     @keyframes ribbonShine {
-      0% {
-        background-position: 200% center;
-      }
-
-      100% {
-        background-position: -200% center;
-      }
+      0% { opacity: 1; }
+      50% { opacity: 0.8; }
+      100% { opacity: 1; }
     }
 
     /* Sparkle particles */
@@ -1965,26 +1974,20 @@
       font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 32px;
       font-weight: 900;
-      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 25%, #f59e0b 50%, #fbbf24 75%, #f59e0b 100%);
-      background-size: 200% 100%;
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      animation: goldShimmer 3s linear infinite;
-      filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 40px rgba(245, 158, 11, 0.6));
+      animation: goldShimmer 3s ease-in-out infinite;
       margin-bottom: 12px;
       letter-spacing: 0.05em;
       text-shadow: none;
     }
 
     @keyframes goldShimmer {
-      0% {
-        background-position: 200% center;
-      }
-
-      100% {
-        background-position: -200% center;
-      }
+      0% { opacity: 1; }
+      50% { opacity: 0.75; }
+      100% { opacity: 1; }
     }
 
     .goal-message-subtitle {
@@ -2000,17 +2003,8 @@
     }
 
     @keyframes subtitlePulse {
-
-      0%,
-      100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.8));
-      }
-
-      50% {
-        transform: scale(1.05);
-        filter: drop-shadow(0 0 30px rgba(245, 158, 11, 1));
-      }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
     }
 
     /* Magic glow around hat */
@@ -2099,25 +2093,19 @@
       font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
       font-size: 32px;
       font-weight: 900;
-      background: linear-gradient(135deg, #f59e0b, #f59e0b, #f59e0b);
-      background-size: 200% 100%;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 12px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      animation: titleShimmer 3s linear infinite;
+      animation: titleShimmer 3s ease-in-out infinite;
     }
 
     @keyframes titleShimmer {
-      0% {
-        background-position: 200% center;
-      }
-
-      100% {
-        background-position: -200% center;
-      }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
     }
 
     .splash-subtitle {
@@ -2208,7 +2196,7 @@
     // ============================================
     (function() {
       const BUG_URL = 'https://vk-bot-illusionist.vercel.app/api/bugreport';
-      const APP_NAME = 'Калькулятор';
+      const APP_NAME = 'Календарь';
       const reported = new Set();
       let reportCount = 0;
 
@@ -2866,30 +2854,6 @@
 </head>
 
 <body style="background:#000;overflow:hidden;">
-  <!-- БЛОКИРОВКА ДЕСКТОПА -->
-  <div id="desktop-block"
-    style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999998;align-items:center;justify-content:center;padding:40px 20px;">
-    <div style="text-align:center;max-width:500px;">
-      <div
-        style="width:120px;height:120px;margin:0 auto 32px;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(251,191,36,0.08));border:2px solid rgba(245,158,11,0.3);border-radius:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(245,158,11,0.2),0 0 0 1px rgba(255,255,255,0.05) inset;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#f59e0b"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-          <line x1="12" y1="18" x2="12.01" y2="18"></line>
-        </svg>
-      </div>
-      <h1
-        style="font-family:Georgia,'Palatino Linotype','Book Antiqua',Palatino,'Times New Roman',serif;font-size:32px;font-weight:700;background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 16px 0;letter-spacing:2px;">
-        📱 Только для смартфонов</h1>
-      <p
-        style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:18px;color:#94a3b8;line-height:1.6;margin:0 0 24px 0;">
-        Это приложение оптимизировано для мобильных устройств.</p>
-      <p
-        style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:16px;color:#64748b;line-height:1.5;margin:0;">
-        Откройте эту страницу на своём<br><strong style="color:#f59e0b;">iPhone или Android</strong> смартфоне.</p>
-    </div>
-  </div>
-
   <!-- SPLASH SCREEN -->
   <div id="splash-screen"
     style="position:fixed;inset:0;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -3160,6 +3124,9 @@
 
     </div>
   </div>
+
+  <!-- BOTTOM FADE -->
+  <div id="bottom-fade"></div>
 
   <!-- BOTTOM NAV -->
   <div id="bottom-nav">
@@ -6231,51 +6198,10 @@
       const cleanAddress = address.trim();
       const encodedAddress = encodeURIComponent(cleanAddress);
 
-      // Проверка интернета
-      if (!navigator.onLine) {
-        // Fallback: открываем Яндекс.Карты с поиском по адресу
-        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
-        window.location.href = yandexMapsUrl;
-        showToast('Офлайн: открываем карты с поиском');
-        return;
-      }
-
-      showToast('⏳ Поиск адреса...');
-
-      try {
-        // Геокодирование через Nominatim (бесплатно, без ключа)
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&accept-language=ru`;
-
-        const response = await fetch(geocodeUrl, {
-          headers: {
-            'User-Agent': 'CalendarApp/1.0'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Network error');
-        }
-
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-          const lat = data[0].lat;
-          const lon = data[0].lon;
-
-          // Открываем Яндекс.Навигатор с координатами
-          const yandexNaviUrl = `yandexnavi://build_route_on_map?lat_to=${lat}&lon_to=${lon}`;
-          window.location.href = yandexNaviUrl;
-
-        } else {
-          throw new Error('Адрес не найден');
-        }
-
-      } catch (error) {
-        // Fallback: открываем Яндекс.Карты с поиском
-        const yandexMapsUrl = `yandexmaps://maps.yandex.ru/?text=${encodedAddress}`;
-        window.location.href = yandexMapsUrl;
-        showToast('Открываем карты');
-      }
+      // Открываем Яндекс.Карты с точным адресом из события (поиск по тексту)
+      // Яндекс сам геокодирует адрес точнее чем Nominatim
+      const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodedAddress}&z=17`;
+      window.open(yandexMapsUrl, '_blank');
     }
 
     // ==========================================
@@ -7057,76 +6983,66 @@
     // BOTTOM NAV AUTO-HIDE ON SCROLL
     // ==========================================
     const bottomNav = document.getElementById('bottom-nav');
-    let scrollTimeout = null;
+    const bottomFade = document.getElementById('bottom-fade');
+    let lastScrollTop = 0;
+    let navVisible = true;
+    let scrollIdleTimer = null;
+    let autoHideTimer = null;
 
-    function debounce(func, delay) {
-      return function (...args) {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => func.apply(this, args), delay);
-      };
-    }
-
-    function showBottomNav() {
-      if (bottomNav) {
-        bottomNav.classList.add('visible');
-      }
+    // Показать навбар на 2.5 секунды, затем скрыть
+    function showBottomNavBriefly() {
+      if (!bottomNav) return;
+      bottomNav.classList.add('visible');
+      if (bottomFade) bottomFade.classList.add('visible');
+      navVisible = true;
+      clearTimeout(autoHideTimer);
+      autoHideTimer = setTimeout(() => {
+        hideBottomNav();
+      }, 2500);
     }
 
     function hideBottomNav() {
-      if (bottomNav) {
-        bottomNav.classList.remove('visible');
-      }
+      if (bottomNav) bottomNav.classList.remove('visible');
+      if (bottomFade) bottomFade.classList.remove('visible');
+      navVisible = false;
+      clearTimeout(autoHideTimer);
     }
 
-    // Проверка позиции скролла для конкретного таба
+    // При загрузке — скрыт, покажем кратко через 300мс
+    function initBottomNav() {
+      hideBottomNav();
+      setTimeout(() => showBottomNavBriefly(), 300);
+    }
+
+    // При смене таба — показать кратко
     function checkScrollPosition(tabName) {
-      let container = null;
-
-      if (tabName === 'calendar') {
-        container = document.querySelector('.calendar-container');
-      } else if (tabName === 'dashboard') {
-        container = document.querySelector('.dashboard-container');
-      }
-
-      if (!container) return;
-
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-
-      // Если контент помещается без скролла или мы внизу - показываем меню
-      const hasNoScroll = scrollHeight <= clientHeight + 10;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 20;
-
-      if (hasNoScroll || isAtBottom) {
-        showBottomNav();
-      } else {
-        hideBottomNav();
-      }
+      lastScrollTop = 0;
+      showBottomNavBriefly();
     }
 
     let scrollTicking = false;
 
     function handleScrollImmediate(e) {
       if (scrollTicking) return;
-
       scrollTicking = true;
 
       requestAnimationFrame(() => {
         const scrollTop = e.target.scrollTop;
         const scrollHeight = e.target.scrollHeight;
         const clientHeight = e.target.clientHeight;
+        const delta = scrollTop - lastScrollTop;
 
-        // Если контент помещается без скролла - всегда показываем
-        const hasNoScroll = scrollHeight <= clientHeight + 10;
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30;
-
-        if (hasNoScroll || isAtBottom) {
-          showBottomNav();
-        } else {
-          hideBottomNav();
+        if (scrollHeight > clientHeight + 10) {
+          if (delta > 3) {
+            // Скролл вниз — прятать
+            hideBottomNav();
+          } else if (delta < -3) {
+            // Скролл вверх — показать кратко
+            showBottomNavBriefly();
+          }
         }
 
+        lastScrollTop = scrollTop;
         scrollTicking = false;
       });
     }
@@ -7194,16 +7110,6 @@
         eventModalBody.addEventListener('change', () => { formDirty = true; });
       }
 
-      // Регистрируем обработчики скролла для bottom-nav
-      const dashContainer = document.querySelector('.dashboard-container');
-      const calContainer = document.querySelector('.calendar-container');
-
-      if (dashContainer) {
-        dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-      }
-      if (calContainer) {
-        calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-      }
     }
 
     // Функция рендера иконок с ожиданием
@@ -7226,34 +7132,7 @@
       }
     }
 
-    // Проверка: только мобильные устройства
-    function isMobileDevice() {
-      const ua = navigator.userAgent.toLowerCase();
-      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
-      const isSmallScreen = window.innerWidth <= 768;
-      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const mobileScore = [isMobile, isSmallScreen, hasTouch].filter(Boolean).length;
-      return mobileScore >= 2;
-    }
-
-    function checkDevice() {
-      if (!isMobileDevice()) {
-        const desktopBlock = document.getElementById('desktop-block');
-        const splash = document.getElementById('splash-screen');
-        if (desktopBlock) {
-          if (splash) splash.style.display = 'none';
-          desktopBlock.style.display = 'flex';
-          document.body.style.overflow = 'hidden';
-          return false;
-        }
-      }
-      return true;
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
-      // Блокируем десктоп
-      if (!checkDevice()) return;
-
       const splash = document.getElementById('splash-screen');
 
       // Register Service Worker for PWA
@@ -7339,8 +7218,19 @@
               splash.classList.add('hidden');
               document.body.classList.add('app-ready');
 
-              // Проверяем позицию скролла для текущего таба
-              setTimeout(() => checkScrollPosition('calendar'), 100);
+              // Показываем нижнее меню
+              setTimeout(() => initBottomNav(), 100);
+
+              // Свайп снизу экрана (зона 80px) — показать навбар
+              let touchStartY = 0;
+              document.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+              }, { passive: true });
+              document.addEventListener('touchend', (e) => {
+                const dy = touchStartY - e.changedTouches[0].clientY;
+                const startedAtBottom = touchStartY > window.innerHeight - 80;
+                if (startedAtBottom && dy > 20) showBottomNavBriefly();
+              }, { passive: true });
 
               // Финальный рендер иконок
               setTimeout(() => {
