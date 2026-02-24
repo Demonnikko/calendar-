@@ -115,3 +115,10 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
+// Слушатель сообщений от клиента (интерфейса) для бесшовных обновлений PWA
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

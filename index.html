@@ -7271,7 +7271,51 @@
 
       // Register Service Worker for PWA
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => { });
+        let refreshing = false;
+
+        // Когда новый SW берет управление на себя, перезагружаем страницу
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+          // Если новая версия уже ждет
+          if (reg.waiting) {
+            showUpdateBanner(reg.waiting);
+          }
+
+          // Если новая версия устанавливается прямо сейчас
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              // Когда установится и перейдет в режим ожидания
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateBanner(newWorker);
+              }
+            });
+          });
+        }).catch(() => { });
+
+        // Функция показа плашки
+        function showUpdateBanner(worker) {
+          const banner = document.getElementById('pwa-update-banner');
+          const btn = document.getElementById('pwa-update-btn');
+          if (banner && btn) {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setTimeout(() => {
+              // На iOS учитываем "челку" (50-60px сверху)
+              banner.style.top = 'env(safe-area-inset-top, 40px)';
+            }, 500);
+
+            btn.onclick = () => {
+              banner.style.top = '-100px';
+              worker.postMessage({ type: 'SKIP_WAITING' });
+            };
+          }
+        }
       }
 
       // Auto block/unblock body scroll when any modal is open
@@ -7561,6 +7605,19 @@
       console.log('📳 Calendar Haptic feedback module loaded');
     })();
   </script>
+  <!-- PWA UPDATE BANNER -->
+  <div id="pwa-update-banner" style="position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1.5px solid rgba(96,165,250,0.5); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; z-index: 99999; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px rgba(96,165,250,0.3);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <i data-lucide="download-cloud" style="width: 24px; height: 24px; color: #60a5fa;"></i>
+      <div>
+        <div style="font-size: 14px; font-weight: 800; color: #f8fafc;">Доступно обновление 🚀</div>
+        <div style="font-size: 11px; color: rgba(148,163,184,0.9); margin-top: 2px;">Нажмите, чтобы применить</div>
+      </div>
+    </div>
+    <button id="pwa-update-btn" style="background: rgba(96,165,250,0.2); border: 1px solid rgba(96,165,250,0.4); border-radius: 10px; padding: 8px 14px; color: #60a5fa; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s;">
+      Обновить
+    </button>
+  </div>
 </body>
 
 </html>
