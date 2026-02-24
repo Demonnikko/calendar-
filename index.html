@@ -3467,6 +3467,25 @@
             активацию</button>
         </div>
 
+        <!-- UPDATE APP -->
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <i data-lucide="refresh-cw" style="width: 20px; height: 20px; color: #60a5fa;"></i>
+              <div
+                style="font-size: 12px; color: rgba(96,165,250,0.8); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em;">
+                Обновление приложения</div>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: rgba(148,163,184,0.8); margin-bottom: 12px; line-height: 1.4;">
+            Нажмите, чтобы загрузить последнюю версию с новыми функциями. Ваши данные и ключ <b>не удалятся</b>.
+          </div>
+          <button onclick="forceAppUpdate()" class="btn-primary"
+            style="background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.25); color: #60a5fa;">
+            Очистить кэш и обновить
+          </button>
+        </div>
+
         <!-- GOAL SETTING -->
         <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
@@ -7148,6 +7167,31 @@
     // ==========================================
     // INIT
     // ==========================================
+
+    // Сброс кэша PWA и принудительное обновление
+    window.forceAppUpdate = function () {
+      showToast('Обновление... Пожалуйста, подождите');
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+
+        caches.keys().then(function (names) {
+          for (let name of names) {
+            caches.delete(name);
+          }
+        }).then(function () {
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 1500);
+        });
+      } else {
+        window.location.reload(true);
+      }
+    };
 
     // Функция инициализации контента (без показа)
     function initializeApp() {
