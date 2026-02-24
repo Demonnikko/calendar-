@@ -2717,6 +2717,13 @@
         if (typeof lucide !== 'undefined') {
           lucide.createIcons();
         }
+
+        // Scroll-обработчик на дашборде
+        const dashContainer = document.querySelector('.dashboard-container');
+        if (dashContainer) {
+          dashContainer.removeEventListener('scroll', handleDashboardScroll);
+          dashContainer.addEventListener('scroll', handleDashboardScroll, { passive: true });
+        }
       }, 500);
 
       // Скрываем анимацию и показываем приложение
