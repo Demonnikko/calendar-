@@ -1337,12 +1337,13 @@
       left: 0;
       right: 0;
       height: 120px;
-      background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%);
+      background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0) 100%);
       pointer-events: none;
       z-index: 99;
       opacity: 0;
       transition: opacity 0.3s ease;
     }
+
     #bottom-fade.visible {
       opacity: 1;
     }
@@ -1865,9 +1866,17 @@
     }
 
     @keyframes ribbonShine {
-      0% { opacity: 1; }
-      50% { opacity: 0.8; }
-      100% { opacity: 1; }
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+
+      100% {
+        opacity: 1;
+      }
     }
 
     /* Sparkle particles */
@@ -1985,9 +1994,17 @@
     }
 
     @keyframes goldShimmer {
-      0% { opacity: 1; }
-      50% { opacity: 0.75; }
-      100% { opacity: 1; }
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.75;
+      }
+
+      100% {
+        opacity: 1;
+      }
     }
 
     .goal-message-subtitle {
@@ -2003,8 +2020,17 @@
     }
 
     @keyframes subtitlePulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(1.03); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.85;
+        transform: scale(1.03);
+      }
     }
 
     /* Magic glow around hat */
@@ -2104,8 +2130,15 @@
     }
 
     @keyframes titleShimmer {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
     }
 
     .splash-subtitle {
@@ -2194,7 +2227,7 @@
     // ============================================
     // BUG REPORTING
     // ============================================
-    (function() {
+    (function () {
       const BUG_URL = 'https://vk-bot-illusionist.vercel.app/api/bugreport';
       const APP_NAME = 'Календарь';
       const reported = new Set();
@@ -2217,15 +2250,15 @@
               userAgent: navigator.userAgent,
               timestamp: Date.now()
             })
-          }).catch(() => {});
-        } catch (_) {}
+          }).catch(() => { });
+        } catch (_) { }
       }
 
-      window.addEventListener('error', function(e) {
+      window.addEventListener('error', function (e) {
         reportBug(e.message, e.error && e.error.stack || `${e.filename}:${e.lineno}:${e.colno}`);
       });
 
-      window.addEventListener('unhandledrejection', function(e) {
+      window.addEventListener('unhandledrejection', function (e) {
         const err = e.reason;
         reportBug(
           err && err.message || String(err),
@@ -3209,9 +3242,22 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Количество гостей</label>
-              <input type="number" id="event-guests" class="form-input" placeholder="0" min="0" inputmode="numeric">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Количество гостей</label>
+                <input type="number" id="event-guests" class="form-input" placeholder="0" min="0" inputmode="numeric">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Источник заказа</label>
+                <select id="event-order-source" class="form-select">
+                  <option value="">Не указан</option>
+                  <option value="advertising">📢 Реклама</option>
+                  <option value="agency">🤝 Агентство</option>
+                  <option value="host">🎤 Ведущий</option>
+                  <option value="referral">💬 Сарафан</option>
+                  <option value="unknown">❓ Неизвестно</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -3757,6 +3803,7 @@
       transport: { label: 'Транспорт', emoji: '🚗', color: '#3b82f6' },
       equipment: { label: 'Оборудование', emoji: '📦', color: '#ec4899' },
       advertising: { label: 'Реклама', emoji: '📢', color: '#f97316' },
+      agency: { label: 'Агентская комиссия', emoji: '🤝', color: '#6366f1' },
       other: { label: 'Другое', emoji: '📌', color: '#64748b' }
     };
 
@@ -5213,6 +5260,7 @@
       document.getElementById('event-client').value = event.client || '';
       document.getElementById('event-phone').value = event.phone || '';
       document.getElementById('event-guests').value = event.guests || '';
+      document.getElementById('event-order-source').value = event.orderSource || '';
       document.getElementById('event-income').value = event.income || '';
       document.getElementById('event-prepay').value = event.prepay || '';
       document.getElementById('event-tax').value = event.tax || '';
@@ -5296,6 +5344,7 @@
       document.getElementById('event-client').value = '';
       document.getElementById('event-phone').value = '';
       document.getElementById('event-guests').value = '';
+      document.getElementById('event-order-source').value = '';
       document.getElementById('event-income').value = '';
       document.getElementById('event-prepay').value = '';
       document.getElementById('event-tax').value = '';
@@ -5815,6 +5864,7 @@
         client: document.getElementById('event-client').value.trim(),
         phone: phone,
         guests: parseInt(document.getElementById('event-guests').value) || 0,
+        orderSource: document.getElementById('event-order-source').value,
         income: income,
         prepay: prepay,
         expenses: expenses.filter(e => e.amount > 0).map(e => ({ amount: e.amount, category: e.category, note: e.note })),
@@ -6098,12 +6148,22 @@
         return;
       }
 
+      const sourceMap = {
+        'advertising': 'реклама',
+        'agency': 'агентство',
+        'host': 'ведущий',
+        'referral': 'сарафан',
+        'unknown': 'неизвестно'
+      };
+
       const results = events.filter(e => {
+        const sourceName = e.orderSource ? (sourceMap[e.orderSource] || '') : '';
         return (e.title && e.title.toLowerCase().includes(q)) ||
           (e.client && e.client.toLowerCase().includes(q)) ||
           (e.location && e.location.toLowerCase().includes(q)) ||
           (e.address && e.address.toLowerCase().includes(q)) ||
-          (e.notes && e.notes.toLowerCase().includes(q));
+          (e.notes && e.notes.toLowerCase().includes(q)) ||
+          (sourceName.includes(q));
       }).sort((a, b) => {
         const dateA = parseEventDate(a.date);
         const dateB = parseEventDate(b.date);
@@ -6453,6 +6513,15 @@
       const statusText = statusInfo.text;
       const statusColor = statusInfo.color;
 
+      const sourceMap = {
+        'advertising': '📢 Реклама',
+        'agency': '🤝 Агентство',
+        'host': '🎤 Ведущий',
+        'referral': '💬 Сарафан',
+        'unknown': '❓ Неизвестно'
+      };
+      const sourceText = event.orderSource ? sourceMap[event.orderSource] : null;
+
       let content = `
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(135deg, ${typeInfo.color}15, ${typeInfo.color}08); border: 1px solid ${typeInfo.color}30; border-radius: 12px;">
@@ -6488,15 +6557,27 @@
           </div>
           ` : ''}
 
-          ${event.client ? `
+          ${event.client || sourceText ? `
           <div style="padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.1); border-radius: 10px;">
-            <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">👤 Клиент</div>
-            <div style="font-size: 14px; color: #fff;">${escapeHtml(event.client)}</div>
-            ${event.phone ? `
-            <a href="tel:${escapeHtml(event.phone)}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 14px; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: #22c55e; text-decoration: none; transition: all 0.2s;">
-              <i data-lucide="phone" style="width: 16px; height: 16px;"></i>
-              ${escapeHtml(event.phone)}
-            </a>
+            ${event.client ? `
+            <div style="margin-bottom: ${sourceText ? '12px' : '0'};">
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">👤 Клиент</div>
+              <div style="font-size: 14px; color: #fff;">${escapeHtml(event.client)}</div>
+              ${event.phone ? `
+              <a href="tel:${escapeHtml(event.phone)}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 14px; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: #22c55e; text-decoration: none; transition: all 0.2s;">
+                <i data-lucide="phone" style="width: 16px; height: 16px;"></i>
+                ${escapeHtml(event.phone)}
+              </a>
+              ` : ''}
+            </div>
+            ` : ''}
+            
+            ${sourceText ? `
+            ${event.client ? '<div style="height: 1px; background: rgba(255,255,255,0.06); margin: 0 0 12px 0;"></div>' : ''}
+            <div>
+              <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">🎯 Источник заказа</div>
+              <div style="font-size: 14px; color: #fff; font-weight: 500;">${sourceText}</div>
+            </div>
             ` : ''}
           </div>
           ` : ''}
@@ -6511,11 +6592,11 @@
               <div style="font-size: 11px; color: rgba(148,163,184,0.7); margin-bottom: 4px;">🎭 Выходы</div>
               <div style="font-size: 16px; font-weight: 700; color: #f59e0b;">${event.schedule.length}</div>
               ${event.schedule.map(s => {
-                const timeStr = s.time ? s.time : '';
-                const durationStr = s.duration ? s.duration + ' мин' : '';
-                return '<div style="font-size: 12px; color: rgba(148,163,184,0.8); margin-top: 4px;">' +
-                  (timeStr ? timeStr : '') + (timeStr && durationStr ? ' — ' : '') + durationStr + '</div>';
-              }).join('')}
+        const timeStr = s.time ? s.time : '';
+        const durationStr = s.duration ? s.duration + ' мин' : '';
+        return '<div style="font-size: 12px; color: rgba(148,163,184,0.8); margin-top: 4px;">' +
+          (timeStr ? timeStr : '') + (timeStr && durationStr ? ' — ' : '') + durationStr + '</div>';
+      }).join('')}
             </div>
             ` : ''}
           </div>
