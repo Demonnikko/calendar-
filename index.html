@@ -7107,6 +7107,22 @@
       }
     }
 
+    // Блокируем Safari back/forward swipe — приложение не должно "уходить" назад
+    history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', () => {
+      history.pushState(null, '', window.location.href);
+    });
+
+    // Блокируем касания от самого края экрана (зона Safari back gesture)
+    let edgeSwipeStarted = false;
+    document.addEventListener('touchstart', (e) => {
+      const x = e.touches[0].clientX;
+      edgeSwipeStarted = (x < 15 || x > window.innerWidth - 15);
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (edgeSwipeStarted) e.preventDefault();
+    }, { passive: false });
+
     document.addEventListener('DOMContentLoaded', async () => {
       const splash = document.getElementById('splash-screen');
 
