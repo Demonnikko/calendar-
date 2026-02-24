@@ -2717,12 +2717,6 @@
         if (typeof lucide !== 'undefined') {
           lucide.createIcons();
         }
-
-        // Scroll-обработчик на дашборде
-        const dashContainer = document.querySelector('.dashboard-container');
-        if (dashContainer) {
-          dashContainer.addEventListener('scroll', handleDashboardScroll, { passive: true });
-        }
       }, 500);
 
       // Скрываем анимацию и показываем приложение
@@ -7153,6 +7147,13 @@
       renderCalendar();
       renderSchedule();
       setupCalendarSwipe();
+
+      // Scroll-обработчик на дашборде
+      const dashContainer = document.querySelector('.dashboard-container');
+      if (dashContainer) {
+        dashContainer.removeEventListener('scroll', handleDashboardScroll);
+        dashContainer.addEventListener('scroll', handleDashboardScroll, { passive: true });
+      }
 
       // Импорт событий из Калькулятора (асинхронно, не блокирует UI)
       setTimeout(function () { importEventsFromFirebase(); }, 2000);
