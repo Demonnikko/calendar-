@@ -5738,7 +5738,8 @@
     }
 
     function addExpenseRow() {
-      expenses.push({ amount: 0, category: '', note: '' });
+      const firstCategory = Object.keys(EXPENSE_CATEGORIES)[0] || 'other';
+      expenses.push({ amount: 0, category: firstCategory, note: '' });
       renderExpenses();
       calculateBalance();
     }
@@ -5869,7 +5870,7 @@
         orderSource: document.getElementById('event-order-source').value,
         income: income,
         prepay: prepay,
-        expenses: expenses.filter(e => e.amount > 0).map(e => ({ amount: e.amount, category: e.category, note: e.note })),
+        expenses: expenses.filter(e => e.amount > 0).map(e => ({ amount: e.amount, category: e.category || Object.keys(EXPENSE_CATEGORIES)[0] || 'other', note: e.note })),
         tax: tax,
         notes: document.getElementById('event-notes').value.trim()
       };
@@ -6743,11 +6744,12 @@
           monthEvents.forEach(e => {
             if (e.expenses && e.expenses.length > 0) {
               e.expenses.forEach(exp => {
-                if (exp.amount > 0 && exp.category) {
-                  if (!expenseByCategory[exp.category]) {
-                    expenseByCategory[exp.category] = 0;
+                if (exp.amount > 0) {
+                  const cat = exp.category || Object.keys(EXPENSE_CATEGORIES)[0] || 'other';
+                  if (!expenseByCategory[cat]) {
+                    expenseByCategory[cat] = 0;
                   }
-                  expenseByCategory[exp.category] += exp.amount;
+                  expenseByCategory[cat] += exp.amount;
                 }
               });
             }
