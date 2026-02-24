@@ -155,6 +155,7 @@
       user-select: none;
       position: relative;
       background: #000000;
+      touch-action: pan-y;
     }
 
     /* Hide ALL app content until fully loaded */
@@ -2705,6 +2706,16 @@
         setTimeout(() => {
           magic.remove();
           document.body.classList.add('app-ready');
+
+          // Показываем меню после анимации
+          if (typeof showBottomNav === 'function') {
+            if (currentView === 'calendar') {
+              showBottomNav();
+            } else {
+              showBottomNav();
+              dashScrollTimer = setTimeout(() => hideBottomNav(), 1000);
+            }
+          }
 
           // Финальный рендер иконок
           setTimeout(() => {
@@ -7069,21 +7080,31 @@
 
     // Функция рендера иконок с ожиданием
     function renderIconsAndShow(callback) {
+      function onReady() {
+        document.body.classList.add('app-ready');
+        // Показываем меню
+        if (typeof showBottomNav === 'function') {
+          if (currentView === 'calendar') {
+            showBottomNav();
+          } else {
+            showBottomNav();
+            dashScrollTimer = setTimeout(() => hideBottomNav(), 1000);
+          }
+        }
+        if (callback) callback();
+      }
+
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
-        // Даём время на рендер иконок
         setTimeout(() => {
           lucide.createIcons();
           setTimeout(() => {
             lucide.createIcons();
-            // Теперь показываем контент
-            document.body.classList.add('app-ready');
-            if (callback) callback();
+            onReady();
           }, 150);
         }, 100);
       } else {
-        document.body.classList.add('app-ready');
-        if (callback) callback();
+        onReady();
       }
     }
 
