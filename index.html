@@ -1320,14 +1320,6 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
-      transform: translateY(120px);
-      opacity: 0;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    #bottom-nav.visible {
-      transform: translateY(0);
-      opacity: 1;
     }
 
     /* Градиентный fade под контентом перед навбаром */
@@ -1340,11 +1332,6 @@
       background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%);
       pointer-events: none;
       z-index: 99;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    #bottom-fade.visible {
-      opacity: 1;
     }
 
     .nav-inner {
@@ -2685,12 +2672,7 @@
           lucide.createIcons();
         }
 
-        // Регистрируем обработчик скролла ТОЛЬКО для дашборда
-        // На календаре меню всегда видно
-        const dashContainer = document.querySelector('.dashboard-container');
-        if (dashContainer) {
-          dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-        }
+        // Меню всегда видно — scroll-обработчики не нужны
       }, 500);
 
       // Скрываем анимацию и показываем приложение
@@ -2706,9 +2688,6 @@
         setTimeout(() => {
           magic.remove();
           document.body.classList.add('app-ready');
-
-          // Проверяем позицию скролла для текущего таба
-          setTimeout(() => checkScrollPosition('calendar'), 100);
 
           // Финальный рендер иконок
           setTimeout(() => {
@@ -4048,17 +4027,10 @@
         document.getElementById('calendar-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
-
-        // На календаре меню всегда видно
-        clearTimeout(autoHideTimer);
-        showBottomNav();
       } else if (tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
-
-        // На дашборде — показать кратко, потом скроется
-        setTimeout(() => checkScrollPosition('dashboard'), 100);
       }
     }
 
@@ -6978,87 +6950,8 @@
     }
 
     // ==========================================
-    // BOTTOM NAV AUTO-HIDE ON SCROLL
+    // BOTTOM NAV — всегда видно, без логики скрытия
     // ==========================================
-    const bottomNav = document.getElementById('bottom-nav');
-    const bottomFade = document.getElementById('bottom-fade');
-    let lastScrollTop = 0;
-    let navVisible = false;
-    let autoHideTimer = null;
-
-    function showBottomNav() {
-      if (!bottomNav) return;
-      bottomNav.classList.add('visible');
-      if (bottomFade) bottomFade.classList.add('visible');
-      navVisible = true;
-    }
-
-    // Показать навбар на 3 секунды, затем скрыть
-    function showBottomNavBriefly() {
-      if (!bottomNav) return;
-      showBottomNav();
-      clearTimeout(autoHideTimer);
-      autoHideTimer = setTimeout(() => {
-        hideBottomNav();
-      }, 3000);
-    }
-
-    function hideBottomNav() {
-      if (bottomNav) bottomNav.classList.remove('visible');
-      if (bottomFade) bottomFade.classList.remove('visible');
-      navVisible = false;
-      clearTimeout(autoHideTimer);
-    }
-
-    // При загрузке — на календаре меню всегда видно
-    function initBottomNav() {
-      if (currentView === 'dashboard') {
-        hideBottomNav();
-        setTimeout(() => showBottomNavBriefly(), 300);
-      } else {
-        setTimeout(() => showBottomNav(), 300);
-      }
-    }
-
-    // При смене таба — показать кратко
-    function checkScrollPosition(tabName) {
-      lastScrollTop = 0;
-      showBottomNavBriefly();
-    }
-
-    let scrollTicking = false;
-
-    function handleScrollImmediate(e) {
-      // Скролл-скрытие только для дашборда
-      if (currentView !== 'dashboard') return;
-      if (scrollTicking) return;
-      scrollTicking = true;
-
-      requestAnimationFrame(() => {
-        const scrollTop = e.target.scrollTop;
-        const scrollHeight = e.target.scrollHeight;
-        const clientHeight = e.target.clientHeight;
-        const delta = scrollTop - lastScrollTop;
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 20;
-
-        if (scrollHeight > clientHeight + 10) {
-          if (atBottom) {
-            // Долистали до конца — показать
-            showBottomNav();
-            clearTimeout(autoHideTimer);
-          } else if (delta < -3 && navVisible) {
-            // Скролл вверх — прятать
-            hideBottomNav();
-          } else if (delta > 5 && navVisible) {
-            // Скролл вниз (отъехали от низа) — прятать
-            hideBottomNav();
-          }
-        }
-
-        lastScrollTop = scrollTop;
-        scrollTicking = false;
-      });
-    }
 
     // ==========================================
     // HELPERS
@@ -7231,28 +7124,7 @@
               splash.classList.add('hidden');
               document.body.classList.add('app-ready');
 
-              // Показываем нижнее меню
-              setTimeout(() => initBottomNav(), 100);
-
-              // Тап на дашборде — показать навбар (если скрыт)
-              let navTouchStartY = 0;
-              let navTouchStartTime = 0;
-              let navTouchMoved = false;
-              document.addEventListener('touchstart', (e) => {
-                navTouchStartY = e.touches[0].clientY;
-                navTouchStartTime = Date.now();
-                navTouchMoved = false;
-              }, { passive: true });
-              document.addEventListener('touchmove', () => {
-                navTouchMoved = true;
-              }, { passive: true });
-              document.addEventListener('touchend', (e) => {
-                const elapsed = Date.now() - navTouchStartTime;
-                // Тап (не скролл) на дашборде — показать/спрятать меню
-                if (!navTouchMoved && elapsed < 300 && currentView === 'dashboard' && !navVisible) {
-                  showBottomNavBriefly();
-                }
-              }, { passive: true });
+              // Меню всегда видно — никакой логики скрытия
 
               // Финальный рендер иконок
               setTimeout(() => {
