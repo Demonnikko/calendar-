@@ -2685,14 +2685,11 @@
           lucide.createIcons();
         }
 
-        // Регистрируем обработчики скролла
+        // Регистрируем обработчик скролла ТОЛЬКО для дашборда
+        // На календаре меню всегда видно
         const dashContainer = document.querySelector('.dashboard-container');
-        const calContainer = document.querySelector('.calendar-container');
         if (dashContainer) {
           dashContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
-        }
-        if (calContainer) {
-          calContainer.addEventListener('scroll', handleScrollImmediate, { passive: true });
         }
       }, 500);
 
@@ -4052,14 +4049,15 @@
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
 
-        // Проверяем позицию скролла после рендера
-        setTimeout(() => checkScrollPosition('calendar'), 100);
+        // На календаре меню всегда видно
+        clearTimeout(autoHideTimer);
+        showBottomNav();
       } else if (tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
 
-        // Проверяем позицию скролла после рендера
+        // На дашборде — показать кратко, потом скроется
         setTimeout(() => checkScrollPosition('dashboard'), 100);
       }
     }
@@ -7012,10 +7010,14 @@
       clearTimeout(autoHideTimer);
     }
 
-    // При загрузке — скрыт, покажем кратко
+    // При загрузке — на календаре меню всегда видно
     function initBottomNav() {
-      hideBottomNav();
-      setTimeout(() => showBottomNavBriefly(), 300);
+      if (currentView === 'dashboard') {
+        hideBottomNav();
+        setTimeout(() => showBottomNavBriefly(), 300);
+      } else {
+        setTimeout(() => showBottomNav(), 300);
+      }
     }
 
     // При смене таба — показать кратко
@@ -7027,6 +7029,8 @@
     let scrollTicking = false;
 
     function handleScrollImmediate(e) {
+      // Скролл-скрытие только для дашборда
+      if (currentView !== 'dashboard') return;
       if (scrollTicking) return;
       scrollTicking = true;
 
@@ -7043,10 +7047,10 @@
             showBottomNav();
             clearTimeout(autoHideTimer);
           } else if (delta < -3 && navVisible) {
-            // Скролл вверх — сразу прятать
+            // Скролл вверх — прятать
             hideBottomNav();
           } else if (delta > 5 && navVisible) {
-            // Скролл вниз (отъехали от низа) — тоже прятать
+            // Скролл вниз (отъехали от низа) — прятать
             hideBottomNav();
           }
         }
@@ -7230,19 +7234,24 @@
               // Показываем нижнее меню
               setTimeout(() => initBottomNav(), 100);
 
-              // Свайп снизу экрана (зона 40px от края) — показать навбар
+              // Тап на дашборде — показать навбар (если скрыт)
               let navTouchStartY = 0;
               let navTouchStartTime = 0;
+              let navTouchMoved = false;
               document.addEventListener('touchstart', (e) => {
                 navTouchStartY = e.touches[0].clientY;
                 navTouchStartTime = Date.now();
+                navTouchMoved = false;
+              }, { passive: true });
+              document.addEventListener('touchmove', () => {
+                navTouchMoved = true;
               }, { passive: true });
               document.addEventListener('touchend', (e) => {
-                const dy = navTouchStartY - e.changedTouches[0].clientY;
-                const startedAtBottom = navTouchStartY > window.innerHeight - 40;
                 const elapsed = Date.now() - navTouchStartTime;
-                // Быстрый свайп вверх из самого низа экрана
-                if (startedAtBottom && dy > 40 && elapsed < 500) showBottomNavBriefly();
+                // Тап (не скролл) на дашборде — показать/спрятать меню
+                if (!navTouchMoved && elapsed < 300 && currentView === 'dashboard' && !navVisible) {
+                  showBottomNavBriefly();
+                }
               }, { passive: true });
 
               // Финальный рендер иконок
