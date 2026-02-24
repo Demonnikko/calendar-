@@ -3795,7 +3795,7 @@
       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
     ];
 
-    let EXPENSE_CATEGORIES = {
+    const DEFAULT_EXPENSE_CATEGORIES = {
       fuel: { label: 'Топливо', emoji: '🛢️', color: '#ef4444' },
       props: { label: 'Реквизит', emoji: '🪄', color: '#f59e0b' },
       rent: { label: 'Аренда', emoji: '🏠', color: '#8b5cf6' },
@@ -3807,12 +3807,14 @@
       other: { label: 'Другое', emoji: '📌', color: '#64748b' }
     };
 
+    let EXPENSE_CATEGORIES = { ...DEFAULT_EXPENSE_CATEGORIES };
+
     function loadCustomExpenseCategories() {
       const stored = localStorage.getItem('illusionist_expense_categories');
       if (stored) {
         try {
           const savedCategories = JSON.parse(stored);
-          EXPENSE_CATEGORIES = savedCategories;
+          EXPENSE_CATEGORIES = { ...DEFAULT_EXPENSE_CATEGORIES, ...savedCategories };
         } catch (e) {
           showToast('⚠️ Ошибка загрузки категорий расходов');
         }
@@ -4856,13 +4858,19 @@
           }
 
           if (data.expenseCategories) {
-            EXPENSE_CATEGORIES = sanitizeImportKeys(data.expenseCategories);
+            const importedCat = sanitizeImportKeys(data.expenseCategories);
+            EXPENSE_CATEGORIES = { ...DEFAULT_EXPENSE_CATEGORIES, ...importedCat };
             saveCustomExpenseCategories();
           }
 
           renderCalendar();
           if (currentView === 'dashboard') {
             renderDashboard();
+            if (typeof showBottomNav === 'function') {
+              showBottomNav();
+              clearTimeout(dashScrollTimer);
+              dashScrollTimer = setTimeout(() => hideBottomNav(), 1000);
+            }
           }
 
           closeSettingsModal();
