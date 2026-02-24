@@ -1320,6 +1320,14 @@
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
       background: transparent;
       pointer-events: none;
+      transform: translateY(120px);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #bottom-nav.visible {
+      transform: translateY(0);
+      opacity: 1;
     }
 
     /* Градиентный fade под контентом перед навбаром */
@@ -1332,6 +1340,11 @@
       background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%);
       pointer-events: none;
       z-index: 99;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #bottom-fade.visible {
+      opacity: 1;
     }
 
     .nav-inner {
@@ -2672,7 +2685,11 @@
           lucide.createIcons();
         }
 
-        // Меню всегда видно — scroll-обработчики не нужны
+        // Scroll-обработчик на дашборде
+        const dashContainer = document.querySelector('.dashboard-container');
+        if (dashContainer) {
+          dashContainer.addEventListener('scroll', handleDashboardScroll, { passive: true });
+        }
       }, 500);
 
       // Скрываем анимацию и показываем приложение
@@ -4027,10 +4044,16 @@
         document.getElementById('calendar-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'calendar\')"]').classList.add('active');
         renderCalendar();
+        clearTimeout(dashScrollTimer);
+        showBottomNav();
       } else if (tab === 'dashboard') {
         document.getElementById('dashboard-tab').classList.add('active');
         document.querySelector('[onclick="switchTab(\'dashboard\')"]').classList.add('active');
         renderDashboard();
+        // На дашборде — показать и через 1 сек спрятать
+        showBottomNav();
+        clearTimeout(dashScrollTimer);
+        dashScrollTimer = setTimeout(() => hideBottomNav(), 1000);
       }
     }
 
@@ -6950,8 +6973,34 @@
     }
 
     // ==========================================
-    // BOTTOM NAV — всегда видно, без логики скрытия
+    // BOTTOM NAV
+    // Календарь: всегда видно
+    // Дашборд: появляется при скролле, прячется через 1 сек после остановки
     // ==========================================
+    const bottomNav = document.getElementById('bottom-nav');
+    const bottomFade = document.getElementById('bottom-fade');
+    let dashScrollTimer = null;
+
+    function showBottomNav() {
+      if (bottomNav) bottomNav.classList.add('visible');
+      if (bottomFade) bottomFade.classList.add('visible');
+    }
+
+    function hideBottomNav() {
+      if (bottomNav) bottomNav.classList.remove('visible');
+      if (bottomFade) bottomFade.classList.remove('visible');
+    }
+
+    function handleDashboardScroll() {
+      // Скроллю — показать меню
+      showBottomNav();
+      // Сбросить таймер скрытия
+      clearTimeout(dashScrollTimer);
+      // Через 1 секунду после остановки — спрятать
+      dashScrollTimer = setTimeout(() => {
+        if (currentView === 'dashboard') hideBottomNav();
+      }, 1000);
+    }
 
     // ==========================================
     // HELPERS
@@ -7124,7 +7173,13 @@
               splash.classList.add('hidden');
               document.body.classList.add('app-ready');
 
-              // Меню всегда видно — никакой логики скрытия
+              // Показываем меню ПОСЛЕ анимации загрузки
+              if (currentView === 'calendar') {
+                showBottomNav();
+              } else {
+                showBottomNav();
+                dashScrollTimer = setTimeout(() => hideBottomNav(), 1000);
+              }
 
               // Финальный рендер иконок
               setTimeout(() => {
