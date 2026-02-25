@@ -1,6 +1,6 @@
 // Service Worker для Illusionist Calendar
-// Версия: 11.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
-const CACHE_NAME = 'illusionist-calendar-v14-offline';
+// Версия: 17.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
+const CACHE_NAME = 'illusionist-calendar-v17-offline';
 
 // Критические ресурсы для мгновенного старта
 const CORE_ASSETS = [
