@@ -32,8 +32,8 @@ const FIREBASE_SDK = [
 const ALL_ASSETS = [...CORE_ASSETS, ...ICON_ASSETS, ...FIREBASE_SDK];
 
 // Установка: кэшируем все ресурсы
+// НЕ вызываем self.skipWaiting() чтобы дать приложению показать баннер обновления
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return Promise.allSettled(

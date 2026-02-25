@@ -7164,28 +7164,26 @@
     // ==========================================
 
     // Сброс кэша PWA и принудительное обновление
-    // Сброс кэша PWA и принудительное обновление
     window.forceAppUpdate = function () {
       showToast('Обновление... Пожалуйста, подождите');
 
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
-        });
+      var reloadUrl = window.location.pathname + '?update=' + new Date().getTime();
 
-        caches.keys().then(function (names) {
-          for (let name of names) {
-            caches.delete(name);
-          }
-        }).then(function () {
-          setTimeout(() => {
-            window.location.href = window.location.pathname + '?update=' + new Date().getTime();
-          }, 1500);
+      if ('serviceWorker' in navigator) {
+        Promise.all([
+          navigator.serviceWorker.getRegistrations().then(function (registrations) {
+            return Promise.all(registrations.map(function (r) { return r.unregister(); }));
+          }),
+          caches.keys().then(function (names) {
+            return Promise.all(names.map(function (n) { return caches.delete(n); }));
+          })
+        ]).then(function () {
+          window.location.href = reloadUrl;
+        }).catch(function () {
+          window.location.href = reloadUrl;
         });
       } else {
-        window.location.href = window.location.pathname + '?update=' + new Date().getTime();
+        window.location.href = reloadUrl;
       }
     };
 
