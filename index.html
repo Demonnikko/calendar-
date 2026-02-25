@@ -7172,6 +7172,7 @@
     // ==========================================
 
     // Сброс кэша PWA и принудительное обновление
+    // Сброс кэша PWA и принудительное обновление
     window.forceAppUpdate = function () {
       showToast('Обновление... Пожалуйста, подождите');
 
@@ -7188,11 +7189,11 @@
           }
         }).then(function () {
           setTimeout(() => {
-            window.location.reload(true);
+            window.location.href = window.location.pathname + '?update=' + new Date().getTime();
           }, 1500);
         });
       } else {
-        window.location.reload(true);
+        window.location.href = window.location.pathname + '?update=' + new Date().getTime();
       }
     };
 

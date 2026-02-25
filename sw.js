@@ -1,6 +1,6 @@
 // Service Worker для Illusionist Calendar
-// Версия: 17.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
-const CACHE_NAME = 'illusionist-calendar-v17-offline';
+// Версия: 18.0 (FULL OFFLINE WITH LOCAL DEPENDENCIES)
+const CACHE_NAME = 'illusionist-calendar-v18-offline';
 
 // Критические ресурсы для мгновенного старта
 const CORE_ASSETS = [
@@ -68,11 +68,16 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Навигация — Cache First для мгновенного старта
+  // Навигация — Network First (чтобы index.html всегда был свежим при наличии интернета)
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then(cached => {
-        return cached || fetch(event.request);
+      fetch(event.request).then(response => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      }).catch(() => {
+        return caches.match('./index.html');
       })
     );
     return;
