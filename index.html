@@ -2721,12 +2721,6 @@
           lucide.createIcons();
         }
 
-        // Scroll-обработчик на дашборде
-        const dashContainer = document.querySelector('.dashboard-container');
-        if (dashContainer) {
-          dashContainer.removeEventListener('scroll', handleDashboardScroll);
-          dashContainer.addEventListener('scroll', handleDashboardScroll, { passive: true });
-        }
       }, 500);
 
       // Скрываем анимацию и показываем приложение
@@ -7253,14 +7247,6 @@
         onReady();
       }
     }
-
-    // Блокируем Safari back/forward swipe — приложение не должно "уходить" назад
-    history.pushState(null, '', window.location.href);
-    window.addEventListener('popstate', () => {
-      history.pushState(null, '', window.location.href);
-    });
-
-    // Safari back gesture блокируется через History API выше
 
     document.addEventListener('DOMContentLoaded', async () => {
       const splash = document.getElementById('splash-screen');
