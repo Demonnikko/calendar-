@@ -964,18 +964,14 @@
 
     .form-section-content {
       overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.25s ease, visibility 0.25s;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
       max-height: 2000px;
       opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
     }
 
     .form-section.collapsed .form-section-content {
       max-height: 0;
       opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
     }
 
     .form-group {
