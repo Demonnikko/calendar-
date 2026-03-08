@@ -6,8 +6,23 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // GET — чтение всех мест
+  // GET — чтение мест или конфига
   if (req.method === 'GET') {
+    const type = req.query?.type || '';
+
+    // ?type=config — конфигурация шоу
+    if (type === 'config') {
+      const section = req.query?.section || '';
+      if (section === 'huligan') {
+        const hulCfg = await fbGet('huligan_config') || {};
+        return res.status(200).json({ huliganShow: hulCfg.show || null });
+      }
+      const config = await fbGet('ticket_config') || {};
+      delete config.adminPassword;
+      return res.status(200).json(config);
+    }
+
+    // По умолчанию — все места
     const seats = await fbGet('ticket_seats') || {};
     return res.status(200).json(seats);
   }
@@ -22,7 +37,6 @@ module.exports = async (req, res) => {
     const { action, seats, tempBookingId } = body || {};
 
     if (action === 'reserve' && Array.isArray(seats) && tempBookingId) {
-      // Только TEMP-резервации допускаются через этот эндпоинт
       if (!String(tempBookingId).startsWith('TEMP-')) {
         return res.status(400).json({ error: 'Only TEMP bookings allowed' });
       }

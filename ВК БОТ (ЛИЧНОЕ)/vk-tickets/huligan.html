@@ -1909,7 +1909,8 @@
         const clientKey = getBookingKey(bid);
         const params = new URLSearchParams({ id: bid });
         if (clientKey) params.set('clientKey', clientKey);
-        const r = await fetch(`/api/huligan-ticket-link?${params.toString()}`);
+        params.set('action', 'ticket_link');
+        const r = await fetch(`/api/huligan?${params.toString()}`);
         if (r.ok) {
           const data = await r.json();
           ticketUrl = data.url || '';

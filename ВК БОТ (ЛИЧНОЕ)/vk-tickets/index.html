@@ -2013,7 +2013,7 @@
     async function loadConfig() {
       let cfg = null;
       try {
-        const r = await fetch('/api/ticket-config');
+        const r = await fetch('/api/seats?type=config');
         if (r.ok) cfg = await r.json();
       } catch { }
 
@@ -2023,10 +2023,9 @@
         if (cfg.payment) Object.assign(APP.config.payment, cfg.payment);
       }
 
-      // Huligan config (тоже через ticket-config, но пока отдельный путь не нужен)
       let hulCfg = null;
       try {
-        const r2 = await fetch('/api/ticket-config?section=huligan');
+        const r2 = await fetch('/api/seats?type=config&section=huligan');
         if (r2.ok) hulCfg = await r2.json();
       } catch { }
 
