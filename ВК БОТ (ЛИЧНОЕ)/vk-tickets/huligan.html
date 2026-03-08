@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ХУЛИgan 16+</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg: #080503;
+      --bg2: #0f0804;
+      --surface: #1a0e06;
+      --fire: #FF7500;
+      --fire2: #FFC200;
+      --fire-dark: #CC2800;
+      --gold: #c9a228;
+      --text: #f0ebe8;
+      --dim: rgba(240, 230, 220, 0.68);
+      --border: rgba(255, 110, 0, 0.28);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ── Floating devils ── */
+    .bg-decor {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .devil-mark {
+      position: absolute;
+      color: var(--fire);
+      animation: devilFloat ease-in-out infinite;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .devil-mark svg {
+      display: block;
+    }
+
+    @keyframes devilFloat {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-3deg);
+      }
+
+      33% {
+        transform: translateY(-14px) rotate(2deg);
+      }
+
+      66% {
+        transform: translateY(-5px) rotate(-5deg);
+      }
+    }
+
+    /* ── Loading ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .load-devil {
+      width: 80px;
+      height: 108px;
+      color: var(--fire);
+      animation: loadPulse 1.6s ease-in-out infinite;
+    }
+
+    .load-devil svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .load-title {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 34px;
+      letter-spacing: 2px;
+    }
+
+    .huli {
+      color: var(--fire2);
+    }
+
+    .load-sub {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    @keyframes loadPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: .8
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 1
+      }
+    }
+
+    /* ── Afisha hero ── */
+    .afisha-hero {
+      position: relative;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(255, 80, 0, 0.20) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Crect width='120' height='60' fill='%230d0400'/%3E%3Crect x='1' y='1' width='57' height='27' fill='%232c1000' rx='1'/%3E%3Crect x='62' y='1' width='57' height='27' fill='%23311200' rx='1'/%3E%3Crect x='-29' y='32' width='57' height='27' fill='%23280e00' rx='1'/%3E%3Crect x='32' y='32' width='57' height='27' fill='%23351300' rx='1'/%3E%3Crect x='93' y='32' width='57' height='27' fill='%232a0f00' rx='1'/%3E%3C/svg%3E") center/120px 60px;
+      border-bottom: 2px solid rgba(255, 110, 0, 0.45);
+      padding: 30px 20px 28px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .afisha-hero::before,
+    .afisha-hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, transparent 5%, var(--fire) 50%, transparent 95%);
+    }
+
+    .afisha-hero::before {
+      left: 0;
+    }
+
+    .afisha-hero::after {
+      right: 0;
+    }
+
+    .afisha-glow {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 100%, rgba(200, 50, 0, 0.32) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 100%, rgba(200, 50, 0, 0.32) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 85%, rgba(255, 100, 0, 0.13) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .afisha-brand {
+      position: relative;
+      z-index: 1;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    .afisha-badge {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      border: 1.5px solid rgba(255, 130, 0, 0.85);
+      background: rgba(160, 60, 0, 0.45);
+      color: #fff;
+      font-size: 10px;
+      letter-spacing: 3px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    .afisha-title {
+      position: relative;
+      z-index: 1;
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 15vw, 70px);
+      line-height: 0.92;
+      letter-spacing: 1px;
+      margin: 4px 0;
+      background: linear-gradient(180deg, #FFE566 0%, #FF9000 42%, #FF3D00 82%, #A81800 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 28px rgba(255, 120, 0, 0.65));
+    }
+
+    .afisha-title .huli {
+      -webkit-text-fill-color: transparent;
+    }
+
+    .afisha-rule {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 14px;
+    }
+
+    .afisha-rule::before,
+    .afisha-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+    }
+
+    .afisha-rule::before {
+      background: linear-gradient(to right, transparent, rgba(255, 110, 0, 0.7));
+    }
+
+    .afisha-rule::after {
+      background: linear-gradient(to left, transparent, rgba(255, 110, 0, 0.7));
+    }
+
+    .afisha-diamond {
+      width: 7px;
+      height: 7px;
+      background: var(--fire2);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(255, 194, 0, 0.7);
+    }
+
+    .afisha-sub {
+      position: relative;
+      z-index: 1;
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 5px;
+      color: #fff;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .afisha-info {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      color: rgba(255, 245, 235, 0.80);
+      letter-spacing: 1.5px;
+      margin-top: 14px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+    }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex;
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      background: rgba(8, 5, 3, 0.97);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 11px 0;
+      font-size: 13px;
+      font-weight: 600;
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: color .2s;
+    }
+
+    .tab-btn.active {
+      color: var(--fire);
+      border-bottom: 2px solid var(--fire);
+    }
+
+    /* ── Show desc ── */
+    .show-desc {
+      position: relative;
+      z-index: 1;
+      padding: 16px 18px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .show-desc em {
+      color: rgba(255, 150, 50, 0.9);
+      font-style: normal;
+    }
+
+    /* ── Ticket section ── */
+    .section-title {
+      position: relative;
+      z-index: 1;
+      padding: 16px 16px 8px;
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .ticket-cards {
+      position: relative;
+      z-index: 1;
+      padding: 0 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ticket-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: transform .15s, border-color .15s, box-shadow .15s;
+    }
+
+    .ticket-card:active {
+      transform: scale(0.975);
+    }
+
+    /* ticket-card colors set via inline style */
+
+    .tc-icon {
+      font-size: 30px;
+      flex-shrink: 0;
+    }
+
+    .tc-info {
+      flex: 1;
+    }
+
+    .tc-name {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 19px;
+      letter-spacing: 0.5px;
+    }
+
+    /* tc-name colors set via inline style */
+
+    .tc-desc {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .tc-price {
+      font-size: 17px;
+      font-weight: 700;
+      flex-shrink: 0;
+      text-align: right;
+      line-height: 1.2;
+    }
+
+    /* tc-price colors set via inline style */
+
+    .tc-arrow {
+      font-size: 18px;
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    /* ── Booking overlay ── */
+    .flow-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .flow-overlay.open {
+      transform: translateY(0);
+    }
+
+    .flow-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--bg);
+    }
+
+    .flow-back {
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: var(--fire);
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .flow-title {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 19px;
+      letter-spacing: 0.5px;
+    }
+
+    .flow-body {
+      padding: 20px 16px 32px;
+    }
+
+    /* Type badge */
+    .type-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    /* type-badge colors set via inline style
+    .type-badge legacy block removed */
+    .type-badge-end {
+      /* placeholder */
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--fire);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 6px;
+    }
+
+    /* Buttons */
+    .btn-main {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #7a3000, var(--fire), #9a4000);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity .2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-main:active {
+      opacity: 0.82;
+    }
+
+    .btn-main:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-main.gold {
+      background: linear-gradient(135deg, #8a6010, var(--gold), #9a7020);
+      color: #080808;
+    }
+
+    .btn-ghost {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--dim);
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      margin-top: 10px;
+    }
+
+    /* Payment card */
+    .pay-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .pay-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 12px;
+    }
+
+    .pay-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .pay-key {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .pay-val {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .pay-amount {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--fire);
+    }
+
+    .pay-comment {
+      font-size: 12px;
+      color: #aaa;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    .pay-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pay-tab {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--dim);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .pay-tab.active {
+      color: #fff;
+      border-color: rgba(255, 130, 0, 0.7);
+      background: rgba(255, 110, 0, 0.16);
+      box-shadow: 0 0 20px rgba(255, 110, 0, 0.2);
+    }
+
+    .pay-method-label {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .pay-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .pay-holder {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--dim);
+    }
+
+    .pay-timer {
+      margin-bottom: 12px;
+      background: rgba(255, 117, 0, 0.09);
+      border: 1px solid rgba(255, 117, 0, 0.35);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .pay-timer-time {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffd6b2;
+      letter-spacing: 1px;
+    }
+
+    .pay-timer-sub {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.4;
+    }
+
+    .bank-warning {
+      margin: 10px 0 16px;
+      background: rgba(232, 83, 72, 0.12);
+      border: 1px solid rgba(232, 83, 72, 0.42);
+      color: #ffd6d2;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    /* Waiting */
+    .waiting-wrap {
+      text-align: center;
+      padding: 40px 16px 20px;
+    }
+
+    .waiting-icon {
+      font-size: 64px;
+      animation: loadPulse 1.6s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .waiting-title {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .waiting-sub {
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .waiting-id {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 9px 22px;
+      background: var(--surface);
+      border-radius: 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 2px;
+    }
+
+    .blink {
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.25
+      }
+    }
+
+    .support-link {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--fire);
+      text-decoration: none;
+    }
+
+    /* Confirmed ticket */
+    .ticket-card-display {
+      margin: 4px 0 20px;
+      background: linear-gradient(160deg, #1c0800, #220a00);
+      border: 1.5px solid var(--fire-dark);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .ticket-head {
+      background: linear-gradient(135deg, #7a3000, var(--fire));
+      padding: 22px;
+      text-align: center;
+    }
+
+    .ticket-show-title {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+
+    .ticket-show-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 3px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .ticket-body {
+      padding: 18px 20px;
+    }
+
+    .ticket-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ticket-row:last-child {
+      border-bottom: none;
+    }
+
+    .ticket-key {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ticket-val {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ticket-val colors set via inline style */
+
+    .ticket-cut {
+      border-top: 2px dashed rgba(255, 110, 0, 0.35);
+      margin: 0 16px;
+    }
+
+    .ticket-number-wrap {
+      padding: 14px 20px 18px;
+      text-align: center;
+    }
+
+    .ticket-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: var(--fire);
+    }
+
+    .ticket-scan-hint {
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 2px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .save-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 16px;
+    }
+
+    /* My tickets */
+    .my-wrap {
+      padding: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .my-empty {
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .my-empty-icon {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+
+    .my-empty-text {
+      font-size: 15px;
+      color: var(--dim);
+    }
+
+    .my-empty-sub {
+      font-size: 12px;
+      color: rgba(240, 240, 240, 0.3);
+      margin-top: 6px;
+    }
+
+    .my-card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+
+    .my-card:active {
+      border-color: var(--fire);
+    }
+
+    .my-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .my-type {
+      font-family: 'Russo One', 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    /* my-type colors set via inline style */
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+
+    .status-pill.new {
+      background: rgba(100, 100, 100, 0.15);
+      color: #888;
+    }
+
+    .status-pill.waiting {
+      background: rgba(255, 180, 0, 0.12);
+      color: #ffa000;
+    }
+
+    .status-pill.confirmed {
+      background: rgba(0, 200, 80, 0.12);
+      color: #00c864;
+    }
+
+    .my-id {
+      font-size: 12px;
+      color: var(--dim);
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    .my-name {
+      font-size: 13px;
+      color: var(--dim);
+      margin-top: 5px;
+    }
+
+    /* Promo code */
+    .promo-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .promo-row .form-input {
+      flex: 1;
+    }
+
+    .btn-promo {
+      padding: 0 18px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--fire);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+      transition: opacity .2s;
+    }
+
+    .btn-promo:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .promo-result {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .promo-ok {
+      color: #4cde88;
+    }
+
+    .promo-err {
+      color: #ff6b6b;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 500;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating devils -->
+  <div id="bgDecor" class="bg-decor"></div>
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="load-devil" id="loadDevilSvg"></div>
+    <div class="load-title" id="loadTitle"><span class="huli">ХУЛИ</span>gan</div>
+    <div class="load-sub">16+ · Загружаем...</div>
+  </div>
+
+  <!-- AFISHA HERO -->
+  <div class="afisha-hero">
+    <div class="afisha-glow"></div>
+    <div class="afisha-brand">KOSTYUK PROJECT</div>
+    <div><span class="afisha-badge">16+</span></div>
+    <div class="afisha-title" id="afishaTitle"><span class="huli">ХУЛИ</span>gan</div>
+    <div class="afisha-rule">
+      <div class="afisha-diamond"></div>
+    </div>
+    <div class="afisha-sub">Магический стендап</div>
+    <div class="afisha-info" id="showDateLine">📅 Скоро &nbsp;•&nbsp; 📍 Уточняется</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('buy')">🎟 Купить билет</button>
+    <button class="tab-btn" onclick="switchTab('tickets')">📋 Мои билеты</button>
+  </div>
+
+  <!-- TAB: КУПИТЬ -->
+  <div id="tabBuy">
+    <div class="show-desc">
+      Забудьте о кроликах в шляпах и детских утренниках. Мой магический стендап — дерзкий коктейль из взрослого юмора и
+      профессиональной иллюзии. Я не просто показываю трюки — я ломаю стереотипы и заставляю смеяться до слёз, пока ваш
+      мозг пытается понять: <em>«Как, чёрт возьми, он это сделал?!»</em>
+      <br><br>⏱ Продолжительность: 1 час 20 минут
+    </div>
+    <div class="section-title">Выберите билет</div>
+    <div class="ticket-cards" id="ticketCards"></div>
+  </div>
+
+  <!-- TAB: МОИ БИЛЕТЫ -->
+  <div id="tabTickets" class="hidden">
+    <div class="my-wrap">
+      <div id="myTicketsList">
+        <div class="my-empty">
+          <div class="my-empty-icon">⏳</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOW OVERLAY -->
+  <div class="flow-overlay" id="flowOverlay">
+
+    <!-- STEP 1: NAME -->
+    <div id="flowStep1">
+      <div class="flow-top">
+        <button class="flow-back" onclick="closeFlow()">←</button>
+        <div class="flow-title">Оформление билета</div>
+      </div>
+      <div class="flow-body">
+        <div id="typeBadge1"></div>
+        <div class="form-group">
+          <label class="form-label" for="fieldName">Имя и фамилия</label>
+          <input type="text" id="fieldName" class="form-input" placeholder="Иван Петров" autocomplete="name">
+          <div class="form-hint">Будет указано в вашем билете</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fieldPhone">Телефон</label>
+          <input type="tel" id="fieldPhone" class="form-input" placeholder="+7 (999) 123-45-67" autocomplete="tel">
+          <div class="form-hint">Нужен для связи по заказу и возврату</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Промокод <span style="opacity:.5;font-weight:400">(если есть)</span></label>
+          <div class="promo-row">
+            <input type="text" id="fieldPromo" class="form-input" placeholder="" autocomplete="off"
+              style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+            <button class="btn-promo" id="btnApplyPromo" onclick="applyPromo()">Применить</button>
+          </div>
+          <div id="promoResult" class="promo-result"></div>
+        </div>
+        <button class="btn-main" id="btnStep1" onclick="submitStep1()">Перейти к оплате →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PAYMENT -->
+    <div id="flowStep2" class="hidden">
+      <div class="flow-top">
+        <button class="flow-back" onclick="showFlowStep(1)">←</button>
+        <div class="flow-title">Оплата</div>
+      </div>
+      <div class="flow-body">
+        <div class="pay-timer">
+          <div class="pay-timer-time" id="hulPayTimer">10:00</div>
+          <div class="pay-timer-sub">Оплатите в течение 10 минут, затем нажмите «Я оплатил — жду подтверждения».</div>
+        </div>
+
+        <div class="pay-tabs">
+          <div class="pay-tab active" onclick="selectHulPayMethod('sbp',this)">📱 СБП</div>
+          <div class="pay-tab" onclick="selectHulPayMethod('card',this)">💳 Карта</div>
+        </div>
+
+        <div id="hulPayMethodSbp" class="pay-card">
+          <div class="pay-method-label">Номер для перевода по СБП (Т-Банк)</div>
+          <div class="pay-value" id="hulPaySbpNum">+7 (909) 276-33-86</div>
+          <div class="pay-holder" id="hulPaySbpHolder">Костюк Дмитрий Павлович</div>
+        </div>
+
+        <div id="hulPayMethodCard" class="pay-card" style="display:none">
+          <div class="pay-method-label">Номер карты (Т-Банк)</div>
+          <div class="pay-value" id="hulPayCardNum">—</div>
+          <div class="pay-holder" id="hulPayCardHolder">Костюк Дмитрий Павлович</div>
+        </div>
+
+        <div class="bank-warning">
+          ⚠️ Оплата принимается строго на Т-Банк.<br>
+          При переводе на другой банк деньги не возвращаются.
+        </div>
+
+        <div class="pay-card" id="payCard"></div>
+        <div style="background:rgba(232,83,72,0.12);border:1.5px solid rgba(232,83,72,0.5);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:left">
+          <div style="color:#ff6b6b;font-weight:700;font-size:14px;margin-bottom:7px">⚠️ Билет выдаётся вручную</div>
+          <div style="color:rgba(255,255,255,0.85);font-size:13px;line-height:1.6">
+            После оплаты билет придёт <b>в течение 15 минут</b> в рабочее время.<br>
+            🕘 <b>9:00 — 00:00</b><br>
+            Оплатили вне этого времени — не переживайте, билет придёт утром.<br>
+            Если долго нет — <a href="https://vk.com/im?sel=196783025" target="_blank" style="color:#ff6b6b;font-weight:600">напишите создателю шоу</a>.
+          </div>
+        </div>
+
+        <button class="btn-main" id="btnPaid" onclick="markPaid()">✅ Я оплатил — жду подтверждения</button>
+        <button class="btn-ghost" onclick="closeFlow()">Отмена</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: WAITING -->
+    <div id="flowStep3" class="hidden">
+      <div class="flow-top" style="justify-content:center">
+        <div class="flow-title" style="text-align:center">Ожидание</div>
+      </div>
+      <div class="flow-body">
+        <div class="waiting-wrap">
+          <div class="waiting-icon">⏳</div>
+          <div class="waiting-title">Ожидаем подтверждения</div>
+          <div class="waiting-sub">
+            Как только мы проверим оплату — ваш билет появится здесь автоматически<span class="blink">...</span>
+          </div>
+          <div class="waiting-id" id="waitingIdText"></div>
+          <div style="font-size:12px;color:var(--dim);margin-top:12px">Не закрывайте эту страницу</div>
+          <a class="support-link" href="https://vk.com/im?sel=196783025" target="_blank">💬 Написать поддержке</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: TICKET -->
+    <div id="flowStep4" class="hidden">
+      <div class="flow-top" style="justify-content:center">
+        <div class="flow-title" style="color:var(--red2);text-align:center">Ваш билет готов! 🎉</div>
+      </div>
+      <div class="flow-body">
+        <div class="ticket-card-display" id="ticketDisplay"></div>
+        <div class="save-hint">🎟 Билет сохранён во вкладке «Мои билеты»</div>
+        <button class="btn-ghost" onclick="showRefundInfo()" style="margin-top:10px;font-size:13px;color:var(--dim)">↩
+          Условия возврата билета</button>
+        <button class="btn-ghost" onclick="goHome()">← На главную</button>
+      </div>
+    </div>
+
+    <!-- REFUND MODAL -->
+    <div id="refundModal"
+      style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);padding:16px;overflow-y:auto">
+      <div
+        style="background:#130a04;border:1px solid rgba(255,100,0,0.3);border-radius:18px;padding:22px;max-width:420px;margin:0 auto">
+        <div style="font-size:18px;font-weight:700;color:#FF6B00;margin-bottom:14px">↩ Условия возврата билета</div>
+        <div style="font-size:13px;line-height:1.7;color:rgba(255,245,235,0.85);margin-bottom:16px">
+          <b>Сроки возврата:</b><br>
+          &bull; За 10 дней и более — 100% стоимости<br>
+          &bull; От 5 до 10 дней — 50% стоимости<br>
+          &bull; От 3 до 5 дней — 30% стоимости<br>
+          &bull; Менее 3 дней — возврат не производится<br><br>
+          <b>Особые случаи:</b><br>
+          &bull; Болезнь / смерть родственника — 100% даже в день мероприятия (c документами)<br>
+          &bull; Отмена мероприятия по инициативе организатора — 100%<br><br>
+          <i style="color:rgba(255,200,180,0.6);font-size:12px">Дата подачи заявления и дата мероприятия не входят в
+            подсчёт дней.</i>
+        </div>
+        <div style="margin-bottom:12px">
+          <label for="hulRefundReason"
+            style="display:block;font-size:12px;color:rgba(255,200,180,0.8);margin-bottom:6px">Причина возврата
+            (обязательно)</label>
+          <textarea id="hulRefundReason" rows="3" placeholder="Например: не смогу прийти, поменялись планы..."
+            style="width:100%;background:#0f0b08;border:1px solid rgba(255,100,0,0.25);border-radius:10px;padding:10px 12px;color:#fff;font-size:13px;resize:vertical"></textarea>
+        </div>
+        <button onclick="requestRefund()"
+          style="width:100%;background:linear-gradient(135deg,#8b1a00,#cc3300);border:none;border-radius:12px;padding:13px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">💬
+          Подать заявку на возврат</button>
+        <button onclick="document.getElementById('refundModal').style.display='none'"
+          style="width:100%;background:transparent;border:1px solid rgba(255,100,0,0.25);border-radius:12px;padding:12px;color:rgba(255,200,180,0.7);font-size:13px;cursor:pointer">Закрыть</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════════════════
+    // DEVIL SVG
+    // ══════════════════════════════════════════
+    const DEVIL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 95" fill="currentColor">
+  <polygon points="19,27 7,1 27,24"/>
+  <polygon points="51,27 63,1 43,24"/>
+  <circle cx="35" cy="38" r="20"/>
+  <ellipse cx="27" cy="36" rx="4.5" ry="5.5" fill="rgba(0,0,0,0.35)"/>
+  <ellipse cx="43" cy="36" rx="4.5" ry="5.5" fill="rgba(0,0,0,0.35)"/>
+  <path d="M22 30 L32 34" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M48 30 L38 34" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M26 49 Q35 57 44 49" stroke="rgba(0,0,0,0.3)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M15 58 Q35 74 55 58 L51 88 Q35 95 19 88 Z"/>
+  <path d="M51 71 Q67 77 63 88 Q60 93 65 96" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M65 96 L70 90 M65 96 L60 90" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>`;
+
+    function createDevilDecor() {
+      const c = document.getElementById('bgDecor');
+      if (!c) return;
+      const sizes = [75, 105, 58, 138, 88, 68, 118, 82, 98, 128, 63, 148, 72, 92, 112];
+      sizes.forEach((sz, i) => {
+        const el = document.createElement('div');
+        el.className = 'devil-mark';
+        el.innerHTML = DEVIL_SVG;
+        el.style.cssText =
+          `left:${(Math.random() * 90).toFixed(1)}%;` +
+          `top:${(Math.random() * 90).toFixed(1)}%;` +
+          `width:${sz}px;height:${Math.round(sz * 1.36)}px;` +
+          `opacity:${(0.04 + Math.random() * 0.05).toFixed(3)};` +
+          `animation-delay:${(i * 0.65).toFixed(1)}s;` +
+          `animation-duration:${(6 + Math.random() * 7).toFixed(1)}s;`;
+        c.appendChild(el);
+      });
+      // Loading screen devil
+      const loadDev = document.getElementById('loadDevilSvg');
+      if (loadDev) loadDev.innerHTML = DEVIL_SVG;
+    }
+
+    // ══════════════════════════════════════════
+    // CONSTANTS & STATE
+    // ══════════════════════════════════════════
+    const APP = {
+      vkUser: null,
+      selectedType: null,
+      currentBookingId: null,
+      clientKey: null,
+      pollTimer: null,
+      payTimer: null,
+      payDeadlineTs: null,
+      createdAt: null,
+      promo: null,
+      config: {
+        ticketTypes: [], // loaded from Firebase: [{ key, name, icon, price, description, color, order }]
+        show: { date: 'Скоро', venue: 'Уточняется' },
+        payment: { phone: '+7 (909) 276-33-86', bank: 'Т-Банк', holder: 'Костюк Дмитрий Павлович' }
+      }
+    };
+
+    // XSS helpers
+    function escHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    // Escape for single-quoted attribute values / onclick keys
+    function escStr(s) {
+      return String(s == null ? '' : s).replace(/['"\\]/g, '_');
+    }
+
+    // Dynamic ticket type helpers
+    function getTypeByKey(key) {
+      return APP.config.ticketTypes.find(t => t.key === key) || null;
+    }
+    function getTypePrice(key) { return (getTypeByKey(key) || {}).price || 0; }
+    function getTypeIcon(key) { return (getTypeByKey(key) || {}).icon || '🎟'; }
+    function getTypeName(key) { return (getTypeByKey(key) || {}).name || key; }
+    function getTypeColor(key) { return (getTypeByKey(key) || {}).color || '#888888'; }
+    const RESERVE_MS = 10 * 60 * 1000;
+    const BLOCKED_TICKET_STATUSES = new Set(['refund_requested', 'cancelled', 'refunded', 'returned']);
+
+    function readBookingKeys() {
+      try {
+        const raw = localStorage.getItem('hul_booking_keys');
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function writeBookingKeys(map) {
+      localStorage.setItem('hul_booking_keys', JSON.stringify(map || {}));
+    }
+
+    function saveBookingKey(bookingId, key) {
+      if (!bookingId || !key) return;
+      const map = readBookingKeys();
+      map[bookingId] = key;
+      writeBookingKeys(map);
+    }
+
+    function getBookingKey(bookingId) {
+      const map = readBookingKeys();
+      return map[bookingId] || '';
+    }
+
+    function removeBookingKey(bookingId) {
+      if (!bookingId) return;
+      const map = readBookingKeys();
+      delete map[bookingId];
+      writeBookingKeys(map);
+    }
+
+    function listSavedBookingIds() {
+      return Object.keys(readBookingKeys());
+    }
+
+    function isBlockedTicketStatus(status) {
+      return BLOCKED_TICKET_STATUSES.has(String(status || '').toLowerCase());
+    }
+
+    function getVkUserId() {
+      const fromProfile = Number(APP.vkUser?.id || 0);
+      if (Number.isFinite(fromProfile) && fromProfile > 0) return fromProfile;
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const fromQuery = Number(params.get('vk_user_id') || params.get('viewer_id') || params.get('user_id') || 0);
+        if (Number.isFinite(fromQuery) && fromQuery > 0) return fromQuery;
+      } catch { }
+      return null;
+    }
+
+    function getMiniAppRouteState() {
+      const state = { tab: 'buy', bookingId: '' };
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const tabParam = String(params.get('tab') || '').toLowerCase();
+        const rawHash = String(params.get('hash') || window.location.hash.replace('#', '') || '');
+        const normalizedHash = rawHash.replace(/^huligan[/:]?/i, '');
+        const hashLower = normalizedHash.toLowerCase();
+
+        let bookingId = String(params.get('bookingId') || params.get('id') || '').trim();
+        if (!bookingId) {
+          const m = normalizedHash.match(/^(?:tickets|mytickets|my_tickets)[/:]([A-Z0-9-]{4,40})$/i);
+          if (m) bookingId = m[1];
+        }
+        if (!/^[A-Z0-9-]{4,40}$/i.test(bookingId)) bookingId = '';
+
+        const isTicketsTab = tabParam === 'tickets'
+          || hashLower === 'tickets'
+          || hashLower === 'mytickets'
+          || hashLower === 'my_tickets'
+          || /^(tickets|mytickets|my_tickets)[/:]/i.test(normalizedHash);
+
+        state.tab = isTicketsTab ? 'tickets' : 'buy';
+        state.bookingId = bookingId;
+      } catch { }
+      return state;
+    }
+
+    // ══════════════════════════════════════════
+    // API READ HELPERS
+    // ══════════════════════════════════════════
+    async function apiAction(action, payload = {}) {
+      try {
+        const r = await fetch('/api/huligan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, ...payload })
+        });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch {
+        return null;
+      }
+    }
+    async function getConfigData() {
+      return await apiAction('get_config');
+    }
+    async function getBooking(bookingId, clientKey = '', vkUserId = null) {
+      return await apiAction('get_booking', { bookingId, clientKey, vkUserId });
+    }
+    async function listUserBookings(vkUserId) {
+      const data = await apiAction('list_user_bookings', { vkUserId });
+      return Array.isArray(data) ? data : [];
+    }
+    async function getPromo(code) {
+      return await apiAction('get_promo', { code });
+    }
+    // ══════════════════════════════════════════
+    // FIREBASE WRITE (via API)
+    // ══════════════════════════════════════════
+    async function fbPut(p, d) {
+      // Работаем через API — Firebase закрыт для прямых запросов
+      try {
+        await fetch('/api/huligan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'fb_put', path: p, data: d })
+        });
+      } catch { }
+    }
+    async function fbPatch(p, d) {
+      try {
+        await fetch('/api/huligan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'fb_patch', path: p, data: d })
+        });
+      } catch { }
+    }
+
+    // ══════════════════════════════════════════
+    // VK BRIDGE
+    // ══════════════════════════════════════════
+    async function initVkBridge() {
+      try {
+        if (typeof vkBridge === 'undefined') return;
+        const t = ms => new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms));
+        await Promise.race([vkBridge.send('VKWebAppInit'), t(3000)]);
+        APP.vkUser = await Promise.race([vkBridge.send('VKWebAppGetUserInfo'), t(3000)]);
+      } catch { }
+    }
+
+    // ══════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════
+    async function init() {
+      createDevilDecor();
+
+      initVkBridge().then(() => {
+        if (APP.vkUser) {
+          const f = document.getElementById('fieldName');
+          if (f && !f.value) {
+            const { first_name, last_name } = APP.vkUser;
+            f.value = [first_name, last_name].filter(Boolean).join(' ');
+          }
+        }
+      }).catch(() => { });
+
+      await loadConfig();
+      renderTicketCards();
+
+      const deepLink = getMiniAppRouteState();
+      if (deepLink.tab === 'tickets') {
+        switchTab('tickets');
+        if (deepLink.bookingId) {
+          await openMyBooking(deepLink.bookingId);
+        }
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        return;
+      }
+
+      // Restore active booking from localStorage
+      const saved = localStorage.getItem('hul_booking_id');
+      if (saved) {
+        APP.currentBookingId = saved;
+        APP.clientKey = getBookingKey(saved);
+        const booking = await getBooking(saved, APP.clientKey, getVkUserId());
+        if (booking) {
+          if (isBlockedTicketStatus(booking.status)) {
+            localStorage.removeItem('hul_booking_id');
+            removeBookingKey(saved);
+            APP.currentBookingId = null;
+            APP.clientKey = null;
+          } else if (booking.status === 'confirmed') {
+            APP.selectedType = booking.ticketType;
+            openFlow();
+            showTicket(booking);
+          } else if (booking.status === 'waiting_admin') {
+            APP.selectedType = booking.ticketType;
+            openFlow();
+            document.getElementById('waitingIdText').textContent = saved;
+            showFlowStep(3);
+            startPolling(saved);
+          } else {
+            localStorage.removeItem('hul_booking_id');
+          }
+        } else {
+          localStorage.removeItem('hul_booking_id');
+          removeBookingKey(saved);
+        }
+      }
+
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    async function loadConfig() {
+      const cfg = await getConfigData();
+      if (cfg) {
+        if (cfg.show) Object.assign(APP.config.show, cfg.show);
+        if (cfg.payment) {
+          APP.config.payment.phone = cfg.payment.phone || cfg.payment.sbp || APP.config.payment.phone;
+          APP.config.payment.holder = cfg.payment.holder || cfg.payment.cardHolder || APP.config.payment.holder;
+          APP.config.payment.bank = cfg.payment.bank || APP.config.payment.bank;
+          APP.config.payment.card = cfg.payment.card || APP.config.payment.card || '';
+        }
+        // Load dynamic ticket types
+        if (cfg.ticketTypes && typeof cfg.ticketTypes === 'object') {
+          const types = Object.entries(cfg.ticketTypes)
+            .filter(([, t]) => t && t.active !== false)
+            .map(([key, t]) => ({ key, ...t }))
+            .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+          if (types.length) APP.config.ticketTypes = types;
+        }
+        // Fallback: generate from old prices/ticketDescs structure
+        if (!APP.config.ticketTypes.length) {
+          const prices = cfg.prices || {};
+          const descs = cfg.ticketDescs || {};
+          APP.config.ticketTypes = [
+            { key: 'vip', name: 'VIP', icon: '👑', price: prices.vip || 3000, description: descs.vip || 'Лучшие места · Приоритетный вход', color: '#c9a228', order: 0 },
+            { key: 'std', name: 'Стандарт', icon: '🎭', price: prices.std || 2000, description: descs.std || 'Хороший обзор · Комфортные места', color: '#ff7500', order: 1 },
+            { key: 'eco', name: 'Эконом', icon: '🎟', price: prices.eco || 1000, description: descs.eco || 'Отличное соотношение цены и качества', color: '#888888', order: 2 }
+          ];
+        }
+      }
+      const showTitle = APP.config.show?.title || 'ХУЛИgan';
+      const loadTitle = document.getElementById('loadTitle');
+      const afishaTitle = document.getElementById('afishaTitle');
+      if (loadTitle) loadTitle.textContent = showTitle;
+      if (afishaTitle) afishaTitle.textContent = showTitle;
+      document.title = `${showTitle} 16+`;
+
+      const { date, time, venue, address } = APP.config.show;
+      const line = document.getElementById('showDateLine');
+      if (line) {
+        const parts = [];
+        if (date && date !== 'Скоро') parts.push('📅 ' + date); else parts.push('📅 Скоро');
+        if (time) parts.push('⏰ ' + time);
+        const locationStr = address ? `${venue}${venue ? ', ' : ''}${address}` : venue;
+        if (locationStr && locationStr !== 'Уточняется') parts.push('📍 ' + locationStr);
+        line.textContent = parts.join('   •   ');
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // TABS
+    // ══════════════════════════════════════════
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'buy') || (i === 1 && tab === 'tickets'));
+      });
+      document.getElementById('tabBuy').classList.toggle('hidden', tab !== 'buy');
+      document.getElementById('tabTickets').classList.toggle('hidden', tab !== 'tickets');
+      if (tab === 'tickets') loadMyTickets();
+    }
+
+    // ══════════════════════════════════════════
+    // TICKET CARDS
+    // ══════════════════════════════════════════
+    function renderTicketCards() {
+      const types = APP.config.ticketTypes;
+      if (!types.length) {
+        document.getElementById('ticketCards').innerHTML = '<div style="color:var(--dim);text-align:center;padding:20px">Типы билетов не настроены</div>';
+        return;
+      }
+      document.getElementById('ticketCards').innerHTML = types.map(t => {
+        const c = t.color || '#888888';
+        const hex = c.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const pText = t.price > 0 ? `${t.price.toLocaleString('ru-RU')} ₽` : 'Уточняется';
+        const desc = t.description || '';
+        const key = escStr(t.key);
+        return `
+      <div class="ticket-card" style="border-color:${c};box-shadow:0 2px 20px rgba(${r},${g},${b},0.12)" onclick="selectType('${key}')">
+        <div class="tc-icon">${t.icon || '🎟'}</div>
+        <div class="tc-info">
+          <div class="tc-name" style="color:${c}">${escHtml(t.name)}</div>
+          <div class="tc-desc">${escHtml(desc)}</div>
+        </div>
+        <div class="tc-price" style="color:${c}">${pText}</div>
+        <div class="tc-arrow">›</div>
+      </div>`;
+      }).join('');
+    }
+
+    // ══════════════════════════════════════════
+    // BOOKING FLOW
+    // ══════════════════════════════════════════
+    function selectType(type) {
+      APP.selectedType = type;
+      APP.promo = null;
+      const _tc = getTypeColor(type);
+      document.getElementById('typeBadge1').innerHTML =
+        `<div class="type-badge" style="background:${_tc}1a;color:${_tc};border:1px solid ${_tc}80">${escHtml(getTypeIcon(type))} ${escHtml(getTypeName(type))}</div>`;
+      if (APP.vkUser) {
+        const f = document.getElementById('fieldName');
+        if (f && !f.value) {
+          const { first_name, last_name } = APP.vkUser;
+          f.value = [first_name, last_name].filter(Boolean).join(' ');
+        }
+      }
+      // Reset promo UI
+      const fp = document.getElementById('fieldPromo');
+      if (fp) fp.value = '';
+      const rp = document.getElementById('promoResult');
+      if (rp) rp.innerHTML = '';
+      const bp = document.getElementById('btnApplyPromo');
+      if (bp) { bp.textContent = 'Применить'; bp.disabled = false; }
+      openFlow();
+      showFlowStep(1);
+    }
+
+    function openFlow() {
+      document.getElementById('flowOverlay').classList.add('open');
+      window.scrollTo(0, 0);
+    }
+
+    function closeFlow() {
+      if (APP.currentBookingId && !confirm('Закрыть оформление? Если уже оплатили — не закрывайте.')) return;
+      document.getElementById('flowOverlay').classList.remove('open');
+      stopPolling();
+      stopHulPayTimer();
+      if (!APP.currentBookingId) APP.selectedType = null;
+    }
+
+    function goHome() {
+      localStorage.removeItem('hul_booking_id');
+      removeBookingKey(APP.currentBookingId);
+      APP.currentBookingId = null;
+      APP.clientKey = null;
+      document.getElementById('flowOverlay').classList.remove('open');
+      stopPolling();
+      stopHulPayTimer();
+    }
+
+    function showFlowStep(n) {
+      [1, 2, 3, 4].forEach(i => document.getElementById(`flowStep${i}`).classList.toggle('hidden', i !== n));
+      if (n === 2) startHulPayTimer();
+      else stopHulPayTimer();
+      requestAnimationFrame(() => {
+        const overlay = document.querySelector('.flow-overlay');
+        if (overlay) { overlay.scrollTop = 0; }
+        const el = document.getElementById(`flowStep${n}`);
+        if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+        setTimeout(() => { if (overlay) overlay.scrollTop = 0; }, 100);
+      });
+    }
+
+    async function applyPromo() {
+      const code = (document.getElementById('fieldPromo').value || '').trim().toUpperCase();
+      const res = document.getElementById('promoResult');
+      const btn = document.getElementById('btnApplyPromo');
+      if (!code) { res.innerHTML = '<span class="promo-err">Введите промокод</span>'; return; }
+
+      btn.disabled = true; btn.textContent = '...';
+      const promo = await getPromo(code);
+
+      if (!promo || !promo.active || promo.usesLeft === 0) {
+        res.innerHTML = '<span class="promo-err">❌ Промокод не найден или недействителен</span>';
+        btn.disabled = false; btn.textContent = 'Применить';
+        APP.promo = null;
+        return;
+      }
+
+      const originalPrice = getTypePrice(APP.selectedType);
+      let finalPrice = originalPrice;
+      let discountLabel = '';
+
+      if (promo.type === 'percent') {
+        const disc = Math.round(originalPrice * promo.value / 100);
+        finalPrice = Math.max(0, originalPrice - disc);
+        discountLabel = `−${promo.value}%`;
+      } else if (promo.type === 'fixed') {
+        finalPrice = Math.max(0, originalPrice - promo.value);
+        discountLabel = `−${promo.value.toLocaleString('ru-RU')} ₽`;
+      } else if (promo.type === 'free') {
+        finalPrice = 0;
+        discountLabel = 'БЕСПЛАТНО';
+      }
+
+      APP.promo = { code, type: promo.type, value: promo.value, originalPrice, finalPrice };
+
+      const finalText = finalPrice > 0 ? `Итого: ${finalPrice.toLocaleString('ru-RU')} ₽` : 'Бесплатно!';
+      res.innerHTML = `<span class="promo-ok">✅ ${discountLabel} · ${finalText}</span>`;
+      btn.textContent = '✓ Применён';
+    }
+
+    async function submitStep1() {
+      const name = (document.getElementById('fieldName').value || '').trim();
+      if (name.length < 2) { showToast('Введите имя и фамилию'); return; }
+      const phone = (document.getElementById('fieldPhone').value || '').trim();
+      const digitsOnly = phone.replace(/\D/g, '');
+      if (!phone || digitsOnly.length < 10) { showToast('Введите корректный номер телефона'); return; }
+
+      const btn = document.getElementById('btnStep1');
+      btn.disabled = true; btn.textContent = 'Сохраняем...';
+
+      const createdAt = Date.now();
+      const bookingId = 'HUL-' + Date.now().toString(36).toUpperCase().slice(-4) +
+        Math.random().toString(36).substring(2, 4).toUpperCase();
+      const clientKey = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      APP.currentBookingId = bookingId;
+      APP.clientKey = clientKey;
+      APP.createdAt = createdAt;
+      APP.payDeadlineTs = createdAt + RESERVE_MS;
+      localStorage.setItem('hul_booking_id', bookingId);
+      saveBookingKey(bookingId, clientKey);
+
+      const originalPrice = getTypePrice(APP.selectedType);
+      const finalPrice = APP.promo ? APP.promo.finalPrice : originalPrice;
+
+      await fbPut(`huligan_bookings/${bookingId}`, {
+        bookingId,
+        name,
+        phone,
+        ticketType: APP.selectedType,
+        status: 'new',
+        clientKey,
+        createdAt,
+        vkUserId: getVkUserId(),
+        promoCode: APP.promo ? APP.promo.code : null,
+        originalPrice,
+        finalPrice
+      });
+
+      renderPayCard(bookingId, name, APP.selectedType);
+      btn.disabled = false; btn.textContent = 'Далее →';
+      showFlowStep(2);
+    }
+
+    function renderPayCard(bookingId, name, type) {
+      const { payment } = APP.config;
+      const originalPrice = getTypePrice(type);
+      const finalPrice = APP.promo ? APP.promo.finalPrice : originalPrice;
+
+      document.getElementById('hulPaySbpNum').textContent = payment.phone || '+7 (909) 276-33-86';
+      document.getElementById('hulPaySbpHolder').textContent = payment.holder || 'Костюк Дмитрий Павлович';
+      document.getElementById('hulPayCardNum').textContent = payment.card || 'Не указан';
+      document.getElementById('hulPayCardHolder').textContent = payment.holder || 'Костюк Дмитрий Павлович';
+
+      const priceRow = APP.promo
+        ? `<div class="pay-row">
+        <span class="pay-key">Цена без скидки</span>
+        <span class="pay-val" style="text-decoration:line-through;opacity:.5">${originalPrice.toLocaleString('ru-RU')} ₽</span>
+       </div>
+       <div class="pay-row">
+        <span class="pay-key">Промокод</span>
+        <span class="pay-val" style="color:var(--fire2)">${APP.promo.code}</span>
+       </div>
+       <div class="pay-row">
+        <span class="pay-key">Итого к оплате</span>
+        <span class="pay-val pay-amount">${finalPrice > 0 ? finalPrice.toLocaleString('ru-RU') + ' ₽' : 'Бесплатно'}</span>
+       </div>`
+        : `<div class="pay-row">
+        <span class="pay-key">Сумма</span>
+        <span class="pay-val pay-amount">${originalPrice > 0 ? originalPrice.toLocaleString('ru-RU') + ' ₽' : 'Уточняется'}</span>
+       </div>`;
+
+      document.getElementById('payCard').innerHTML = `
+    <div class="pay-row">
+      <span class="pay-key">Получатель</span>
+      <span class="pay-val">${payment.holder || 'Костюк Дмитрий Павлович'}</span>
+    </div>
+    ${priceRow}
+    <div class="pay-row">
+      <span class="pay-key">Банк</span>
+      <span class="pay-val">${payment.bank || 'Т-Банк'}</span>
+    </div>`;
+    }
+
+    function selectHulPayMethod(method, el) {
+      document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById('hulPayMethodSbp').style.display = method === 'sbp' ? '' : 'none';
+      document.getElementById('hulPayMethodCard').style.display = method === 'card' ? '' : 'none';
+    }
+
+    function updateHulPayTimerUI(msLeft) {
+      const el = document.getElementById('hulPayTimer');
+      if (!el) return;
+      const mins = Math.max(0, Math.floor(msLeft / 60000));
+      const secs = Math.max(0, Math.floor((msLeft % 60000) / 1000));
+      el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      el.style.color = msLeft <= 60_000 ? '#ff8b80' : '#ffd6b2';
+    }
+
+    function stopHulPayTimer() {
+      if (APP.payTimer) {
+        clearInterval(APP.payTimer);
+        APP.payTimer = null;
+      }
+    }
+
+    function startHulPayTimer() {
+      if (!APP.payDeadlineTs) return;
+      stopHulPayTimer();
+      const tick = () => {
+        const left = APP.payDeadlineTs - Date.now();
+        if (left <= 0) {
+          updateHulPayTimerUI(0);
+          stopHulPayTimer();
+          const btn = document.getElementById('btnPaid');
+          if (btn) btn.disabled = true;
+          showToast('⏰ Время на оплату истекло. Оформите билет заново.');
+          return;
+        }
+        updateHulPayTimerUI(left);
+      };
+      tick();
+      APP.payTimer = setInterval(tick, 1000);
+    }
+
+    function isHulPayExpired() {
+      return APP.payDeadlineTs && Date.now() > APP.payDeadlineTs;
+    }
+
+    async function markPaid() {
+      if (isHulPayExpired()) {
+        showToast('⏰ Время на оплату истекло. Оформите билет заново.');
+        return;
+      }
+      const btn = document.getElementById('btnPaid');
+      btn.disabled = true; btn.textContent = 'Отправляем...';
+      stopHulPayTimer();
+
+      // Статус обновляется СЕРВЕРОМ — клиент не пишет в Firebase напрямую
+      try {
+        const r = await fetch('/api/huligan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'notify_admin',
+            bookingId: APP.currentBookingId,
+            clientKey: APP.clientKey || getBookingKey(APP.currentBookingId),
+            vkUserId: getVkUserId()
+          })
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          btn.disabled = false; btn.textContent = '✅ Я оплатил — жду подтверждения';
+          showToast('Ошибка: ' + (err.error || 'попробуйте снова'));
+          return;
+        }
+      } catch {
+        btn.disabled = false; btn.textContent = '✅ Я оплатил — жду подтверждения';
+        showToast('Ошибка соединения. Проверьте интернет и попробуйте снова.');
+        return;
+      }
+
+      document.getElementById('waitingIdText').textContent = APP.currentBookingId;
+      showFlowStep(3);
+      startPolling(APP.currentBookingId);
+      btn.disabled = false; btn.textContent = '✅ Я оплатил — жду подтверждения';
+    }
+
+    // ══════════════════════════════════════════
+    // POLLING
+    // ══════════════════════════════════════════
+    function startPolling(bookingId) {
+      stopPolling();
+      APP.pollTimer = setInterval(async () => {
+        const b = await getBooking(bookingId, APP.clientKey || getBookingKey(bookingId), getVkUserId());
+        if (b && b.status === 'confirmed') {
+          stopPolling();
+          showTicket(b);
+        } else if (b && isBlockedTicketStatus(b.status)) {
+          stopPolling();
+          localStorage.removeItem('hul_booking_id');
+          APP.currentBookingId = null;
+          showToast(b.status === 'refund_requested'
+            ? 'Заявка на возврат принята. Билет временно заблокирован.'
+            : 'Билет аннулирован администратором.');
+          document.getElementById('flowOverlay').classList.remove('open');
+        }
+      }, 4000);
+    }
+
+    function stopPolling() {
+      if (APP.pollTimer) { clearInterval(APP.pollTimer); APP.pollTimer = null; }
+    }
+
+    // ══════════════════════════════════════════
+    // TICKET DISPLAY
+    // ══════════════════════════════════════════
+    async function showTicket(booking) {
+      localStorage.removeItem('hul_booking_id');
+      const t = booking.ticketType;
+      const tColor = getTypeColor(t);
+      const cfg = APP.config.show;
+      const showTitle = cfg.title || 'ХУЛИgan';
+      const isCancelled = booking.status === 'cancelled' || booking.status === 'refunded' || booking.status === 'returned';
+      const bid = APP.currentBookingId || booking.bookingId;
+
+      if (isCancelled) {
+        document.getElementById('ticketDisplay').innerHTML = `
+          <div class="ticket-card-display" style="border-color:rgba(232,83,72,0.4);background:linear-gradient(160deg,#1c0a0a 0%,#080816 100%);padding:60px 20px;text-align:center">
+            <div style="font-size:56px;margin-bottom:16px">❌</div>
+            <div style="font-family:'Russo One',sans-serif;font-size:24px;color:#e85348;margin-bottom:12px;letter-spacing:1px">БИЛЕТ НЕДЕЙСТВИТЕЛЕН</div>
+            <div style="color:var(--dim);font-size:14px;line-height:1.6">
+              Этот билет был отменён или осуществлён возврат.<br>
+              Посещение шоу по этому билету невозможно.
+            </div>
+            <div style="margin-top:20px;font-size:12px;color:var(--dim);opacity:0.5">Билет № ${booking.ticketNumber || bid}</div>
+          </div>
+        `;
+        showFlowStep(4);
+        return;
+      }
+
+      // Запрашиваем подписанную ссылку для QR-кода
+      let ticketUrl = '';
+      try {
+        const clientKey = getBookingKey(bid);
+        const params = new URLSearchParams({ id: bid });
+        if (clientKey) params.set('clientKey', clientKey);
+        const r = await fetch(`/api/huligan-ticket-link?${params.toString()}`);
+        if (r.ok) {
+          const data = await r.json();
+          ticketUrl = data.url || '';
+        }
+      } catch { }
+
+      document.getElementById('ticketDisplay').innerHTML = `
+          <div class="ticket-head">
+      <div class="ticket-show-title">${showTitle}</div>
+      <div class="ticket-show-sub">16+ &nbsp;•&nbsp; Магический стендап</div>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-row">
+        <span class="ticket-key">Тип билета</span>
+        <span class="ticket-val" style="color:${tColor}">${escHtml(getTypeName(t))}</span>
+      </div>
+      <div class="ticket-row">
+        <span class="ticket-key">Гость</span>
+        <span class="ticket-val">${escHtml(booking.name)}</span>
+      </div>
+      <div class="ticket-row">
+        <span class="ticket-key">Дата</span>
+        <span class="ticket-val">${cfg.date || '—'}${cfg.time ? ', ' + cfg.time : ''}</span>
+      </div>
+      <div class="ticket-row">
+        <span class="ticket-key">Место проведения</span>
+        <span class="ticket-val">${cfg.venue || '—'}</span>
+      </div>
+    </div>
+    <div class="ticket-cut"></div>
+    <div id="ticketQrWrap" style="text-align:center;padding:20px 0">
+      <div id="ticketQrCode" style="display:inline-block;background:#fff;padding:12px;border-radius:12px"></div>
+      <div style="margin-top:8px;font-size:11px;color:var(--dim);opacity:0.6">Сканируйте для проверки подлинности</div>
+    </div>
+    <div class="ticket-number-wrap">
+      <div class="ticket-number">${booking.ticketNumber || bid}</div>
+      <div class="ticket-scan-hint">Предъявите QR-код на входе</div>
+    </div>`;
+
+      // Генерируем QR-код
+      if (ticketUrl) {
+        const qrEl = document.getElementById('ticketQrCode');
+        if (qrEl && typeof QRCode !== 'undefined') {
+          new QRCode(qrEl, {
+            text: ticketUrl,
+            width: 180,
+            height: 180,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      } else {
+        const wrap = document.getElementById('ticketQrWrap');
+        if (wrap) wrap.innerHTML = '<div style="color:var(--dim);font-size:13px;padding:16px">⏳ QR-код временно недоступен</div>';
+      }
+
+      showFlowStep(4);
+    }
+
+    // ══════════════════════════════════════════
+    // MY TICKETS
+    // ══════════════════════════════════════════
+    async function loadMyTickets() {
+      const list = document.getElementById('myTicketsList');
+      list.innerHTML = '<div class="my-empty"><div class="my-empty-icon">⏳</div></div>';
+
+      const found = [];
+      const vkUserId = getVkUserId();
+
+      if (vkUserId) {
+        const items = await listUserBookings(vkUserId);
+        items.forEach((b) => {
+          if (!isBlockedTicketStatus(b.status)) found.push(b);
+        });
+      }
+
+      for (const id of listSavedBookingIds()) {
+        if (!id || found.find(b => b.bookingId === id)) continue;
+        const b = await getBooking(id, getBookingKey(id), vkUserId);
+        if (b && !isBlockedTicketStatus(b.status)) found.push({ ...b, bookingId: b.bookingId || id });
+      }
+
+      const saved = localStorage.getItem('hul_booking_id');
+      if (saved && !found.find(b => b.bookingId === saved)) {
+        const b = await getBooking(saved, getBookingKey(saved), vkUserId);
+        if (b && !isBlockedTicketStatus(b.status)) found.push({ ...b, bookingId: b.bookingId || saved });
+        else {
+          localStorage.removeItem('hul_booking_id');
+          removeBookingKey(saved);
+        }
+      }
+
+      if (!found.length) {
+        list.innerHTML = `
+          <div class="my-empty">
+        <div class="my-empty-icon">🎟</div>
+        <div class="my-empty-text">Билетов пока нет</div>
+        <div class="my-empty-sub">Выберите билет на вкладке «Купить»</div>
+      </div> `;
+        return;
+      }
+
+      const STATUS_LABEL = { new: 'Не оплачен', waiting_admin: 'Ожидает подтверждения', confirmed: 'Подтверждён', cancelled: 'Отменён', refunded: 'Возврат', returned: 'Возврат' };
+      const STATUS_CLS = { new: 'new', waiting_admin: 'waiting', confirmed: 'confirmed', cancelled: 'new', refunded: 'new', returned: 'new' };
+
+      found.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      list.innerHTML = found.map(b => {
+        const tColor = getTypeColor(b.ticketType);
+        const sc = STATUS_CLS[b.status] || 'new';
+        const sl = STATUS_LABEL[b.status] || b.status;
+        return `
+          <div class="my-card" onclick="openMyBooking('${escStr(b.bookingId)}')">
+        <div class="my-card-top">
+          <span class="my-type" style="color:${tColor}">${escHtml(getTypeIcon(b.ticketType))} ${escHtml(getTypeName(b.ticketType))}</span>
+          <span class="status-pill ${sc}">${sl}</span>
+        </div>
+        <div class="my-id">${b.ticketNumber || b.bookingId}</div>
+        <div class="my-name">👤 ${b.name}</div>
+      </div> `;
+      }).join('');
+    }
+
+    async function openMyBooking(bookingId) {
+      APP.currentBookingId = bookingId;
+      APP.clientKey = getBookingKey(bookingId);
+      const booking = await getBooking(bookingId, APP.clientKey, getVkUserId());
+      if (!booking) return;
+      if (isBlockedTicketStatus(booking.status)) {
+        localStorage.removeItem('hul_booking_id');
+        removeBookingKey(bookingId);
+        APP.currentBookingId = null;
+        APP.clientKey = null;
+        showToast(booking.status === 'refund_requested'
+          ? 'Заявка на возврат принята. Билет временно заблокирован.'
+          : 'Этот билет аннулирован и недоступен.');
+        return;
+      }
+      APP.selectedType = booking.ticketType;
+      openFlow();
+      if (booking.status === 'confirmed') {
+        showTicket(booking);
+      } else if (booking.status === 'waiting_admin') {
+        document.getElementById('waitingIdText').textContent = bookingId;
+        showFlowStep(3);
+        startPolling(bookingId);
+      } else {
+        APP.createdAt = Number(booking.createdAt) || Date.now();
+        APP.payDeadlineTs = APP.createdAt + RESERVE_MS;
+        if (isHulPayExpired()) {
+          showToast('⏰ Время на оплату этой заявки истекло. Оформите новую заявку.');
+          document.getElementById('flowOverlay').classList.remove('open');
+          localStorage.removeItem('hul_booking_id');
+          removeBookingKey(bookingId);
+          APP.currentBookingId = null;
+          APP.clientKey = null;
+          return;
+        }
+        const phoneInp = document.getElementById('fieldPhone');
+        if (phoneInp && booking.phone) phoneInp.value = booking.phone;
+        renderPayCard(bookingId, booking.name, booking.ticketType);
+        showFlowStep(2);
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // UTILS
+    // ══════════════════════════════════════════
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function showRefundInfo() {
+      const inp = document.getElementById('hulRefundReason');
+      if (inp) inp.value = '';
+      document.getElementById('refundModal').style.display = 'block';
+    }
+
+    async function requestRefund() {
+      const reason = (document.getElementById('hulRefundReason')?.value || '').trim();
+      if (!reason) {
+        showToast('Укажите причину возврата');
+        return;
+      }
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Отправляем...';
+      try {
+        await fetch('/api/huligan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'refund_request',
+            bookingId: APP.currentBookingId,
+            clientKey: APP.clientKey || getBookingKey(APP.currentBookingId),
+            vkUserId: getVkUserId(),
+            reason
+          })
+        });
+        document.getElementById('refundModal').style.display = 'none';
+        const inp = document.getElementById('hulRefundReason');
+        if (inp) inp.value = '';
+        showToast('✅ Заявка отправлена! Дмитрий свяжется с вами в ближайшее время.');
+      } catch {
+        showToast('Ошибка. Попробуйте ещё раз.');
+        btn.disabled = false;
+        btn.textContent = '💬 Подать заявку на возврат';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+
+</html>
