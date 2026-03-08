@@ -1812,13 +1812,13 @@
       <div id="reasonModalSub" style="font-size:13px;color:var(--dim);margin-bottom:16px">Это поможет нам стать лучше
       </div>
       <textarea id="reasonInput" placeholder="Напишите причину..."
+        oninput="reasonInputChanged()"
         style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,162,39,0.2);border-radius:10px;padding:12px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;resize:none;height:90px;outline:none"></textarea>
       <div style="display:flex;gap:10px;margin-top:14px">
         <button onclick="reasonModalCancel()"
-          style="flex:1;background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:10px;padding:11px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Не
-          указывать</button>
-        <button onclick="reasonModalConfirm()"
-          style="flex:1;background:linear-gradient(135deg,#a87c14,#e8c540,#a87c14);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;color:#09090f;cursor:pointer;font-family:'Inter',sans-serif">Отправить</button>
+          style="flex:1;background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:10px;padding:11px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Без причины</button>
+        <button id="reasonModalSendBtn" onclick="reasonModalConfirm()" disabled
+          style="flex:1;background:linear-gradient(135deg,#a87c14,#e8c540,#a87c14);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;color:#09090f;cursor:pointer;font-family:'Inter',sans-serif;opacity:0.4">Отправить</button>
       </div>
     </div>
   </div>
@@ -3015,17 +3015,28 @@
       document.getElementById('reasonModalTitle').textContent = title;
       document.getElementById('reasonModalSub').textContent = sub;
       document.getElementById('reasonInput').value = '';
+      // Кнопка «Отправить» неактивна пока не введён текст
+      const btn = document.getElementById('reasonModalSendBtn');
+      btn.disabled = true;
+      btn.style.opacity = '0.4';
       const m = document.getElementById('reasonModal');
       m.style.display = 'flex';
+    }
+    function reasonInputChanged() {
+      const hasText = document.getElementById('reasonInput').value.trim().length > 0;
+      const btn = document.getElementById('reasonModalSendBtn');
+      btn.disabled = !hasText;
+      btn.style.opacity = hasText ? '1' : '0.4';
     }
     function reasonModalCancel() {
       document.getElementById('reasonModal').style.display = 'none';
       const cb = _reasonCallback;
       _reasonCallback = null;
-      if (cb) cb(''); // Выполняем действие без причины
+      if (cb) cb('');
     }
     function reasonModalConfirm() {
       const reason = document.getElementById('reasonInput').value.trim();
+      if (!reason) return; // Защита на случай если кнопка почему-то доступна
       document.getElementById('reasonModal').style.display = 'none';
       if (_reasonCallback) _reasonCallback(reason);
       _reasonCallback = null;
