@@ -1,0 +1,3556 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Шоу «Секрет» — Купить билет</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg: #080816;
+      --bg2: #0e0c20;
+      --gold: #c9a228;
+      --gold2: #e8c540;
+      --text: #f0e6d0;
+      --dim: rgba(240, 230, 208, 0.55);
+      --border: rgba(201, 162, 39, 0.22);
+      --red: #e85348;
+      --green: #3dbf6e;
+      --blue: #4a8fd9;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ══ Floating ? background ══ */
+    .bg-decor {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .q-mark {
+      position: absolute;
+      font-family: 'Playfair Display', serif;
+      color: rgba(201, 162, 39, 0.055);
+      animation: qFloat ease-in-out infinite;
+      user-select: none;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    @keyframes qFloat {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-4deg);
+      }
+
+      50% {
+        transform: translateY(-16px) rotate(4deg);
+      }
+    }
+
+    /* ══ Loading overlay ══ */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(201, 162, 39, 0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--dim);
+    }
+
+    /* ══ Header ══ */
+    .header {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      padding: 18px 16px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 130% at 50% -10%, rgba(201, 162, 39, 0.17) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .key-icon {
+      flex-shrink: 0;
+      opacity: .85;
+    }
+
+    .venue-badge {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(201, 162, 39, 0.55);
+      margin-bottom: 8px;
+    }
+
+    .show-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 29px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-shadow: 0 0 40px rgba(201, 162, 39, 0.5);
+      line-height: 1;
+    }
+
+    .show-title sup {
+      font-size: 12px;
+      opacity: .6;
+      margin-left: 2px;
+    }
+
+    .show-tagline {
+      font-size: 13px;
+      color: var(--dim);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .show-meta {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px 10px;
+      margin-top: 10px;
+    }
+
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: rgba(240, 230, 208, 0.75);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 4px 10px;
+    }
+
+    /* ══ Tabs ══ */
+    .tab-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ══ Views ══ */
+    .view {
+      position: relative;
+      z-index: 1;
+    }
+
+    .view.hidden {
+      display: none !important;
+    }
+
+    /* ══ Legend ══ */
+    .legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px 12px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .ldot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1.5px solid rgba(0, 0, 0, 0.2);
+    }
+
+    /* ══ Seats counter ══ */
+    .seats-counter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 8px 16px 4px;
+      padding: 7px 16px;
+      background: rgba(201, 162, 39, 0.08);
+      border: 1px solid rgba(201, 162, 39, 0.22);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--gold);
+      font-weight: 600;
+      letter-spacing: .2px;
+    }
+
+    .seats-counter.urgent {
+      background: rgba(220, 60, 50, 0.10);
+      border-color: rgba(220, 60, 50, 0.30);
+      color: var(--red);
+    }
+
+    /* ══ Hall map ══ */
+    .map-wrap {
+      padding: 4px 0 110px;
+      overflow-x: auto;
+    }
+
+    .map-inner {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    #hallSvg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .stage-lbl {
+      font-family: 'Inter', sans-serif;
+      fill: rgba(201, 162, 39, 0.5);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 5px;
+    }
+
+    .tbl-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px;
+      fill: rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .seat {
+      cursor: pointer;
+      transition: opacity .1s;
+    }
+
+    .seat.taken,
+    .seat.reserved {
+      cursor: not-allowed;
+    }
+
+    .seat.avail:hover {
+      opacity: .72;
+    }
+
+    /* ══ Cart bar ══ */
+    .cart-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0 12px 14px;
+      background: linear-gradient(180deg, transparent 0%, var(--bg) 35%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .cart-inner {
+      pointer-events: all;
+      background: rgba(10, 9, 26, 0.97);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 -4px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    .cart-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cart-hint {
+      font-size: 13px;
+      color: var(--dim);
+      font-style: italic;
+    }
+
+    .cart-count {
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .cart-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      line-height: 1.1;
+    }
+
+    .btn-book {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 3px 18px rgba(201, 162, 39, 0.45);
+      transition: transform .12s;
+      white-space: nowrap;
+    }
+
+    .btn-book:disabled {
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.22);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-book:not(:disabled):active {
+      transform: scale(.96);
+    }
+
+    /* ══ Step views (2-4) common ══ */
+    .step-page {
+      padding: 20px 16px 120px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .step-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--dim);
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      padding: 0;
+    }
+
+    .step-back:hover {
+      color: var(--text);
+    }
+
+    .step-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
+
+    /* ══ Form reservation timer bar ══ */
+    .form-timer-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(201, 162, 39, 0.10);
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: var(--gold);
+    }
+
+    .form-timer-countdown {
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      min-width: 40px;
+    }
+
+    .form-timer-label {
+      opacity: .75;
+    }
+
+    .form-timer-bar.urgent {
+      background: rgba(220, 60, 50, 0.12);
+      border-color: rgba(220, 60, 50, 0.40);
+      color: var(--red);
+      animation: ftb-pulse .8s ease-in-out infinite;
+    }
+
+    @keyframes ftb-pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    /* ══ Form ══ */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 6px;
+      letter-spacing: .3px;
+    }
+
+    .form-inp {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(201, 162, 39, 0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .form-inp:focus {
+      border-color: rgba(201, 162, 39, 0.5);
+    }
+
+    .form-inp::placeholder {
+      color: rgba(240, 230, 208, 0.25);
+    }
+
+    /* Promo */
+    .promo-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .promo-row .form-inp {
+      flex: 1;
+    }
+
+    .btn-apply {
+      background: rgba(201, 162, 39, 0.15);
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      color: var(--gold);
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+
+    .btn-apply:hover {
+      background: rgba(201, 162, 39, 0.25);
+    }
+
+    .promo-result {
+      font-size: 12px;
+      margin-top: 5px;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .promo-ok {
+      background: rgba(61, 191, 110, 0.1);
+      color: var(--green);
+    }
+
+    .promo-err {
+      background: rgba(232, 83, 72, 0.1);
+      color: var(--red);
+    }
+
+    /* Order summary */
+    .order-summary {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 16px 0;
+    }
+
+    .order-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .order-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .order-total {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+      margin-top: 4px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .seat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin: 2px 0;
+    }
+
+    .zone-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ══ Payment page ══ */
+    .timer-ring {
+      position: relative;
+      display: inline-block;
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 16px;
+    }
+
+    .timer-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .timer-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer-mm {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .timer-lbl {
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: .5px;
+      margin-top: 2px;
+    }
+
+    .timer-expired {
+      color: var(--red) !important;
+    }
+
+    .timer-warn {
+      color: #f5a623 !important;
+    }
+
+    .timer-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .timer-note {
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 6px;
+    }
+
+    /* Payment method tabs */
+    .pay-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .pay-tab {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--dim);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .pay-tab.active {
+      background: rgba(201, 162, 39, 0.12);
+      border-color: rgba(201, 162, 39, 0.4);
+      color: var(--gold);
+    }
+
+    .pay-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .pay-method-label {
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .pay-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 1px;
+      word-break: break-all;
+    }
+
+    .pay-holder {
+      font-size: 13px;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    .pay-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .pay-note {
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 8px;
+    }
+
+    .bank-warning {
+      margin: 0 0 16px;
+      background: rgba(232, 83, 72, 0.12);
+      border: 1px solid rgba(232, 83, 72, 0.38);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #ffd7d3;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .btn-paid {
+      width: 100%;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 22px rgba(201, 162, 39, 0.4);
+      transition: transform .12s;
+      margin-bottom: 10px;
+    }
+
+    .btn-paid:active {
+      transform: scale(.97);
+    }
+
+    .btn-cancel-booking {
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(201, 162, 39, 0.25);
+      color: var(--dim);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-cancel-booking:hover {
+      color: var(--text);
+    }
+
+    .btn-support {
+      display: block;
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto 4px;
+      padding: 12px;
+      background: rgba(74, 143, 217, 0.12);
+      border: 1px solid rgba(74, 143, 217, 0.35);
+      color: var(--blue);
+      border-radius: 12px;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-support:hover {
+      background: rgba(74, 143, 217, 0.2);
+    }
+
+    .star-btn {
+      font-size: 32px;
+      cursor: pointer;
+      color: rgba(201, 162, 39, 0.25);
+      transition: color .15s;
+    }
+
+    .star-btn.active {
+      color: var(--gold);
+    }
+
+    .btn-review {
+      display: inline-block;
+      margin-top: 6px;
+      background: rgba(201, 162, 39, 0.1);
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      color: var(--gold);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ══ Step 4: Waiting ══ */
+    .waiting-box {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .waiting-icon {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .waiting-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .waiting-sub {
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.7;
+      max-width: 300px;
+      margin: 0 auto 24px;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .4;
+        transform: scale(.7)
+      }
+    }
+
+    .confirmed-box {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .confirmed-icon {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .confirmed-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .btn-ticket {
+      display: inline-block;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(201, 162, 39, 0.4);
+    }
+
+    /* ══ My tickets tab ══ */
+    .my-tickets-wrap {
+      padding: 16px 16px 40px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .my-tickets-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .ticket-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+
+    .ticket-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .ticket-card-id {
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--gold);
+    }
+
+    .ticket-card-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .ticket-card-seats {
+      font-size: 13px;
+      color: var(--dim);
+      margin-bottom: 10px;
+    }
+
+    .ticket-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-open-ticket {
+      background: rgba(201, 162, 39, 0.12);
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-refund {
+      background: rgba(232, 83, 72, 0.08);
+      border: 1px solid rgba(232, 83, 72, 0.25);
+      color: var(--red);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ══ Toast ══ */
+    .toast {
+      position: fixed;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(12, 10, 28, .97);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 300;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .5);
+      opacity: 0;
+      transition: transform .25s, opacity .25s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ══ Buttons universal ══ */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35);
+      transition: transform .12s;
+      margin-bottom: 0;
+    }
+
+    .btn-primary:active {
+      transform: scale(.97);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(201, 162, 39, 0.28);
+      color: var(--gold);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* ══ Home Screen ══ */
+    #screenHome {
+      min-height: 100dvh;
+      padding-bottom: 40px;
+    }
+
+    .home-top {
+      text-align: center;
+      padding: 50px 20px 32px;
+    }
+
+    .home-q {
+      font-family: 'Playfair Display', serif;
+      font-size: 80px;
+      font-weight: 900;
+      color: rgba(201, 162, 39, 0.60);
+      line-height: 1;
+      animation: qFloat 3s ease-in-out infinite;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .home-brand {
+      font-size: 10px;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: rgba(240, 230, 208, 0.40);
+      margin-bottom: 8px;
+    }
+
+    .home-h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 23px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 1px;
+      text-shadow: 0 0 28px rgba(201, 162, 39, 0.45);
+      margin-bottom: 6px;
+    }
+
+    .home-sub {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+
+    .home-cards {
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .home-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .home-card {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(201, 162, 39, 0.18);
+      border-radius: 16px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .home-card:active {
+      background: rgba(201, 162, 39, 0.07);
+      border-color: rgba(201, 162, 39, 0.35);
+    }
+
+    .home-card.disabled {
+      opacity: .45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .home-emoji {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .home-age {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(201, 162, 39, 0.12);
+      border: 1px solid rgba(201, 162, 39, 0.28);
+      color: var(--gold);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    .home-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .home-date {
+      font-size: 11px;
+      color: rgba(240, 230, 208, 0.45);
+    }
+
+    .home-btn {
+      margin-top: auto;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .home-btn-outline {
+      margin-top: auto;
+      background: rgba(201, 162, 39, 0.08);
+      border: 1px solid rgba(201, 162, 39, 0.22);
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .home-wide-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .home-wide-text {
+      flex: 1;
+    }
+
+    .home-wide-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .home-wide-desc {
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    .home-arrow {
+      color: var(--gold);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ══ Quiz Screen ══ */
+    #screenQuiz {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quiz-hdr {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+
+    .quiz-back {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      padding: 4px 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .quiz-back:hover {
+      color: var(--text);
+    }
+
+    .quiz-prog {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .quiz-prog-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: width .35s ease;
+    }
+
+    .quiz-step-num {
+      font-size: 11px;
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .quiz-body {
+      flex: 1;
+      padding: 24px 16px 130px;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .quiz-q {
+      font-family: 'Playfair Display', serif;
+      font-size: 21px;
+      color: var(--gold);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .quiz-hint-txt {
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 18px;
+    }
+
+    .quiz-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .quiz-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(201, 162, 39, 0.18);
+      color: var(--text);
+      border-radius: 20px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+
+    .quiz-chip.active {
+      background: rgba(201, 162, 39, 0.16);
+      border-color: rgba(201, 162, 39, 0.60);
+      color: var(--gold);
+    }
+
+    .quiz-chip:active {
+      opacity: .75;
+    }
+
+    .quiz-day-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .quiz-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      transition: all .15s;
+    }
+
+    .quiz-day.active {
+      background: rgba(201, 162, 39, 0.16);
+      border-color: rgba(201, 162, 39, 0.60);
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .quiz-day.past {
+      opacity: .3;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .quiz-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0 16px 20px;
+      background: linear-gradient(180deg, transparent 0%, var(--bg) 40%);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .quiz-nav>* {
+      pointer-events: all;
+    }
+
+    .quiz-next {
+      width: 100%;
+      background: linear-gradient(135deg, #a87c14, #e8c540, #a87c14);
+      color: #09090f;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35);
+      transition: transform .12s;
+    }
+
+    .quiz-next:disabled {
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.22);
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .quiz-next:not(:disabled):active {
+      transform: scale(.97);
+    }
+
+    .quiz-skip {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--dim);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      padding: 10px;
+      margin-top: 4px;
+    }
+
+    .quiz-success-wrap {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .quiz-success-icon {
+      font-size: 64px;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .quiz-success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .quiz-success-sub {
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating ? marks -->
+  <div id="bgDecor" class="bg-decor"></div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div
+      style="font-family:'Playfair Display',serif;font-size:80px;color:rgba(201,162,39,0.7);line-height:1;animation:qFloat 2s ease-in-out infinite;margin-bottom:8px">
+      ?</div>
+    <div
+      style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);letter-spacing:3px;margin-bottom:6px">
+      СЕКРЕТ</div>
+    <div class="loading-text">Загружаем зал...</div>
+  </div>
+
+  <!-- ═══ HOME SCREEN ═══ -->
+  <div id="screenHome" class="view hidden">
+    <div class="home-top">
+      <span class="home-q">?</span>
+      <div class="home-brand">Дмитрий Костюк · Иллюзионист</div>
+      <div class="home-h1">Магия рядом с вами</div>
+      <div class="home-sub">Выберите шоу или закажите<br>выступление на ваше мероприятие</div>
+    </div>
+    <div class="home-cards">
+      <div class="home-row">
+        <!-- Секрет -->
+        <div class="home-card" onclick="goToSecret()">
+          <div class="home-emoji">🎭</div>
+          <div>
+            <span class="home-age">12+</span>
+            <div class="home-name">Шоу «Секрет»</div>
+          </div>
+          <div class="home-date" id="homeShowDate">—</div>
+          <div class="home-btn">Купить билет</div>
+        </div>
+        <!-- Хулиган -->
+        <div class="home-card" onclick="goToHuligan()">
+          <div class="home-emoji">😈</div>
+          <div>
+            <span class="home-age">18+</span>
+            <div class="home-name">Хулиган GAN</div>
+          </div>
+          <div class="home-date" id="homeHuliganDate">Магический стендап</div>
+          <div class="home-btn-outline">Подробнее →</div>
+        </div>
+      </div>
+      <!-- Заказать шоу -->
+      <div class="home-card" onclick="goToQuiz()">
+        <div class="home-wide-inner">
+          <span style="font-size:38px">🎩</span>
+          <div class="home-wide-text">
+            <div class="home-wide-name">Заказать шоу</div>
+            <div class="home-wide-desc">Корпоратив · День рождения<br>Свадьба · Детский праздник</div>
+          </div>
+          <span class="home-arrow">→</span>
+        </div>
+      </div>
+      <!-- Школа фокусов -->
+      <div class="home-card disabled">
+        <div class="home-wide-inner">
+          <span style="font-size:38px">✨</span>
+          <div class="home-wide-text">
+            <div class="home-wide-name">Школа фокусов</div>
+            <div class="home-wide-desc">Дневник ученика, уровни,<br>достижения — скоро!</div>
+          </div>
+          <span style="font-size:11px;color:var(--dim);white-space:nowrap">Скоро</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ SCREEN ═══ -->
+  <div id="screenQuiz" class="view hidden">
+    <div class="quiz-hdr">
+      <button class="quiz-back" onclick="quizBack()">← Назад</button>
+      <div class="quiz-prog">
+        <div class="quiz-prog-fill" id="quizFill" style="width:0%"></div>
+      </div>
+      <span class="quiz-step-num" id="quizStepNum">1 / 7</span>
+    </div>
+    <div class="quiz-body" id="quizBody"></div>
+    <div class="quiz-nav" id="quizNav">
+      <button class="quiz-next" id="quizBtnNext" onclick="quizNext()" disabled>Далее →</button>
+      <button class="quiz-skip" id="quizBtnSkip" onclick="quizSkip()" style="display:none">Пропустить</button>
+    </div>
+  </div>
+
+  <!-- ═══ REFUND FEEDBACK SCREEN ═══ -->
+  <div id="screenRefundFeedback" class="view hidden" style="max-width:760px;margin:0 auto;padding:18px 16px 40px">
+    <div class="quiz-hdr" style="margin-bottom:16px">
+      <button class="quiz-back" onclick="showScreen('home')">← На главную</button>
+      <div style="font-size:13px;color:var(--dim)">Анкета возврата</div>
+      <span style="width:48px"></span>
+    </div>
+    <div class="payment-box" style="padding:18px">
+      <div class="step-title" style="margin-bottom:8px">Спасибо, что обратились к нам</div>
+      <div style="font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:18px">
+        Нам важно понять причину возврата и улучшить сервис. Это займет меньше минуты.
+      </div>
+      <div id="rfMeta" style="font-size:12px;color:var(--dim);margin-bottom:14px"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="rfReasonCode">Почему вернули билет? *</label>
+        <select class="form-inp" id="rfReasonCode">
+          <option value="">Выберите причину</option>
+          <option value="plans_changed">Изменились планы</option>
+          <option value="date_time_not_fit">Не подходит дата/время</option>
+          <option value="price">Не устроила цена</option>
+          <option value="location">Неудобная площадка/локация</option>
+          <option value="health">По состоянию здоровья</option>
+          <option value="other">Другое</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="rfReasonText">Комментарий (необязательно)</label>
+        <textarea class="form-inp" id="rfReasonText" rows="3" placeholder="Коротко опишите ситуацию"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="rfImproveText">Что можно улучшить? (необязательно)</label>
+        <textarea class="form-inp" id="rfImproveText" rows="3" placeholder="Ваше предложение"></textarea>
+      </div>
+
+      <button class="btn-primary" id="rfSubmitBtn" onclick="submitRefundFeedback()" style="max-width:320px">
+        Отправить анкету
+      </button>
+      <div id="rfStatus" style="margin-top:12px;font-size:13px;color:var(--dim)"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header" id="pageHeader">
+    <span class="venue-badge" id="venueBadge">🎭 Арт-площадка Лампа · Ярославль, Нахимсона 21</span>
+    <div class="header-main">
+      <svg class="key-icon" viewBox="0 0 24 32" width="22" height="29" fill="none">
+        <path d="M7 14V9C7 5.13 9.69 2 13 2C16.31 2 19 5.13 19 9V14" stroke="rgba(201,162,39,0.75)" stroke-width="2"
+          stroke-linecap="round" />
+        <rect x="3" y="14" width="20" height="16" rx="3" fill="rgba(201,162,39,0.1)" stroke="rgba(201,162,39,0.65)"
+          stroke-width="1.5" />
+        <circle cx="13" cy="22" r="3" fill="rgba(201,162,39,0.55)" />
+        <path d="M12 24.5v2.5h2v-2.5" fill="rgba(201,162,39,0.55)" stroke="none" />
+      </svg>
+      <div>
+        <div class="show-title">ШОУ «СЕКРЕТ»<sup>12+</sup></div>
+        <div class="show-tagline">шоу, которое вдохновляет</div>
+      </div>
+    </div>
+    <div class="show-meta" id="showMeta">
+      <div class="meta-chip">📅 Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabHallBtn" onclick="switchTab('hall')">🎭 Выбор мест</button>
+    <button class="tab-btn" id="tabTicketsBtn" onclick="switchTab('tickets')">🎫 Мои билеты</button>
+  </div>
+
+  <!-- ═══ HALL TAB ═══ -->
+  <div id="tabHall" class="view">
+
+    <!-- Step 1: Hall map -->
+    <div id="step1">
+      <div class="legend">
+        <div class="legend-item">
+          <div class="ldot" style="background:#e85348"></div>VIP — <span id="legVip">1 400</span> ₽
+        </div>
+        <div class="legend-item">
+          <div class="ldot" style="background:#3dbf6e"></div>Стандарт — <span id="legStd">1 100</span> ₽
+        </div>
+        <div class="legend-item">
+          <div class="ldot" style="background:#4a8fd9"></div>Эконом — <span id="legEco">800</span> ₽
+        </div>
+        <div class="legend-item">
+          <div class="ldot" style="background:#c9a228;border-color:#c9a228"></div>Брон.
+        </div>
+        <div class="legend-item">
+          <div class="ldot" style="background:#252535;border-color:#353548"></div>Занято
+        </div>
+      </div>
+
+      <!-- Счётчик свободных мест -->
+      <div id="seatsCounter" class="seats-counter" style="display:none"></div>
+
+      <div class="map-wrap">
+        <div class="map-inner">
+          <svg id="hallSvg" viewBox="0 0 490 515" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="sglow" cx="50%" cy="100%" r="60%">
+                <stop offset="0%" stop-color="rgba(201,162,39,0.18)" />
+                <stop offset="100%" stop-color="rgba(201,162,39,0)" />
+              </radialGradient>
+              <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="4" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <rect x="80" y="12" width="330" height="80" rx="8" fill="url(#sglow)" opacity=".7" />
+            <rect x="110" y="14" width="270" height="44" rx="7" fill="rgba(201,162,39,0.08)"
+              stroke="rgba(201,162,39,0.45)" stroke-width="1.5" />
+            <text x="245" y="41" class="stage-lbl" text-anchor="middle" dominant-baseline="central">С Ц Е Н А</text>
+            <g id="hall"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="cart-bar">
+        <div class="cart-inner">
+          <div class="cart-left">
+            <div class="cart-hint" id="cartHint">Нажмите на место, чтобы выбрать</div>
+            <div id="cartInfo" style="display:none">
+              <div class="cart-count" id="cartCount"></div>
+              <div class="cart-total" id="cartTotal"></div>
+            </div>
+          </div>
+          <button class="btn-book" id="btnBook" disabled onclick="goStep2()">Далее →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Booking form -->
+    <div id="step2" class="view hidden">
+      <div class="step-page">
+        <button class="step-back" onclick="goStep1()">← Назад к выбору мест</button>
+        <div class="step-title">🎩 Оформление брони</div>
+
+        <!-- Form reservation timer -->
+        <div class="form-timer-bar" id="formTimerBar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span class="form-timer-countdown" id="formTimerDisplay">10:00</span>
+          <span class="form-timer-label">— места зарезервированы за вами</span>
+        </div>
+
+        <div id="step2Summary"></div>
+
+        <div class="form-group">
+          <label class="form-label">Ваше имя *</label>
+          <input class="form-inp" id="fieldName" placeholder="Иван Иванов" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Телефон *</label>
+          <input class="form-inp" id="fieldPhone" type="tel" placeholder="+7 (999) 123-45-67" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Промокод (если есть)</label>
+          <div class="promo-row">
+            <input class="form-inp" id="fieldPromo" placeholder="" style="text-transform:uppercase">
+            <button class="btn-apply" onclick="applyPromo()">Применить</button>
+          </div>
+          <div id="promoResult" style="display:none" class="promo-result"></div>
+        </div>
+
+        <div class="order-summary" id="orderSummary"></div>
+
+        <button class="btn-primary" onclick="goStep3()">Перейти к оплате →</button>
+        <button class="btn-secondary" onclick="goStep1()">← Изменить места</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Payment -->
+    <div id="step3" class="view hidden">
+      <div class="step-page">
+        <div class="step-title">💳 Оплата</div>
+
+        <div class="timer-container">
+          <div class="timer-ring">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(201,162,39,0.12)" stroke-width="6" />
+              <circle id="timerCircle" cx="48" cy="48" r="42" fill="none" stroke="var(--gold)" stroke-width="6"
+                stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" />
+            </svg>
+            <div class="timer-text">
+              <div class="timer-mm" id="timerDisplay">10:00</div>
+              <div class="timer-lbl">осталось</div>
+            </div>
+          </div>
+          <div class="timer-note">Оплатите в течение 10 минут.<br>Места будут удерживаться за вами.</div>
+        </div>
+
+        <div class="pay-tabs">
+          <div class="pay-tab active" onclick="selectPayMethod('sbp',this)">📱 СБП</div>
+          <div class="pay-tab" onclick="selectPayMethod('card',this)">💳 Карта</div>
+        </div>
+
+        <div id="payMethodSbp" class="pay-card">
+          <div class="pay-method-label">Номер для перевода по СБП (Т-Банк)</div>
+          <div class="pay-value" id="paySbpNum">+7 (909) 276-33-86</div>
+          <div class="pay-holder" id="paySbpHolder">Костюк Дмитрий Павлович</div>
+        </div>
+        <div id="payMethodCard" class="pay-card" style="display:none">
+          <div class="pay-method-label">Номер карты (Т-Банк)</div>
+          <div class="pay-value" id="payCardNum">—</div>
+          <div class="pay-holder" id="payCardHolder">—</div>
+        </div>
+
+        <div class="bank-warning">
+          ⚠️ Оплата принимается строго на Т-Банк.<br>
+          При переводе на другой банк деньги не возвращаются.
+        </div>
+
+        <div class="pay-card" style="text-align:center;margin-bottom:20px">
+          <div class="pay-method-label">Сумма к оплате</div>
+          <div class="pay-amount" id="payAmount">0 ₽</div>
+          <div class="pay-note">Комментарий к переводу не требуется</div>
+        </div>
+
+        <div style="background:rgba(232,83,72,0.12);border:1.5px solid rgba(232,83,72,0.5);border-radius:14px;padding:16px 18px;margin-bottom:16px;text-align:left">
+          <div style="color:#ff6b6b;font-weight:700;font-size:15px;margin-bottom:8px">⚠️ Важно: билет выдаётся вручную</div>
+          <div style="color:rgba(255,255,255,0.85);font-size:13.5px;line-height:1.6">
+            После оплаты билет выдаётся <b>в течение 15 минут</b> в рабочее время.<br><br>
+            🕘 <b>Рабочее время: с 9:00 до 00:00</b><br><br>
+            Если вы оплатили ночью или рано утром — не переживайте, билет придёт в ближайшее рабочее время.<br><br>
+            Если билет не пришёл — <a href="https://vk.com/im?sel=196783025" target="_blank" style="color:#ff6b6b;font-weight:600">напишите создателю шоу лично ВКонтакте</a>.
+          </div>
+        </div>
+
+        <button class="btn-paid" onclick="markPaid()">✅ Я оплатил — жду подтверждения</button>
+        <button class="btn-cancel-booking" onclick="cancelActiveBooking()">Отменить бронь</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Waiting / Confirmed -->
+    <div id="step4" class="view hidden">
+      <div class="step-page">
+        <div id="waitingBox" class="waiting-box">
+          <span class="waiting-icon">🎩</span>
+          <div class="waiting-title">Заявка отправлена!</div>
+          <div class="waiting-sub">
+            <span class="pulse-dot"></span>&nbsp;<b>Ожидаем подтверждения оплаты...</b><br><br>
+            Билет выдаётся вручную — обычно в течение <b>15 минут</b>.<br><br>
+            🕘 <b>Рабочее время: 9:00 — 00:00</b><br>
+            Если вы оплатили вне этого времени — билет придёт в ближайшее рабочее время. Не переживайте!<br><br>
+            Как только оплата подтвердится, вы получите уведомление в личные сообщения ВКонтакте, а билет появится во вкладке «Мои билеты».
+          </div>
+          <a class="btn-support" href="https://vk.com/im?sel=196783025" target="_blank">💬 Написать создателю шоу</a>
+          <button class="btn-cancel-booking" style="max-width:280px;margin:0 auto;display:block;margin-top:10px"
+            onclick="cancelActiveBooking()">Отменить заявку</button>
+        </div>
+        <div id="confirmedBox" class="confirmed-box" style="display:none">
+          <span class="confirmed-icon">🎉</span>
+          <div class="confirmed-title">Оплата подтверждена!</div>
+          <div class="waiting-sub">Ваши места забронированы. Билет доступен в мини-аппе во вкладке «Мои билеты».</div>
+          <a id="ticketLink" class="btn-ticket" href="#">🎟 Открыть билет</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /tabHall -->
+
+  <!-- ═══ MY TICKETS TAB ═══ -->
+  <div id="tabTickets" class="view hidden">
+    <div class="my-tickets-wrap">
+      <div class="my-tickets-title">🎫 Мои билеты</div>
+      <div id="myTicketsList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ REASON MODAL ═══ -->
+  <div id="reasonModal"
+    style="display:none;position:fixed;inset:0;z-index:300;background:rgba(8,8,22,0.85);display:none;align-items:center;justify-content:center;padding:20px">
+    <div
+      style="background:#0e0c20;border:1px solid rgba(201,162,39,0.25);border-radius:20px;padding:24px;width:100%;max-width:380px">
+      <div id="reasonModalTitle"
+        style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:8px">Причина</div>
+      <div id="reasonModalSub" style="font-size:13px;color:var(--dim);margin-bottom:16px">Это поможет нам стать лучше
+      </div>
+      <textarea id="reasonInput" placeholder="Напишите причину..."
+        style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,162,39,0.2);border-radius:10px;padding:12px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;resize:none;height:90px;outline:none"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="reasonModalCancel()"
+          style="flex:1;background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:10px;padding:11px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Не
+          указывать</button>
+        <button onclick="reasonModalConfirm()"
+          style="flex:1;background:linear-gradient(135deg,#a87c14,#e8c540,#a87c14);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;color:#09090f;cursor:pointer;font-family:'Inter',sans-serif">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REVIEW MODAL ═══ -->
+  <div id="reviewModal"
+    style="display:none;position:fixed;inset:0;z-index:300;background:rgba(8,8,22,0.85);align-items:center;justify-content:center;padding:20px">
+    <div
+      style="background:#0e0c20;border:1px solid rgba(201,162,39,0.25);border-radius:20px;padding:24px;width:100%;max-width:380px">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:4px">⭐ Оставить
+        отзыв</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Ваше мнение важно. Как прошло шоу?</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px" id="starRow">
+        <span class="star-btn" data-v="1" onclick="setStars(1)">★</span>
+        <span class="star-btn" data-v="2" onclick="setStars(2)">★</span>
+        <span class="star-btn" data-v="3" onclick="setStars(3)">★</span>
+        <span class="star-btn" data-v="4" onclick="setStars(4)">★</span>
+        <span class="star-btn" data-v="5" onclick="setStars(5)">★</span>
+      </div>
+      <textarea id="reviewText" placeholder="Расскажите о впечатлениях..."
+        style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,162,39,0.2);border-radius:10px;padding:12px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;resize:none;height:90px;outline:none"></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="closeReviewModal()"
+          style="flex:1;background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:10px;padding:11px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Позже</button>
+        <button onclick="submitReview()"
+          style="flex:1;background:linear-gradient(135deg,#a87c14,#e8c540,#a87c14);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;color:#09090f;cursor:pointer;font-family:'Inter',sans-serif">Отправить
+          ✨</button>
+      </div>
+      <div id="reviewBookingId" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="ticketModal"
+    style="display:none;position:fixed;inset:0;z-index:350;background:rgba(8,8,22,0.95);overflow-y:auto;padding:16px">
+    <div style="max-width:420px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-family:'Playfair Display',serif;color:var(--gold);font-size:18px">🎟 Ваш билет</div>
+        <button onclick="closeTicketModal()"
+          style="background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px">✕ Закрыть</button>
+      </div>
+      <div id="ticketInlineContent"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════════════════════════════
+    // CONSTANTS
+    // ══════════════════════════════════════════════════════
+    const FB = 'https://kostyuk-vk-bot-default-rtdb.firebaseio.com';
+    const RESERVE_MS = 10 * 60 * 1000; // 10 minutes
+
+    const ZONES = {
+      vip: { color: '#e85348', rgb: '232,83,72', label: 'VIP', price: 1400 },
+      standart: { color: '#3dbf6e', rgb: '61,191,110', label: 'Стандарт', price: 1100 },
+      econom: { color: '#4a8fd9', rgb: '74,143,217', label: 'Эконом', price: 800 }
+    };
+
+    const TABLES = [
+      { id: 1, cx: 130, cy: 120, zone: 'vip', n: 8, big: true },
+      { id: 2, cx: 252, cy: 114, zone: 'vip', n: 8, big: true },
+      { id: 3, cx: 370, cy: 120, zone: 'vip', n: 8, big: true },
+      { id: 6, cx: 55, cy: 207, zone: 'standart', n: 4, big: false },
+      { id: 4, cx: 168, cy: 205, zone: 'vip', n: 8, big: true },
+      { id: 5, cx: 296, cy: 205, zone: 'vip', n: 8, big: true },
+      { id: 7, cx: 438, cy: 207, zone: 'standart', n: 4, big: false },
+      { id: 8, cx: 100, cy: 289, zone: 'standart', n: 4, big: false },
+      { id: 9, cx: 207, cy: 287, zone: 'standart', n: 4, big: false },
+      { id: 10, cx: 307, cy: 287, zone: 'standart', n: 4, big: false },
+      { id: 11, cx: 408, cy: 293, zone: 'standart', n: 4, big: false },
+      { id: 12, cx: 118, cy: 380, zone: 'standart', n: 4, big: false },
+      { id: 13, cx: 220, cy: 378, zone: 'standart', n: 4, big: false },
+      { id: 14, cx: 320, cy: 378, zone: 'standart', n: 4, big: false },
+      { id: 15, cx: 408, cy: 384, zone: 'standart', n: 4, big: false },
+      { id: 16, cx: 55, cy: 473, zone: 'econom', n: 4, big: false },
+      { id: 17, cx: 140, cy: 473, zone: 'econom', n: 4, big: false },
+      { id: 18, cx: 225, cy: 473, zone: 'econom', n: 4, big: false },
+      { id: 19, cx: 310, cy: 473, zone: 'econom', n: 4, big: false }
+    ];
+
+    // ══════════════════════════════════════════════════════
+    // STATE
+    // ══════════════════════════════════════════════════════
+    const APP = {
+      tab: 'hall',
+      step: 1,
+      config: {
+        show: { title: 'Шоу «Секрет»', date: '28 февраля 2026', time: '18:00', venue: 'Арт-площадка Лампа, Ярославль' },
+        prices: { vip: 1400, standart: 1100, econom: 800 },
+        payment: { sbp: '+7 (909) 276-33-86', card: '', cardHolder: 'Костюк Дмитрий Павлович' }
+      },
+      seats: {},
+      picked: new Set(),
+      booking: null,       // { id, ...data }
+      promoData: null,     // { type, value, code }
+      tempBookingId: null,    // temporary Firebase reservation ID (step 2)
+      tempReservedAt: null,   // when temp reservation was made
+      seatPollTimer: null,
+      confirmPollTimer: null,
+      timerInterval: null,
+      formTimerInterval: null, // countdown on step 2
+      vkUser: null,        // VK user profile (if inside Mini App)
+    };
+
+    function getVkUserId() {
+      const fromProfile = Number(APP.vkUser?.id || 0);
+      if (Number.isFinite(fromProfile) && fromProfile > 0) return fromProfile;
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const fromQuery = Number(params.get('vk_user_id') || params.get('viewer_id') || params.get('user_id') || 0);
+        if (Number.isFinite(fromQuery) && fromQuery > 0) return fromQuery;
+      } catch { }
+      return null;
+    }
+
+    function getMiniAppRouteState() {
+      const state = { tab: 'hall', bookingId: '', feedbackShow: '' };
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const tabParam = String(params.get('tab') || '').toLowerCase();
+        const rawHash = String(params.get('hash') || window.location.hash.replace('#', '') || '');
+        const hashLower = rawHash.toLowerCase();
+
+        let bookingId = String(params.get('bookingId') || params.get('id') || '').trim();
+        if (!bookingId) {
+          const m = rawHash.match(/^(?:tickets|mytickets|my_tickets)[/:]([A-Z0-9-]{4,40})$/i);
+          if (m) bookingId = m[1];
+        }
+        if (!/^[A-Z0-9-]{4,40}$/i.test(bookingId)) bookingId = '';
+
+        const isTicketsTab = tabParam === 'tickets'
+          || hashLower === 'tickets'
+          || hashLower === 'mytickets'
+          || hashLower === 'my_tickets'
+          || /^(tickets|mytickets|my_tickets)[/:]/i.test(rawHash);
+
+        const hashFeedback = rawHash.match(/^refund(?:[_-]?feedback)?[/:](secret|huligan)(?:[/:]([A-Z0-9-]{4,40}))?$/i);
+        const showParam = String(params.get('show') || (hashFeedback ? hashFeedback[1] : '') || '').toLowerCase();
+        const isFeedbackTab = tabParam === 'refund_feedback'
+          || tabParam === 'refund'
+          || tabParam === 'feedback'
+          || hashLower.startsWith('refund')
+          || hashLower.startsWith('refund_feedback');
+
+        state.tab = isFeedbackTab ? 'refund_feedback' : (isTicketsTab ? 'tickets' : 'hall');
+        state.bookingId = bookingId;
+        state.feedbackShow = (showParam === 'huligan' || showParam === 'secret') ? showParam : 'secret';
+      } catch { }
+      return state;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // FIREBASE HELPERS
+    // ══════════════════════════════════════════════════════
+    async function fbGet(path) {
+      try {
+        const r = await fetch(`${FB}/${path}.json`);
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (e) { return null; }
+    }
+    async function fbPut(path, data) {
+      try { await fetch(`${FB}/${path}.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (e) { }
+    }
+    async function fbPatch(path, data) {
+      try { await fetch(`${FB}/${path}.json`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (e) { }
+    }
+    async function fbDelete(path) {
+      try { await fetch(`${FB}/${path}.json`, { method: 'DELETE' }); } catch (e) { }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // BACKGROUND DECOR
+    // ══════════════════════════════════════════════════════
+    function createBgDecor() {
+      const c = document.getElementById('bgDecor');
+      [80, 110, 150, 70, 130, 90, 60, 120, 85, 140, 75, 100, 55, 165, 95].forEach((sz, i) => {
+        const s = document.createElement('span');
+        s.className = 'q-mark';
+        s.textContent = '?';
+        s.style.cssText = `left:${Math.random() * 92}%;top:${Math.random() * 92}%;font-size:${sz}px;` +
+          `animation-delay:${(i * 0.6).toFixed(1)}s;animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;`;
+        c.appendChild(s);
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // CONFIG LOADING
+    // ══════════════════════════════════════════════════════
+    async function loadConfig() {
+      const [showCfg, pricesCfg, paymentCfg, hulCfg] = await Promise.all([
+        fbGet('ticket_config/show'),
+        fbGet('ticket_config/prices'),
+        fbGet('ticket_config/payment'),
+        fbGet('huligan_config')
+      ]);
+
+      if (showCfg) Object.assign(APP.config.show, showCfg);
+      if (pricesCfg) Object.assign(APP.config.prices, pricesCfg);
+      if (paymentCfg) Object.assign(APP.config.payment, paymentCfg);
+
+      if (hulCfg && hulCfg.show) {
+        APP.config.huliganShow = hulCfg.show;
+      }
+
+      // Update ZONES prices
+      ZONES.vip.price = APP.config.prices.vip;
+      ZONES.standart.price = APP.config.prices.standart;
+      ZONES.econom.price = APP.config.prices.econom;
+      // Update legend
+      document.getElementById('legVip').textContent = fmt(ZONES.vip.price);
+      document.getElementById('legStd').textContent = fmt(ZONES.standart.price);
+      document.getElementById('legEco').textContent = fmt(ZONES.econom.price);
+      // Update show meta
+      const { date, time, venue, address } = APP.config.show;
+      const venueBadgeEl = document.getElementById('venueBadge');
+      if (venueBadgeEl) {
+        venueBadgeEl.textContent = address
+          ? `🎭 ${venue} · ${address}`
+          : `🎭 ${venue}`;
+      }
+      document.getElementById('showMeta').innerHTML = `
+    <div class="meta-chip">📅 ${date}</div>
+    <div class="meta-chip">⏰ ${time}</div>
+    <div class="meta-chip">📍 ${address || venue}</div>
+  `;
+      updateHomeScreen();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // SEAT LOADING
+    // ══════════════════════════════════════════════════════
+    async function loadSeats() {
+      const raw = await fbGet('ticket_seats') || {};
+      // Не пишем в Firebase — истёкшие резервы отображаются как свободные
+      // через getSeatStatus(), но серверные данные не трогаем
+      APP.seats = raw;
+      updateSeatCounter();
+    }
+
+    function updateSeatCounter() {
+      const el = document.getElementById('seatsCounter');
+      if (!el) return;
+      // Считаем все места и свободные
+      const totalSeats = TABLES.reduce((s, t) => s + t.n, 0);
+      let available = 0;
+      for (const tbl of TABLES) {
+        for (let si = 0; si < tbl.n; si++) {
+          if (getSeatStatus(tbl.id, si) === 'available') available++;
+        }
+      }
+      const taken = totalSeats - available;
+      if (available === 0) {
+        el.textContent = '🔴 Все места проданы';
+        el.className = 'seats-counter urgent';
+      } else {
+        const urgentThreshold = Math.ceil(totalSeats * 0.15); // < 15% — красный
+        el.className = 'seats-counter' + (available <= urgentThreshold ? ' urgent' : '');
+        el.innerHTML = available <= urgentThreshold
+          ? `🔥 Осталось всего <b style="margin:0 3px">${available}</b> мест из ${totalSeats}`
+          : `🎟 Свободно <b style="margin:0 3px">${available}</b> из ${totalSeats} мест`;
+      }
+      el.style.display = '';
+    }
+
+    function getSeatStatus(tableId, si) {
+      const s = APP.seats[`${tableId}_${si}`];
+      if (!s || s.status === 'available') return 'available';
+      if (s.status === 'reserved') {
+        const exp = s.reservedAt && (Date.now() - s.reservedAt) > RESERVE_MS;
+        return exp ? 'available' : 'reserved';
+      }
+      return s.status || 'available';
+    }
+
+    // ══════════════════════════════════════════════════════
+    // HALL RENDERING
+    // ══════════════════════════════════════════════════════
+    const NS = 'http://www.w3.org/2000/svg';
+    function svgEl(tag, attrs) {
+      const e = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+      return e;
+    }
+
+    function seatPositions(cx, cy, n, big, zone) {
+      const r = big ? 37 : 27;
+      const pts = [];
+      if (n === 8) {
+        // VIP: 8 мест по кругу
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * 2 * Math.PI - Math.PI / 2;
+          pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+        }
+      } else if (zone === 'standart') {
+        // Стандарт: крестик — сверху, справа, снизу, слева
+        pts.push({ x: cx, y: cy - r }); // сверху
+        pts.push({ x: cx + r, y: cy }); // справа
+        pts.push({ x: cx, y: cy + r }); // снизу
+        pts.push({ x: cx - r, y: cy }); // слева
+      } else if (zone === 'econom') {
+        // Эконом: 2 слева и 2 справа параллельно
+        const v = 11;
+        pts.push({ x: cx - r, y: cy - v }); // левый верхний
+        pts.push({ x: cx - r, y: cy + v }); // левый нижний
+        pts.push({ x: cx + r, y: cy - v }); // правый верхний
+        pts.push({ x: cx + r, y: cy + v }); // правый нижний
+      } else {
+        const a0 = Math.PI * 0.10, a1 = Math.PI * 0.90;
+        for (let i = 0; i < n; i++) {
+          const t = i / (n - 1);
+          const a = a0 + (a1 - a0) * t;
+          pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+        }
+      }
+      return pts;
+    }
+
+    function renderHall() {
+      const g = document.getElementById('hall');
+      g.innerHTML = '';
+      for (const tbl of TABLES) {
+        const z = ZONES[tbl.zone];
+        const tr = tbl.big ? 22 : 14;
+        const sr = tbl.big ? 10 : 9;
+        // Table circle
+        g.appendChild(svgEl('circle', {
+          cx: tbl.cx, cy: tbl.cy, r: tr,
+          fill: `rgba(${z.rgb},0.07)`,
+          stroke: `rgba(${z.rgb},0.28)`,
+          'stroke-width': 1.5
+        }));
+        // Table number
+        const lbl = svgEl('text', { x: tbl.cx, y: tbl.cy, class: 'tbl-lbl', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': tbl.big ? 11 : 9 });
+        lbl.textContent = tbl.id;
+        g.appendChild(lbl);
+        // Seats
+        const pts = seatPositions(tbl.cx, tbl.cy, tbl.n, tbl.big, tbl.zone);
+        pts.forEach((pt, si) => {
+          const key = `${tbl.id}-${si}`;
+          const status = getSeatStatus(tbl.id, si);
+          const isPicked = APP.picked.has(key);
+          const seat = svgEl('circle', { cx: pt.x.toFixed(1), cy: pt.y.toFixed(1), r: sr });
+          if (status === 'taken') {
+            seat.setAttribute('fill', '#1a1a2e');
+            seat.setAttribute('stroke', '#2a2a40');
+            seat.setAttribute('stroke-width', 1);
+            seat.classList.add('seat', 'taken');
+          } else if (status === 'reserved') {
+            seat.setAttribute('fill', 'rgba(201,162,39,0.22)');
+            seat.setAttribute('stroke', 'rgba(201,162,39,0.70)');
+            seat.setAttribute('stroke-width', 1.5);
+            seat.classList.add('seat', 'reserved');
+            // Вычисляем оставшееся время
+            const seatData = APP.seats[`${tbl.id}_${si}`];
+            const remaining = seatData?.reservedAt ? Math.max(0, RESERVE_MS - (Date.now() - seatData.reservedAt)) : 0;
+            const minsLeft = Math.ceil(remaining / 60000);
+            const minsStr = remaining > 0 ? `${minsLeft}′` : '⏱';
+            seat.setAttribute('title', `Зарезервировано (~${minsLeft} мин.)`);
+            // Оборачиваем в <g> чтобы добавить текст поверх
+            const seatG = svgEl('g', {});
+            seatG.appendChild(seat);
+            const timerTxt = svgEl('text', {
+              x: pt.x.toFixed(1), y: pt.y.toFixed(1),
+              'text-anchor': 'middle', 'dominant-baseline': 'central',
+              'font-size': sr <= 9 ? '6' : '7',
+              'font-family': 'Inter, sans-serif',
+              fill: 'rgba(201,162,39,0.95)',
+              'pointer-events': 'none',
+              'user-select': 'none',
+              'font-weight': '700'
+            });
+            timerTxt.textContent = minsStr;
+            seatG.appendChild(timerTxt);
+            g.appendChild(seatG);
+            return; // уже добавили через seatG, не добавляем seat напрямую
+          } else if (isPicked) {
+            seat.setAttribute('fill', z.color);
+            seat.setAttribute('stroke', '#f0c840');
+            seat.setAttribute('stroke-width', 3);
+            seat.setAttribute('filter', 'url(#glow)');
+            seat.classList.add('seat', 'picked');
+            seat.addEventListener('click', () => toggleSeat(key));
+          } else {
+            seat.setAttribute('fill', z.color);
+            seat.setAttribute('stroke', `rgba(${z.rgb},0.3)`);
+            seat.setAttribute('stroke-width', 2);
+            seat.setAttribute('opacity', '0.88');
+            seat.classList.add('seat', 'avail');
+            seat.addEventListener('click', () => toggleSeat(key));
+          }
+          g.appendChild(seat);
+        });
+      }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // INTERACTION — SEAT TOGGLE
+    // ══════════════════════════════════════════════════════
+    function toggleSeat(key) {
+      if (APP.picked.has(key)) {
+        APP.picked.delete(key);
+      } else {
+        if (APP.picked.size >= 8) { toast('Максимум 8 мест за раз'); return; }
+        APP.picked.add(key);
+      }
+      renderHall();
+      updateCart();
+    }
+
+    function calcTotal() {
+      let s = 0;
+      APP.picked.forEach(key => {
+        const [tid] = key.split('-').map(Number);
+        const tbl = TABLES.find(t => t.id === tid);
+        if (tbl) s += ZONES[tbl.zone].price;
+      });
+      return s;
+    }
+
+    function updateCart() {
+      const hEl = document.getElementById('cartHint');
+      const iEl = document.getElementById('cartInfo');
+      const cEl = document.getElementById('cartCount');
+      const tEl = document.getElementById('cartTotal');
+      const btn = document.getElementById('btnBook');
+      if (!APP.picked.size) {
+        hEl.style.display = ''; iEl.style.display = 'none';
+        btn.disabled = true; return;
+      }
+      hEl.style.display = 'none'; iEl.style.display = '';
+      cEl.textContent = `${APP.picked.size} ${plural(APP.picked.size, 'место', 'места', 'мест')} выбрано`;
+      tEl.textContent = fmt(calcTotal()) + ' ₽';
+      btn.disabled = false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STEP NAVIGATION
+    // ══════════════════════════════════════════════════════
+    function scrollToTop(stepN) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      if (stepN) {
+        const el = document.getElementById(`step${stepN}`);
+        if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
+      if (typeof vkBridge !== 'undefined') {
+        try { vkBridge.send('VKWebAppScrollTop'); } catch (e) { }
+      }
+    }
+
+    function showStep(n) {
+      [1, 2, 3, 4].forEach(i => {
+        const el = document.getElementById(`step${i}`);
+        if (el) { if (i === n) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+      });
+      APP.step = n;
+      // На шагах 2-4 скрываем хедер и табы — форма сразу перед глазами
+      const header = document.getElementById('pageHeader');
+      const tabBar = document.querySelector('.tab-bar');
+      if (n === 1) {
+        if (header) header.style.display = '';
+        if (tabBar) tabBar.style.display = '';
+      } else {
+        if (header) header.style.display = 'none';
+        if (tabBar) tabBar.style.display = 'none';
+      }
+      // Скроллим после рендера DOM
+      requestAnimationFrame(() => {
+        scrollToTop(n);
+        setTimeout(() => scrollToTop(n), 100);
+      });
+    }
+
+    function goStep1(releaseTemp = true) {
+      clearTimers();
+      // Если есть временная бронь (пользователь вернулся с шага 2) — освобождаем места
+      if (releaseTemp && APP.tempBookingId) {
+        for (const key of APP.picked) {
+          const [tid, si] = key.split('-').map(Number);
+          fbPut(`ticket_seats/${tid}_${si}`, { status: 'available' }).catch(() => { });
+          APP.seats[`${tid}_${si}`] = { status: 'available' };
+        }
+        APP.tempBookingId = null;
+        APP.tempReservedAt = null;
+      }
+      showStep(1);
+      renderHall();
+      updateCart();
+    }
+
+    async function goStep2() {
+      if (!APP.picked.size) return;
+
+      const btn = document.getElementById('btnBook');
+      btn.disabled = true;
+      btn.textContent = '⏳ Проверяем...';
+
+      // Проверяем актуальность в Firebase
+      await loadSeats();
+      for (const key of APP.picked) {
+        const [tid, si] = key.split('-').map(Number);
+        const st = getSeatStatus(tid, si);
+        if (st === 'taken' || st === 'reserved') {
+          btn.disabled = false;
+          btn.textContent = 'Далее →';
+          toast(`Место за столом ${tid} только что заняли. Выберите другое.`);
+          APP.picked.delete(key);
+          renderHall(); updateCart();
+          return;
+        }
+      }
+
+      // Резервируем места в Firebase с временным ID
+      const tempId = 'TEMP-' + Date.now().toString(36).toUpperCase().slice(-6);
+      const now = Date.now();
+      APP.tempBookingId = tempId;
+      APP.tempReservedAt = now;
+
+      await Promise.all([...APP.picked].map(key => {
+        const [tid, si] = key.split('-').map(Number);
+        return fbPut(`ticket_seats/${tid}_${si}`, {
+          status: 'reserved', bookingId: tempId, reservedAt: now
+        });
+      }));
+      // Обновляем локальный кэш чтобы рендер зала сразу отразил бронь
+      for (const key of APP.picked) {
+        const [tid, si] = key.split('-').map(Number);
+        APP.seats[`${tid}_${si}`] = { status: 'reserved', bookingId: tempId, reservedAt: now };
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Далее →';
+
+      renderStep2Summary();
+      showStep(2);
+      startFormTimer(now);
+
+      // Auto-fill name from VK profile if available
+      if (APP.vkUser && !document.getElementById('fieldName').value) {
+        const { first_name, last_name } = APP.vkUser;
+        document.getElementById('fieldName').value = [first_name, last_name].filter(Boolean).join(' ');
+      }
+    }
+
+    async function goStep3() {
+      const name = document.getElementById('fieldName').value.trim();
+      const phone = document.getElementById('fieldPhone').value.trim();
+      if (!name) { toast('Введите ваше имя'); return; }
+      const digitsOnly = phone.replace(/\D/g, '');
+      if (!phone || digitsOnly.length < 10) { toast('Введите корректный номер телефона (мин. 10 цифр)'); return; }
+
+      // Проверяем что временная бронь ещё не истекла
+      if (!APP.tempBookingId || !APP.tempReservedAt || (Date.now() - APP.tempReservedAt) >= RESERVE_MS) {
+        toast('⏰ Время бронирования истекло. Выберите места заново.');
+        APP.tempBookingId = null;
+        APP.tempReservedAt = null;
+        APP.picked.clear();
+        goStep1(false);
+        return;
+      }
+
+      showLoading(true);
+
+      const bookingId = genBookingId();
+      const reservedAt = APP.tempReservedAt;
+      const seats = [...APP.picked].map(key => {
+        const [tid, si] = key.split('-').map(Number);
+        const tbl = TABLES.find(t => t.id === tid);
+        return { tableId: tid, seatIdx: si, zone: tbl.zone };
+      });
+
+      // Создаём бронь через сервер — он проверит доступность мест и рассчитает цену
+      let serverResult;
+      try {
+        const r = await fetch('/api/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId, name, phone, seats,
+            tempBookingId: APP.tempBookingId,
+            promoCode: APP.promoData ? APP.promoData.code : null,
+            vkUserId: getVkUserId()
+          })
+        });
+        serverResult = await r.json();
+        if (!r.ok) {
+          showLoading(false);
+          if (serverResult.seats) {
+            toast('⚠️ Часть мест уже заняли другие. Выберите места заново.');
+            await loadSeats();
+            APP.picked.clear();
+            goStep1(false);
+          } else {
+            toast('Ошибка создания брони: ' + (serverResult.error || 'попробуйте снова'));
+          }
+          return;
+        }
+      } catch (e) {
+        showLoading(false);
+        toast('Ошибка соединения. Проверьте интернет и попробуйте снова.');
+        return;
+      }
+
+      const total = serverResult.total;
+      const discountedTotal = serverResult.discountedTotal;
+      const booking = {
+        name, phone, seats, total, discountedTotal,
+        promoCode: APP.promoData ? APP.promoData.code : null,
+        status: 'pending_payment',
+        createdAt: reservedAt,
+        ticketLinkVersion: 1,
+        vkUserId: getVkUserId()
+      };
+
+      saveUserProfile(bookingId, name, phone).catch(() => { });
+      APP.tempBookingId = null;
+      APP.tempReservedAt = null;
+      APP.booking = { id: bookingId, clientKey: serverResult.clientKey, ...booking };
+      localStorage.setItem('activeBooking', JSON.stringify({ id: bookingId, clientKey: serverResult.clientKey }));
+      saveBookingKey(bookingId, serverResult.clientKey);
+      saveMyTicket(bookingId);
+
+      showLoading(false);
+      renderStep3();
+      showStep(3);
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STEP 2 RENDER
+    // ══════════════════════════════════════════════════════
+    function renderStep2Summary() {
+      const total = calcTotal();
+      const seatsHtml = [...APP.picked].map(key => {
+        const [tid, si] = key.split('-').map(Number);
+        const tbl = TABLES.find(t => t.id === tid);
+        const z = ZONES[tbl.zone];
+        return `<div class="seat-item">
+      <span class="zone-dot" style="background:${z.color}"></span>
+      Стол ${tid}, место ${si + 1} — <b style="color:${z.color}">${z.label}</b> ${fmt(z.price)} ₽
+    </div>`;
+      }).join('');
+      document.getElementById('step2Summary').innerHTML = `
+    <div style="margin-bottom:16px">${seatsHtml}</div>
+  `;
+      renderOrderSummary(total);
+    }
+
+    function renderOrderSummary(total) {
+      const disc = getDiscountedTotal(total);
+      const discountAmt = total - disc;
+      let rows = `
+    <div class="order-row"><span>Итого за места</span><span>${fmt(total)} ₽</span></div>
+  `;
+      if (discountAmt > 0) {
+        rows += `<div class="order-row" style="color:var(--green)"><span>Скидка (${APP.promoData.code})</span><span>−${fmt(discountAmt)} ₽</span></div>`;
+      }
+      rows += `<div class="order-row order-total"><span>К оплате</span><span style="color:var(--gold)">${fmt(disc)} ₽</span></div>`;
+      document.getElementById('orderSummary').innerHTML = rows;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // PROMO CODE
+    // ══════════════════════════════════════════════════════
+    async function applyPromo() {
+      const code = document.getElementById('fieldPromo').value.trim().toUpperCase();
+      const res = document.getElementById('promoResult');
+      res.style.display = 'none';
+      if (!code) return;
+      const p = await fbGet(`ticket_promo/${code}`);
+      if (!p || !p.active) {
+        res.className = 'promo-result promo-err';
+        res.textContent = '✗ Промокод не найден или недействителен';
+        res.style.display = '';
+        APP.promoData = null;
+        return;
+      }
+      if (p.usesLeft === 0) {
+        res.className = 'promo-result promo-err';
+        res.textContent = '✗ Промокод исчерпан';
+        res.style.display = '';
+        APP.promoData = null;
+        return;
+      }
+      let descText = '';
+      if (p.type === 'percent') descText = `−${p.value}%`;
+      else if (p.type === 'fixed') descText = `−${fmt(p.value)} ₽`;
+      else descText = 'Бесплатно (100%)';
+      APP.promoData = { code, type: p.type, value: p.value };
+      res.className = 'promo-result promo-ok';
+      res.textContent = `✓ Промокод применён: ${descText}`;
+      res.style.display = '';
+      renderOrderSummary(calcTotal());
+    }
+
+    function getDiscountedTotal(total) {
+      if (!APP.promoData) return total;
+      const { type, value } = APP.promoData;
+      if (type === 'free') return 0;
+      if (type === 'percent') return Math.round(total * (1 - value / 100));
+      if (type === 'fixed') return Math.max(0, total - value);
+      return total;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STEP 3 — PAYMENT
+    // ══════════════════════════════════════════════════════
+    function renderStep3() {
+      if (!APP.booking) return;
+      const pmt = APP.config.payment;
+      document.getElementById('paySbpNum').textContent = pmt.sbp || '+7 (909) 276-33-86';
+      document.getElementById('paySbpHolder').textContent = pmt.cardHolder || 'Костюк Дмитрий Павлович';
+      document.getElementById('payCardNum').textContent = pmt.card || 'Не указан';
+      document.getElementById('payCardHolder').textContent = pmt.cardHolder || '—';
+      document.getElementById('payAmount').textContent = fmt(APP.booking.discountedTotal) + ' ₽';
+      startTimer(APP.booking.createdAt);
+    }
+
+    function selectPayMethod(method, el) {
+      document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('payMethodSbp').style.display = method === 'sbp' ? '' : 'none';
+      document.getElementById('payMethodCard').style.display = method === 'card' ? '' : 'none';
+    }
+
+    // ── Form step timer (шаг 2) ──
+    function startFormTimer(reservedAt) {
+      if (APP.formTimerInterval) { clearInterval(APP.formTimerInterval); APP.formTimerInterval = null; }
+      const endTime = reservedAt + RESERVE_MS;
+      const bar = document.getElementById('formTimerBar');
+      const display = document.getElementById('formTimerDisplay');
+      if (!bar || !display) return;
+
+      function tick() {
+        const remaining = endTime - Date.now();
+        if (remaining <= 0) {
+          clearInterval(APP.formTimerInterval);
+          APP.formTimerInterval = null;
+          // Освобождаем места
+          const keys = [...APP.picked];
+          APP.picked.clear();
+          for (const key of keys) {
+            const [tid, si] = key.split('-').map(Number);
+            fbPut(`ticket_seats/${tid}_${si}`, { status: 'available' }).catch(() => { });
+            APP.seats[`${tid}_${si}`] = { status: 'available' };
+          }
+          APP.tempBookingId = null;
+          APP.tempReservedAt = null;
+          goStep1(false);
+          toast('⏰ Время вышло! Места освобождены. Выберите заново.');
+          return;
+        }
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        bar.classList.toggle('urgent', remaining < 60000);
+      }
+      tick();
+      APP.formTimerInterval = setInterval(tick, 1000);
+    }
+
+    // ── Main payment timer (шаг 3) ──
+    function startTimer(createdAt) {
+      clearTimers();
+      const endTime = createdAt + RESERVE_MS;
+      const circle = document.getElementById('timerCircle');
+      const circumference = 264;
+
+      function tick() {
+        const remaining = endTime - Date.now();
+        if (remaining <= 0) {
+          clearTimers();
+          document.getElementById('timerDisplay').textContent = '0:00';
+          document.getElementById('timerDisplay').className = 'timer-mm timer-expired';
+          circle.style.strokeDashoffset = circumference;
+          circle.style.stroke = 'var(--red)';
+          toast('⏰ Время вышло! Бронь отменена.');
+          cancelActiveBooking(true);
+          return;
+        }
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        const display = `${mins}:${secs.toString().padStart(2, '0')}`;
+        document.getElementById('timerDisplay').textContent = display;
+        const fraction = remaining / RESERVE_MS;
+        circle.style.strokeDashoffset = circumference * (1 - fraction);
+        const disp = document.getElementById('timerDisplay');
+        if (remaining < 60000) { disp.className = 'timer-mm timer-expired'; circle.style.stroke = 'var(--red)'; }
+        else if (remaining < 180000) { disp.className = 'timer-mm timer-warn'; circle.style.stroke = '#f5a623'; }
+        else { disp.className = 'timer-mm'; circle.style.stroke = 'var(--gold)'; }
+      }
+      tick();
+      APP.timerInterval = setInterval(tick, 1000);
+    }
+
+    function clearTimers() {
+      if (APP.timerInterval) { clearInterval(APP.timerInterval); APP.timerInterval = null; }
+      if (APP.seatPollTimer) { clearInterval(APP.seatPollTimer); APP.seatPollTimer = null; }
+      if (APP.confirmPollTimer) { clearInterval(APP.confirmPollTimer); APP.confirmPollTimer = null; }
+      if (APP.formTimerInterval) { clearInterval(APP.formTimerInterval); APP.formTimerInterval = null; }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // MARK PAID
+    // ══════════════════════════════════════════════════════
+    async function markPaid() {
+      if (!APP.booking) return;
+      const btn = document.querySelector('.btn-paid');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправляем...'; }
+      clearTimers();
+      // Статус и блокировка мест обновляются СЕРВЕРОМ через /api/notify
+      // Клиент не пишет напрямую в Firebase
+      try {
+        const r = await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: APP.booking.id, event: 'paid' })
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          if (btn) { btn.disabled = false; btn.textContent = '✅ Я оплатил — жду подтверждения'; }
+          toast('Ошибка: ' + (err.error || 'попробуйте снова'));
+          return;
+        }
+      } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Я оплатил — жду подтверждения'; }
+        toast('Ошибка соединения. Проверьте интернет и попробуйте снова.');
+        return;
+      }
+      APP.booking.status = 'pending_confirmation';
+      showStep(4);
+      startConfirmPolling();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STEP 4 — POLLING FOR CONFIRMATION
+    // ══════════════════════════════════════════════════════
+    function startConfirmPolling() {
+      document.getElementById('waitingBox').style.display = '';
+      document.getElementById('confirmedBox').style.display = 'none';
+      APP.confirmPollTimer = setInterval(async () => {
+        if (!APP.booking) return;
+        const b = await apiGetBooking(APP.booking.id);
+        if (b && b.status === 'confirmed') {
+          APP.booking = { id: APP.booking.id, ...APP.booking, ...b };
+          clearInterval(APP.confirmPollTimer);
+          showConfirmed();
+        } else if (b && (b.status === 'cancelled' || b.status === 'refunded')) {
+          clearInterval(APP.confirmPollTimer);
+          toast('Бронь отменена администратором');
+          APP.booking = null;
+          localStorage.removeItem('activeBooking');
+          APP.picked.clear();
+          goStep1();
+        }
+      }, 5000);
+    }
+
+    function showConfirmed() {
+      document.getElementById('waitingBox').style.display = 'none';
+      document.getElementById('confirmedBox').style.display = '';
+      const linkEl = document.getElementById('ticketLink');
+      linkEl.href = '#';
+      linkEl.onclick = async (e) => {
+        e.preventDefault();
+        await openTicket(APP.booking.id);
+      };
+      localStorage.removeItem('activeBooking');
+    }
+
+    // ══════════════════════════════════════════════════════
+    // CANCEL BOOKING
+    // ══════════════════════════════════════════════════════
+    async function doCancelBooking(reason) {
+      if (!APP.booking) { goStep1(); return; }
+      clearTimers();
+      // Сервер обновляет статус и освобождает места — клиент не пишет в Firebase
+      try {
+        await fetch('/api/notify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: APP.booking.id, event: 'cancelled', reason: reason || '', clientKey: getActiveClientKey() })
+        });
+      } catch (e) { }
+      toast('Бронь отменена');
+      APP.booking = null;
+      localStorage.removeItem('activeBooking');
+      APP.picked.clear();
+      APP.promoData = null;
+      await loadSeats();
+      goStep1();
+    }
+
+    async function cancelActiveBooking(expired = false) {
+      if (!APP.booking) { goStep1(); return; }
+      if (expired) {
+        await doCancelBooking('Истёк таймер оплаты');
+        toast('⏰ Время вышло! Бронь отменена.');
+        return;
+      }
+      showReasonModal(
+        '❌ Отмена брони',
+        'Почему вы хотите отменить? Это поможет нам улучшить сервис.',
+        async (reason) => { await doCancelBooking(reason); }
+      );
+    }
+
+    // ══════════════════════════════════════════════════════
+    // TABS
+    // ══════════════════════════════════════════════════════
+    function switchTab(tab) {
+      APP.tab = tab;
+      document.getElementById('tabHall').classList.toggle('hidden', tab !== 'hall');
+      document.getElementById('tabTickets').classList.toggle('hidden', tab !== 'hall' ? false : true);
+      document.getElementById('tabTickets').classList.toggle('hidden', tab !== 'tickets');
+      document.getElementById('tabHallBtn').classList.toggle('active', tab === 'hall');
+      document.getElementById('tabTicketsBtn').classList.toggle('active', tab === 'tickets');
+      if (tab === 'tickets') loadMyTickets();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // MY TICKETS
+    // ══════════════════════════════════════════════════════
+    // ── Хранение clientKey для каждой брони ──
+    function saveBookingKey(bookingId, clientKey) {
+      if (!bookingId || !clientKey) return;
+      const map = JSON.parse(localStorage.getItem('booking_keys') || '{}');
+      map[bookingId] = clientKey;
+      localStorage.setItem('booking_keys', JSON.stringify(map));
+    }
+    function getBookingKey(bookingId) {
+      const map = JSON.parse(localStorage.getItem('booking_keys') || '{}');
+      return map[bookingId] || '';
+    }
+    function getActiveClientKey() {
+      return (APP.booking && APP.booking.clientKey) || getBookingKey(APP.booking?.id) || '';
+    }
+
+    function saveMyTicket(id) {
+      const stored = JSON.parse(localStorage.getItem('myTickets') || '[]');
+      if (!stored.includes(id)) stored.unshift(id);
+      localStorage.setItem('myTickets', JSON.stringify(stored.slice(0, 20)));
+    }
+
+    async function loadMyTickets() {
+      const idsSet = new Set(JSON.parse(localStorage.getItem('myTickets') || '[]'));
+      const list = document.getElementById('myTicketsList');
+      const vkUserId = getVkUserId();
+
+      if (vkUserId) {
+        const profile = await fbGet(`ticket_users/${vkUserId}`);
+        if (profile?.lastBookingId) idsSet.add(profile.lastBookingId);
+
+        const allBookings = await fbGet('ticket_bookings');
+        if (allBookings && typeof allBookings === 'object') {
+          Object.entries(allBookings).forEach(([id, b]) => {
+            if (Number(b?.vkUserId) === vkUserId) idsSet.add(id);
+          });
+        }
+      }
+
+      const ids = Array.from(idsSet);
+      if (!ids.length) {
+        list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--dim)">
+      <div style="font-size:36px;margin-bottom:12px">🎫</div>
+      <div style="font-size:14px">У вас пока нет билетов</div>
+    </div>`;
+        return;
+      }
+      list.innerHTML = `<div style="font-size:13px;color:var(--dim);margin-bottom:12px">Загрузка...</div>`;
+      const bookings = await Promise.all(ids.map(id => apiGetBooking(id).then(b => b ? { id, ...b } : null)));
+      const valid = bookings.filter(Boolean);
+      if (!valid.length) {
+        list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--dim)"><div style="font-size:13px">Билеты не найдены</div></div>`;
+        return;
+      }
+      const STATUS_PILLS = {
+        pending_payment: ['rgba(201,162,39,0.15)', 'var(--gold)', '⏳ Ожидает оплаты'],
+        pending_confirmation: ['rgba(74,143,217,0.15)', 'var(--blue)', '💳 Ожидает подтверждения'],
+        confirmed: ['rgba(61,191,110,0.15)', 'var(--green)', '✓ Подтверждён'],
+        refund_requested: ['rgba(255,176,0,0.15)', '#ffb000', '↩ Запрос на возврат'],
+        cancelled: ['rgba(232,83,72,0.12)', 'var(--red)', '✗ Отменён'],
+        refunded: ['rgba(255,255,255,0.06)', 'var(--dim)', '↩ Возврат'],
+      };
+      list.innerHTML = valid.map(b => {
+        const [bg, color, label] = STATUS_PILLS[b.status] || STATUS_PILLS.cancelled;
+        const seatsStr = (b.seats || []).map(s => `Стол ${s.tableId}, м.${s.seatIdx + 1}`).join(' · ');
+        const actions = [];
+      if (b.status === 'confirmed') {
+          actions.push(`<a class="btn-open-ticket" href="#" onclick="openTicket('${b.id}');return false;">🎟 Билет</a>`);
+          if (!b.reviewed)
+            actions.push(`<button class="btn-review" onclick="openReviewModal('${b.id}')">⭐ Отзыв</button>`);
+        }
+        if (b.status === 'confirmed' || b.status === 'pending_confirmation' || b.status === 'pending_payment')
+          actions.push(`<button class="btn-refund" onclick="refundTicket('${b.id}')">Вернуть</button>`);
+        return `
+      <div class="ticket-card">
+        <div class="ticket-card-head">
+          <div>
+            <div class="ticket-card-id">${b.id}</div>
+            <div class="ticket-card-name">${esc(b.name) || '—'}</div>
+          </div>
+          <span class="status-pill" style="background:${bg};color:${color};border:1px solid ${color}33">${label}</span>
+        </div>
+        <div class="ticket-card-seats">🪑 ${seatsStr} · ${fmt(b.discountedTotal || b.total || 0)} ₽</div>
+        ${actions.length ? `<div class="ticket-card-actions">${actions.join('')}</div>` : ''}
+      </div>`;
+      }).join('');
+    }
+
+    async function doRefund(id, reason) {
+      const b = await apiGetBooking(id);
+      if (!b) return;
+      // Сервер сам обновляет статус и освобождает места — клиент не пишет в Firebase
+      const event = b.status === 'confirmed' ? 'refund_requested' : 'cancelled';
+      try {
+        const r = await fetch('/api/notify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: id, event, reason: reason || '', clientKey: getBookingKey(id) })
+        });
+        if (!r.ok) {
+          toast('Ошибка при отправке заявки. Попробуйте ещё раз.');
+          return;
+        }
+      } catch (e) {
+        toast('Нет связи. Попробуйте ещё раз.');
+        return;
+      }
+      if (event === 'refund_requested') {
+        toast('↩ Заявка на возврат отправлена — ожидайте решения администратора');
+      } else {
+        toast('Бронь отменена');
+      }
+      loadMyTickets();
+    }
+
+    function refundTicket(id) {
+      showReasonModal(
+        '↩ Возврат билета',
+        'Почему вы хотите вернуть билет? Нам важно знать.',
+        async (reason) => {
+          await doRefund(id, reason);
+        }
+      );
+    }
+
+    // ══════════════════════════════════════════════════════
+    // SEAT POLLING
+    // ══════════════════════════════════════════════════════
+    function startSeatPolling() {
+      APP.seatPollTimer = setInterval(async () => {
+        if (APP.step === 1) {
+          await loadSeats();
+          renderHall();
+        }
+      }, 15000);
+    }
+
+    // ══════════════════════════════════════════════════════
+    // UTILITIES
+    // ══════════════════════════════════════════════════════
+    function fmt(n) { return Number(n).toLocaleString('ru-RU'); }
+    async function apiGetBooking(bookingId) {
+      try {
+        const r = await fetch(`/api/ticket-booking?id=${encodeURIComponent(bookingId)}`);
+        if (!r.ok) return null;
+        const data = await r.json();
+        return data?.booking || null;
+      } catch {
+        return null;
+      }
+    }
+    function closeTicketModal() {
+      const modal = document.getElementById('ticketModal');
+      if (modal) modal.style.display = 'none';
+    }
+    async function openTicket(bookingId) {
+      const modal = document.getElementById('ticketModal');
+      const content = document.getElementById('ticketInlineContent');
+      if (!modal || !content) return;
+      content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim)"><div style="width:36px;height:36px;border:3px solid rgba(201,162,39,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>Загрузка...</div>';
+      modal.style.display = 'block';
+      try {
+        const clientKey = getBookingKey(bookingId);
+        const params = new URLSearchParams({ id: bookingId, full: '1' });
+        if (clientKey) params.set('clientKey', clientKey);
+        const r = await fetch(`/api/ticket-link?${params.toString()}`);
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const msgs = { 409: '⏳ Билет ещё не подтверждён администратором. Ожидайте — обычно до 15 минут.', 410: '❌ Этот билет аннулирован.', 403: '⛔ Нет доступа к билету.', 404: '❌ Билет не найден.' };
+          content.innerHTML = `<div style="text-align:center;padding:40px;color:#e85348;font-size:15px">${msgs[r.status] || 'Не удалось открыть билет.'}</div>`;
+          return;
+        }
+        renderInlineTicket(content, data, bookingId);
+      } catch {
+        content.innerHTML = '<div style="text-align:center;padding:40px;color:#e85348">Ошибка сети. Попробуйте позже.</div>';
+      }
+    }
+    function renderInlineTicket(el, data, bookingId) {
+      const b = data.booking || {};
+      const show = (data.config?.show) || {};
+      const date = show.date || '28 февраля 2026';
+      const time = show.time || '18:00';
+      const venue = show.venue || 'Арт-площадка Лампа, Ярославль';
+      const ZCOLORS = { vip: '#e85348', standart: '#3dbf6e', econom: '#4a8fd9' };
+      const ZLABELS = { vip: 'VIP', standart: 'Стандарт', econom: 'Эконом' };
+      const zones = [...new Set((b.seats || []).map(s => s.zone))];
+      const pz = zones[0] || 'standart';
+      const zc = ZCOLORS[pz];
+      const total = b.discountedTotal || b.total || 0;
+      const seatsHtml = (b.seats || []).map(s =>
+        `<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border-radius:6px;padding:4px 10px;margin:2px 2px 2px 0;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:${ZCOLORS[s.zone]||'#888'}"></span>Стол\u00a0${s.tableId}, м.\u00a0${s.seatIdx+1}</span>`
+      ).join('');
+      el.innerHTML = `
+        <div style="background:linear-gradient(160deg,#0f0d24,#080816);border:1px solid rgba(201,162,39,0.35);border-radius:20px;overflow:hidden;box-shadow:0 0 60px rgba(201,162,39,0.12)">
+          <div style="text-align:center;padding:24px 20px 20px;background:linear-gradient(180deg,rgba(201,162,39,0.1),transparent);border-bottom:1px solid rgba(201,162,39,0.2)">
+            <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(201,162,39,0.55);margin-bottom:8px">KOSTYUK PROJECT · Ярославль</div>
+            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold);letter-spacing:2px;text-shadow:0 0 30px rgba(201,162,39,0.5)">ШОУ «СЕКРЕТ»<sup style="font-size:13px;opacity:.6">12+</sup></div>
+          </div>
+          <div style="display:flex;justify-content:center;padding:20px;background:rgba(255,255,255,0.015);border-bottom:1px solid rgba(201,162,39,0.15)">
+            <div style="background:#fff;border-radius:12px;padding:12px;box-shadow:0 0 30px rgba(201,162,39,0.25)" id="ticketQrCode"></div>
+          </div>
+          <div style="padding:20px">
+            <div style="display:flex;gap:10px;margin-bottom:12px"><span>👤</span><div><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px">Гость</span><span style="font-size:15px;font-weight:500">${esc(b.name)}</span></div></div>
+            <div style="display:flex;gap:10px;margin-bottom:12px"><span>🪑</span><div><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px">Места</span><div style="margin-top:2px">${seatsHtml}</div></div></div>
+            <div style="display:flex;gap:10px;margin-bottom:12px"><span>📅</span><div><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px">Дата и время</span><span style="font-size:15px;font-weight:500">${esc(date)} в ${esc(time)}</span></div></div>
+            <div style="display:flex;gap:10px"><span>📍</span><div><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px">Площадка</span><span style="font-size:15px;font-weight:500">${esc(venue)}</span></div></div>
+            <div style="margin:16px 0 0;padding:10px 16px;border-radius:10px;background:rgba(${hexToRgb(zc)},0.12);border:1px solid rgba(${hexToRgb(zc)},0.35);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:${zc}">ЗОНА ${ZLABELS[pz]}</span>
+              <span style="font-size:18px;font-weight:600;color:${zc}">${fmt(total)}\u00a0₽</span>
+            </div>
+          </div>
+          <div style="padding:14px 20px;border-top:1px solid rgba(201,162,39,0.12);display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Билет №</div><div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);letter-spacing:1px">${esc(bookingId)}</div></div>
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(61,191,110,0.15);color:#3dbf6e;border:1px solid rgba(61,191,110,0.3)">✓ Подтверждён</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <button onclick="closeTicketModal()" style="width:100%;background:transparent;border:1px solid rgba(201,162,39,0.2);color:var(--dim);border-radius:12px;padding:12px;font-size:14px;cursor:pointer">← Назад</button>
+        </div>`;
+      // Генерируем QR-код
+      try {
+        const qrEl = document.getElementById('ticketQrCode');
+        if (qrEl && typeof QRCode !== 'undefined') {
+          new QRCode(qrEl, { text: data.url, width: 180, height: 180, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
+        }
+      } catch (e) {}
+    }
+    function hexToRgb(hex) { const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `${r},${g},${b}`; }
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function plural(n, one, two, five) {
+      const m = n % 10, h = n % 100;
+      if (h >= 11 && h <= 14) return five;
+      if (m === 1) return one;
+      if (m >= 2 && m <= 4) return two;
+      return five;
+    }
+    function showLoading(v) {
+      document.getElementById('loadingOverlay').classList.toggle('hidden', !v);
+    }
+    function toast(msg, dur = 2500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), dur);
+    }
+    function genBookingId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let id = 'BK-';
+      for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // REASON MODAL
+    // ══════════════════════════════════════════════════════
+    let _reasonCallback = null;
+    function showReasonModal(title, sub, cb) {
+      _reasonCallback = cb;
+      document.getElementById('reasonModalTitle').textContent = title;
+      document.getElementById('reasonModalSub').textContent = sub;
+      document.getElementById('reasonInput').value = '';
+      const m = document.getElementById('reasonModal');
+      m.style.display = 'flex';
+    }
+    function reasonModalCancel() {
+      document.getElementById('reasonModal').style.display = 'none';
+      const cb = _reasonCallback;
+      _reasonCallback = null;
+      if (cb) cb(''); // Выполняем действие без причины
+    }
+    function reasonModalConfirm() {
+      const reason = document.getElementById('reasonInput').value.trim();
+      document.getElementById('reasonModal').style.display = 'none';
+      if (_reasonCallback) _reasonCallback(reason);
+      _reasonCallback = null;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // REVIEW MODAL
+    // ══════════════════════════════════════════════════════
+    let _reviewRating = 5;
+    function setStars(n) {
+      _reviewRating = n;
+      document.querySelectorAll('.star-btn').forEach(s => {
+        s.classList.toggle('active', parseInt(s.dataset.v) <= n);
+      });
+    }
+    function openReviewModal(bookingId) {
+      document.getElementById('reviewBookingId').textContent = bookingId;
+      document.getElementById('reviewText').value = '';
+      _reviewRating = 5;
+      setStars(5);
+      document.getElementById('reviewModal').style.display = 'flex';
+    }
+    function closeReviewModal() {
+      document.getElementById('reviewModal').style.display = 'none';
+    }
+    async function submitReview() {
+      const bookingId = document.getElementById('reviewBookingId').textContent;
+      const text = document.getElementById('reviewText').value.trim();
+      if (!text) { toast('Напишите пару слов о шоу'); return; }
+
+      // Generate promo code for reward
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = 'REVIEW';
+      for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+
+      const reviewId = `R-${bookingId}-${Date.now()}`;
+      await fbPut(`ticket_reviews/${reviewId}`, {
+        bookingId, rating: _reviewRating, text, promoCode: code,
+        createdAt: Date.now()
+      });
+      // Save promo to Firebase (15% off next show)
+      await fbPut(`ticket_promo/${code}`, {
+        type: 'percent', value: 15, usesLeft: 1,
+        active: true, description: `Бонус за отзыв — 15% скидка`
+      });
+      // Notify admin
+      try {
+        await fetch('/api/notify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId, event: 'review', rating: _reviewRating, reviewText: text, clientKey: getBookingKey(bookingId) })
+        });
+      } catch (e) { }
+      closeReviewModal();
+      toast(`🎁 Спасибо! Промокод на скидку 15%: ${code}`);
+    }
+
+    // ══════════════════════════════════════════════════════
+    // SAVE USER PROFILE
+    // ══════════════════════════════════════════════════════
+    async function saveUserProfile(bookingId, name, phone) {
+      const uid = getVkUserId();
+      if (!uid) return;
+      const existing = await fbGet(`ticket_users/${uid}`);
+      await fbPut(`ticket_users/${uid}`, {
+        vkId: uid,
+        firstName: APP.vkUser?.first_name || existing?.firstName || '',
+        lastName: APP.vkUser?.last_name || existing?.lastName || '',
+        name, phone,
+        photo: APP.vkUser?.photo_200 || existing?.photo || '',
+        lastBookingId: bookingId,
+        lastSeen: Date.now(),
+        totalBookings: (existing?.totalBookings || 0) + 1
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // SCREEN NAVIGATION
+    // ══════════════════════════════════════════════════════
+    function showScreen(name) {
+      const sHome = document.getElementById('screenHome');
+      const sQuiz = document.getElementById('screenQuiz');
+      const sRefund = document.getElementById('screenRefundFeedback');
+      const hdr = document.getElementById('pageHeader');
+      const tabs = document.querySelector('.tab-bar');
+      const hall = document.getElementById('tabHall');
+      const tix = document.getElementById('tabTickets');
+      // Hide all
+      [sHome, sQuiz, sRefund, hall, tix].forEach(el => el && el.classList.add('hidden'));
+      if (hdr) hdr.style.display = 'none';
+      if (tabs) tabs.style.display = 'none';
+
+      if (name === 'home') {
+        if (sHome) sHome.classList.remove('hidden');
+      } else if (name === 'quiz') {
+        if (sQuiz) sQuiz.classList.remove('hidden');
+      } else if (name === 'refund-feedback') {
+        if (sRefund) sRefund.classList.remove('hidden');
+      } else if (name === 'hall') {
+        if (hdr) hdr.style.display = '';
+        if (tabs) tabs.style.display = '';
+        if (hall) hall.classList.remove('hidden');
+        document.getElementById('tabHallBtn').classList.add('active');
+        document.getElementById('tabTicketsBtn').classList.remove('active');
+      } else if (name === 'tickets') {
+        if (hdr) hdr.style.display = '';
+        if (tabs) tabs.style.display = '';
+        if (tix) tix.classList.remove('hidden');
+        document.getElementById('tabHallBtn').classList.remove('active');
+        document.getElementById('tabTicketsBtn').classList.add('active');
+        loadMyTickets();
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function setupRefundFeedbackForm(showType, bookingId) {
+      const showName = showType === 'huligan' ? 'ХУЛИgan' : 'Секрет';
+      const meta = document.getElementById('rfMeta');
+      if (meta) {
+        meta.textContent = `Шоу: ${showName} · Бронь: ${bookingId || '—'}`;
+      }
+      const status = document.getElementById('rfStatus');
+      if (status) {
+        status.textContent = '';
+        status.style.color = 'var(--dim)';
+      }
+      const reasonCode = document.getElementById('rfReasonCode');
+      const reasonText = document.getElementById('rfReasonText');
+      const improveText = document.getElementById('rfImproveText');
+      if (reasonCode) reasonCode.value = '';
+      if (reasonText) reasonText.value = '';
+      if (improveText) improveText.value = '';
+      const submitBtn = document.getElementById('rfSubmitBtn');
+      if (submitBtn) submitBtn.disabled = false;
+      window.__refundFeedbackCtx = { show: showType, bookingId };
+    }
+
+    async function submitRefundFeedback() {
+      const ctx = window.__refundFeedbackCtx || {};
+      const reasonCode = (document.getElementById('rfReasonCode')?.value || '').trim();
+      const reasonText = (document.getElementById('rfReasonText')?.value || '').trim();
+      const improveText = (document.getElementById('rfImproveText')?.value || '').trim();
+      const statusEl = document.getElementById('rfStatus');
+      const btn = document.getElementById('rfSubmitBtn');
+
+      if (!ctx.bookingId) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--red)';
+          statusEl.textContent = 'Не удалось определить бронь для анкеты.';
+        }
+        return;
+      }
+      if (!reasonCode) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--red)';
+          statusEl.textContent = 'Выберите причину возврата.';
+        }
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'Отправляем...'; }
+      if (statusEl) {
+        statusEl.style.color = 'var(--dim)';
+        statusEl.textContent = '';
+      }
+
+      try {
+        const r = await fetch('/api/refund-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            show: ctx.show || 'secret',
+            bookingId: ctx.bookingId,
+            reasonCode,
+            reasonText,
+            improveText,
+            vkUserId: getVkUserId()
+          })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data?.ok) {
+          throw new Error(data?.error || 'Не удалось отправить анкету');
+        }
+        if (statusEl) {
+          statusEl.style.color = 'var(--green)';
+          statusEl.textContent = 'Спасибо! Анкета отправлена.';
+        }
+        if (btn) btn.textContent = 'Отправлено ✓';
+      } catch (e) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--red)';
+          statusEl.textContent = e?.message || 'Ошибка отправки';
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Отправить анкету';
+        }
+      }
+    }
+
+    function goToSecret() {
+      showScreen('hall');
+      showStep(1);
+      renderHall();
+      updateCart();
+    }
+
+    function goToHuligan() {
+      window.location.href = 'huligan.html';
+    }
+
+    function goToQuiz() {
+      QUIZ.step = 0;
+      QUIZ.answers = {};
+      QUIZ.dateMonth = null;
+      QUIZ.dateDay = null;
+      showScreen('quiz');
+      renderQuizStep();
+    }
+
+    function updateHomeScreen() {
+      const el = document.getElementById('homeShowDate');
+      if (el) el.textContent = APP.config.show?.date ? '📅 ' + APP.config.show.date : '—';
+
+      const hulEl = document.getElementById('homeHuliganDate');
+      if (hulEl) {
+        hulEl.textContent = APP.config.huliganShow?.date ? '📅 ' + APP.config.huliganShow.date : 'Магический стендап';
+      }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // QUIZ
+    // ══════════════════════════════════════════════════════
+    const QUIZ = { step: 0, answers: {}, dateMonth: null, dateDay: null };
+
+    const QUIZ_STEPS = [
+      { id: 'date', q: 'Когда планируете мероприятие?', type: 'date', skip: true },
+      {
+        id: 'guests', q: 'Сколько гостей ожидается?', type: 'chips', skip: false,
+        opts: ['До 10', '10–25', '25–50', '50–100', '100+']
+      },
+      {
+        id: 'format', q: 'Формат мероприятия', type: 'chips', skip: false,
+        opts: ['Корпоратив', 'День рождения', 'Свадьба', 'Детский праздник', 'Другое']
+      },
+      {
+        id: 'duration', q: 'Желаемая продолжительность шоу', type: 'chips', skip: true,
+        opts: ['30–45 минут', '1 час', '1,5 часа', '2 часа']
+      },
+      {
+        id: 'budget', q: 'Бюджет на выступление', type: 'chips', skip: true,
+        opts: ['до 20 000 ₽', '20–50 000 ₽', '50–100 000 ₽', '100 000+ ₽']
+      },
+      {
+        id: 'venue', q: 'Место проведения', type: 'chips', skip: true,
+        opts: ['Офис / конференц-зал', 'Ресторан / банкетный зал', 'На природе / шатёр', 'Другое']
+      },
+      { id: 'contact', q: 'Как с вами связаться?', type: 'contact', skip: false }
+    ];
+
+    const Q_MONTHS_S = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    const Q_MONTHS_F = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+    function renderQuizStep() {
+      const total = QUIZ_STEPS.length;
+      const s = QUIZ_STEPS[QUIZ.step];
+      const pct = Math.round((QUIZ.step / total) * 100);
+      document.getElementById('quizFill').style.width = pct + '%';
+      document.getElementById('quizStepNum').textContent = (QUIZ.step + 1) + ' / ' + total;
+      const nextBtn = document.getElementById('quizBtnNext');
+      const skipBtn = document.getElementById('quizBtnSkip');
+      const isLast = QUIZ.step === total - 1;
+      nextBtn.textContent = isLast ? 'Отправить ✨' : 'Далее →';
+      skipBtn.style.display = s.skip ? '' : 'none';
+      const body = document.getElementById('quizBody');
+
+      if (s.type === 'chips') {
+        const cur = QUIZ.answers[s.id];
+        body.innerHTML = '<div class="quiz-q">' + s.q + '</div>' +
+          '<div class="quiz-chips">' +
+          s.opts.map(o => '<div class="quiz-chip' + (cur === o ? ' active' : '') +
+            '" onclick="quizPick(this,\'' + s.id + '\')">' + o + '</div>').join('') +
+          '</div>';
+        nextBtn.disabled = !cur;
+      }
+      else if (s.type === 'date') {
+        const now = new Date();
+        const months = Array.from({ length: 8 }, function (_, i) {
+          const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+          return { m: d.getMonth(), y: d.getFullYear() };
+        });
+        const selM = QUIZ.dateMonth;
+        const selD = QUIZ.dateDay;
+        let daysHtml = '';
+        if (selM !== null) {
+          const dim = new Date(selM.y, selM.m + 1, 0).getDate();
+          const todayN = (selM.y === now.getFullYear() && selM.m === now.getMonth()) ? now.getDate() : 0;
+          daysHtml = '<div style="font-size:12px;color:var(--dim);margin:16px 0 8px">Число:</div>' +
+            '<div class="quiz-day-grid">' +
+            Array.from({ length: dim }, function (_, i) { return i + 1; }).map(function (d) {
+              const past = d < todayN;
+              return '<div class="quiz-day' + (selD === d ? ' active' : '') + (past ? ' past' : '') +
+                '" onclick="quizPickDay(' + d + ')">' + d + '</div>';
+            }).join('') + '</div>';
+        }
+        body.innerHTML = '<div class="quiz-q">' + s.q + '</div>' +
+          '<div class="quiz-hint-txt">Выберите месяц, затем число</div>' +
+          '<div class="quiz-chips">' +
+          months.map(function (mo) {
+            const active = selM && selM.m === mo.m && selM.y === mo.y;
+            return '<div class="quiz-chip' + (active ? ' active' : '') +
+              '" onclick="quizPickMonth(' + mo.m + ',' + mo.y + ')">' +
+              Q_MONTHS_S[mo.m] + ' ' + mo.y + '</div>';
+          }).join('') + '</div>' + daysHtml;
+        nextBtn.disabled = !(selM && selD);
+      }
+      else if (s.type === 'contact') {
+        const sn = QUIZ.answers.cName || (APP.vkUser ? [APP.vkUser.first_name, APP.vkUser.last_name].filter(Boolean).join(' ') : '');
+        const sp = QUIZ.answers.cPhone || '';
+        body.innerHTML = '<div class="quiz-q">' + s.q + '</div>' +
+          '<div class="form-group" style="margin-top:16px">' +
+          '<label class="form-label">Ваше имя *</label>' +
+          '<input class="form-inp" id="qzName" placeholder="Иван Иванов" value="' + esc(sn) + '" autocomplete="name" oninput="quizContactChange()">' +
+          '</div>' +
+          '<div class="form-group">' +
+          '<label class="form-label">Телефон *</label>' +
+          '<input class="form-inp" id="qzPhone" type="tel" placeholder="+7 (999) 123-45-67" value="' + esc(sp) + '" autocomplete="tel" oninput="quizContactChange()">' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--dim);margin-top:4px">Мы свяжемся в течение 24 часов</div>';
+        quizContactChange();
+      }
+    }
+
+    function quizPick(el, sid) {
+      document.querySelectorAll('#quizBody .quiz-chip').forEach(function (c) { c.classList.remove('active'); });
+      el.classList.add('active');
+      QUIZ.answers[sid] = el.textContent.trim();
+      document.getElementById('quizBtnNext').disabled = false;
+    }
+
+    function quizPickMonth(m, y) {
+      QUIZ.dateMonth = { m: m, y: y };
+      QUIZ.dateDay = null;
+      renderQuizStep();
+    }
+
+    function quizPickDay(d) {
+      QUIZ.dateDay = d;
+      const mo = QUIZ.dateMonth;
+      QUIZ.answers.date = d + ' ' + Q_MONTHS_F[mo.m].toLowerCase() + ' ' + mo.y;
+      renderQuizStep();
+    }
+
+    function quizContactChange() {
+      const n = (document.getElementById('qzName')?.value || '').trim();
+      const p = (document.getElementById('qzPhone')?.value || '').trim();
+      QUIZ.answers.cName = n;
+      QUIZ.answers.cPhone = p;
+      document.getElementById('quizBtnNext').disabled = !n || p.replace(/\D/g, '').length < 10;
+    }
+
+    function quizBack() {
+      if (QUIZ.step === 0) { showScreen('home'); return; }
+      QUIZ.step--;
+      renderQuizStep();
+    }
+
+    function quizSkip() {
+      const s = QUIZ_STEPS[QUIZ.step];
+      if (!s.skip) return;
+      delete QUIZ.answers[s.id];
+      if (s.type === 'date') { QUIZ.dateMonth = null; QUIZ.dateDay = null; }
+      QUIZ.step++;
+      renderQuizStep();
+    }
+
+    function quizNext() {
+      if (QUIZ.step === QUIZ_STEPS.length - 1) { quizSubmit(); return; }
+      QUIZ.step++;
+      renderQuizStep();
+    }
+
+    async function quizSubmit() {
+      const name = QUIZ.answers.cName || '';
+      const phone = QUIZ.answers.cPhone || '';
+      if (!name || phone.replace(/\D/g, '').length < 10) { toast('Введите имя и телефон'); return; }
+      const btn = document.getElementById('quizBtnNext');
+      btn.disabled = true; btn.textContent = '⏳ Отправляем...';
+
+      const order = {
+        name, phone,
+        date: QUIZ.answers.date || 'не указана',
+        guests: QUIZ.answers.guests || 'не указано',
+        format: QUIZ.answers.format || 'не указан',
+        duration: QUIZ.answers.duration || 'не указана',
+        budget: QUIZ.answers.budget || 'не указан',
+        venue: QUIZ.answers.venue || 'не указано',
+        source: 'mini-app',
+        createdAt: Date.now(),
+        vkUserId: APP.vkUser ? APP.vkUser.id : null
+      };
+      const key = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      await fbPut('concert_orders_web/' + key, order);
+      try {
+        await fetch('/api/notify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'order_request', order })
+        });
+      } catch (e) { }
+
+      document.getElementById('quizNav').style.display = 'none';
+      document.getElementById('quizBody').innerHTML =
+        '<div class="quiz-success-wrap">' +
+        '<span class="quiz-success-icon">🎉</span>' +
+        '<div class="quiz-success-title">Заявка отправлена!</div>' +
+        '<div class="quiz-success-sub">' +
+        'Мы свяжемся с вами в течение 24 часов<br>для обсуждения деталей и стоимости.<br><br>' +
+        '<b style="color:var(--gold)">' + esc(name) + '</b>, ждём встречи! ✨' +
+        '</div>' +
+        '<button class="btn-primary" onclick="showScreen(\'home\')" style="max-width:280px;margin:0 auto">← На главную</button>' +
+        '</div>';
+    }
+
+    // ══════════════════════════════════════════════════════
+    // HASH ROUTING — open_app с hash:'huligan' → huligan.html
+    // ══════════════════════════════════════════════════════
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const rawHash = params.get('hash') || window.location.hash.replace('#', '');
+      const m = String(rawHash || '').match(/^huligan(?:[/:](.*))?$/i);
+      if (m) {
+        const next = new URLSearchParams(window.location.search || '');
+        next.set('hash', 'huligan');
+        const tail = String(m[1] || '').trim();
+        const bidMatch = tail.match(/^(?:tickets|mytickets|my_tickets)[/:]([A-Z0-9-]{4,40})$/i);
+        if (!next.get('tab') && /^(tickets|mytickets|my_tickets)/i.test(tail)) {
+          next.set('tab', 'tickets');
+        }
+        if (!next.get('bookingId') && bidMatch) {
+          next.set('bookingId', bidMatch[1]);
+        }
+        const query = next.toString();
+        window.location.replace('huligan.html' + (query ? `?${query}` : ''));
+      }
+    })();
+
+    // ══════════════════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════════════════
+    async function initVkBridge() {
+      try {
+        if (typeof vkBridge !== 'undefined') {
+          // Таймаут 3 сек — не блокируем загрузку если VK Bridge медленный
+          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('vk timeout')), 3000));
+          await Promise.race([vkBridge.send('VKWebAppInit'), timeout]);
+          const user = await Promise.race([
+            vkBridge.send('VKWebAppGetUserInfo'),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('vk timeout')), 3000))
+          ]);
+          APP.vkUser = user;
+        }
+      } catch (e) { /* не внутри VK Mini App или таймаут — продолжаем */ }
+    }
+
+    async function init() {
+      createBgDecor();
+      showLoading(true);
+      // Hide main app chrome upfront — home screen shows first
+      const _hdr = document.getElementById('pageHeader');
+      const _tabs = document.querySelector('.tab-bar');
+      if (_hdr) _hdr.style.display = 'none';
+      if (_tabs) _tabs.style.display = 'none';
+      document.getElementById('tabHall').classList.add('hidden');
+      document.getElementById('tabTickets').classList.add('hidden');
+
+      try {
+        // VK Bridge инициализируется параллельно, не блокирует основную загрузку
+        initVkBridge().then(() => {
+          if (APP.vkUser && document.getElementById('fieldName') && !document.getElementById('fieldName').value) {
+            const { first_name, last_name } = APP.vkUser;
+            document.getElementById('fieldName').value = [first_name, last_name].filter(Boolean).join(' ');
+          }
+        }).catch(() => { });
+        await Promise.all([loadConfig(), loadSeats()]);
+        updateHomeScreen();
+      } catch (e) { console.error('init error:', e); }
+      showLoading(false);
+      renderHall();
+      updateCart();
+      startSeatPolling();
+
+      const deepLink = getMiniAppRouteState();
+      if (deepLink.tab === 'refund_feedback') {
+        setupRefundFeedbackForm(deepLink.feedbackShow || 'secret', deepLink.bookingId || '');
+        showScreen('refund-feedback');
+        return;
+      }
+      if (deepLink.tab === 'tickets') {
+        showScreen('tickets');
+        if (deepLink.bookingId) {
+          await openTicket(deepLink.bookingId);
+        }
+        return;
+      }
+
+      // Resume active booking if exists
+      const saved = localStorage.getItem('activeBooking');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const id = parsed.id;
+          const savedClientKey = parsed.clientKey || getBookingKey(id);
+          const b = await apiGetBooking(id);
+          if (b && (b.status === 'pending_payment' || b.status === 'pending_confirmation')) {
+            APP.booking = { id, clientKey: savedClientKey, ...b };
+            showScreen('hall');
+            if (b.status === 'pending_payment') {
+              renderStep3();
+              showStep(3);
+            } else {
+              showStep(4);
+              startConfirmPolling();
+            }
+            return;
+          } else {
+            localStorage.removeItem('activeBooking');
+          }
+        } catch (e) { localStorage.removeItem('activeBooking'); }
+      }
+      // Это мини-апп конкретно шоу «Секрет» — сразу зал
+      showScreen('hall');
+      showStep(1);
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
