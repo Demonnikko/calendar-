@@ -2011,19 +2011,27 @@
     // CONFIG LOADING
     // ══════════════════════════════════════════════════════
     async function loadConfig() {
-      const [showCfg, pricesCfg, paymentCfg, hulCfg] = await Promise.all([
-        fbGet('ticket_config/show'),
-        fbGet('ticket_config/prices'),
-        fbGet('ticket_config/payment'),
-        fbGet('huligan_config')
-      ]);
+      let cfg = null;
+      try {
+        const r = await fetch('/api/ticket-config');
+        if (r.ok) cfg = await r.json();
+      } catch { }
 
-      if (showCfg) Object.assign(APP.config.show, showCfg);
-      if (pricesCfg) Object.assign(APP.config.prices, pricesCfg);
-      if (paymentCfg) Object.assign(APP.config.payment, paymentCfg);
+      if (cfg) {
+        if (cfg.show) Object.assign(APP.config.show, cfg.show);
+        if (cfg.prices) Object.assign(APP.config.prices, cfg.prices);
+        if (cfg.payment) Object.assign(APP.config.payment, cfg.payment);
+      }
 
-      if (hulCfg && hulCfg.show) {
-        APP.config.huliganShow = hulCfg.show;
+      // Huligan config (тоже через ticket-config, но пока отдельный путь не нужен)
+      let hulCfg = null;
+      try {
+        const r2 = await fetch('/api/ticket-config?section=huligan');
+        if (r2.ok) hulCfg = await r2.json();
+      } catch { }
+
+      if (hulCfg && hulCfg.huliganShow) {
+        APP.config.huliganShow = hulCfg.huliganShow;
       }
 
       // Update ZONES prices
@@ -2054,10 +2062,12 @@
     // SEAT LOADING
     // ══════════════════════════════════════════════════════
     async function loadSeats() {
-      const raw = await fbGet('ticket_seats') || {};
-      // Не пишем в Firebase — истёкшие резервы отображаются как свободные
-      // через getSeatStatus(), но серверные данные не трогаем
-      APP.seats = raw;
+      let raw = {};
+      try {
+        const r = await fetch('/api/seats');
+        if (r.ok) raw = await r.json();
+      } catch { }
+      APP.seats = raw || {};
       updateSeatCounter();
     }
 
@@ -2305,13 +2315,16 @@
 
     async function goStep1(releaseTemp = true) {
       clearTimers();
-      // Если есть временная бронь (пользователь вернулся с шага 2) — освобождаем места
+      // Если есть временная бронь (пользователь вернулся с шага 2) — освобождаем места через сервер
       if (releaseTemp && APP.tempBookingId) {
-        for (const key of APP.picked) {
+        const seatsToRelease = [...APP.picked].map(key => {
           const [tid, si] = key.split('-').map(Number);
-          fbPut(`ticket_seats/${tid}_${si}`, { status: 'available' }).catch(() => { });
-          APP.seats[`${tid}_${si}`] = { status: 'available' };
-        }
+          return { tableId: tid, seatIdx: si };
+        });
+        fetch('/api/seats', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'release', seats: seatsToRelease })
+        }).catch(() => { });
         APP.tempBookingId = null;
         APP.tempReservedAt = null;
       }
@@ -2350,12 +2363,14 @@
       APP.tempBookingId = tempId;
       APP.tempReservedAt = now;
 
-      await Promise.all([...APP.picked].map(key => {
+      const seatsToReserve = [...APP.picked].map(key => {
         const [tid, si] = key.split('-').map(Number);
-        return fbPut(`ticket_seats/${tid}_${si}`, {
-          status: 'reserved', bookingId: tempId, reservedAt: now
-        });
-      }));
+        return { tableId: tid, seatIdx: si };
+      });
+      await fetch('/api/seats', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reserve', seats: seatsToReserve, tempBookingId: tempId })
+      });
       // Обновляем локальный кэш чтобы рендер зала сразу отразил бронь
       for (const key of APP.picked) {
         const [tid, si] = key.split('-').map(Number);
@@ -2569,14 +2584,17 @@
         if (remaining <= 0) {
           clearInterval(APP.formTimerInterval);
           APP.formTimerInterval = null;
-          // Освобождаем места
+          // Освобождаем места через сервер
           const keys = [...APP.picked];
           APP.picked.clear();
-          for (const key of keys) {
+          const seatsToRelease = keys.map(key => {
             const [tid, si] = key.split('-').map(Number);
-            fbPut(`ticket_seats/${tid}_${si}`, { status: 'available' }).catch(() => { });
-            APP.seats[`${tid}_${si}`] = { status: 'available' };
-          }
+            return { tableId: tid, seatIdx: si };
+          });
+          fetch('/api/seats', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'release', seats: seatsToRelease })
+          }).catch(() => { });
           APP.tempBookingId = null;
           APP.tempReservedAt = null;
           goStep1(false);
