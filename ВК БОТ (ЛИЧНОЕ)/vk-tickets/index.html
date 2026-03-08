@@ -2090,8 +2090,15 @@
       const s = APP.seats[`${tableId}_${si}`];
       if (!s || s.status === 'available') return 'available';
       if (s.status === 'reserved') {
-        const exp = s.reservedAt && (Date.now() - s.reservedAt) > RESERVE_MS;
-        return exp ? 'available' : 'reserved';
+        // Только TEMP-резервации (до отправки формы) истекают по таймеру.
+        // Реальные резервации (после book.js) — занятые места, не трогаем.
+        const bid = String(s.bookingId || '');
+        const isTemp = !bid || bid.startsWith('TEMP-');
+        if (isTemp) {
+          const exp = s.reservedAt && (Date.now() - s.reservedAt) > RESERVE_MS;
+          return exp ? 'available' : 'reserved';
+        }
+        return 'taken'; // Реальная бронь — место занято
       }
       return s.status || 'available';
     }
@@ -2296,7 +2303,7 @@
       });
     }
 
-    function goStep1(releaseTemp = true) {
+    async function goStep1(releaseTemp = true) {
       clearTimers();
       // Если есть временная бронь (пользователь вернулся с шага 2) — освобождаем места
       if (releaseTemp && APP.tempBookingId) {
@@ -2308,6 +2315,8 @@
         APP.tempBookingId = null;
         APP.tempReservedAt = null;
       }
+      // Всегда подтягиваем свежие данные о местах из Firebase
+      await loadSeats();
       showStep(1);
       renderHall();
       updateCart();
@@ -2731,7 +2740,7 @@
     // ══════════════════════════════════════════════════════
     // TABS
     // ══════════════════════════════════════════════════════
-    function switchTab(tab) {
+    async function switchTab(tab) {
       APP.tab = tab;
       document.getElementById('tabHall').classList.toggle('hidden', tab !== 'hall');
       document.getElementById('tabTickets').classList.toggle('hidden', tab !== 'hall' ? false : true);
@@ -2739,6 +2748,7 @@
       document.getElementById('tabHallBtn').classList.toggle('active', tab === 'hall');
       document.getElementById('tabTicketsBtn').classList.toggle('active', tab === 'tickets');
       if (tab === 'tickets') loadMyTickets();
+      if (tab === 'hall') { await loadSeats(); renderHall(); }
     }
 
     // ══════════════════════════════════════════════════════
