@@ -1599,6 +1599,64 @@
       text-transform: uppercase;
     }
 
+    /* ===== PORTAL OVERLAY ===== */
+    #portalOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      pointer-events: none;
+      background: #000;
+      opacity: 0;
+    }
+    #portalOverlay.active {
+      display: block;
+      pointer-events: all;
+    }
+    .portal-circle {
+      position: fixed;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: radial-gradient(circle, #fff8d6 0%, #cba128 25%, #7b2fff 60%, #0a0014 100%);
+      box-shadow:
+        0 0 60px 20px rgba(203,161,40,0.6),
+        0 0 120px 40px rgba(120,40,255,0.4),
+        inset 0 0 60px rgba(255,255,255,0.3);
+      transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .portal-circle.open {
+      opacity: 1;
+    }
+    .portal-particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: portalParticle 0.8s ease-out forwards;
+    }
+    @keyframes portalParticle {
+      0%   { opacity: 1; transform: translate(0,0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0); }
+    }
+    .portal-text {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff8d6;
+      font-family: var(--ff-head, serif);
+      font-size: clamp(1.2rem, 4vw, 2rem);
+      letter-spacing: 0.15em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.3s;
+      text-shadow: 0 0 20px rgba(203,161,40,0.8), 0 0 40px rgba(120,40,255,0.6);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .portal-text.show { opacity: 1; }
+
     /* Modify pack cards button */
     .pack .btn {
       margin-top: 15px;
@@ -2283,7 +2341,7 @@
       </div>
       <h2 class="magic-school__title">Школа фокусов для детей 7–13 лет</h2>
       <p class="magic-school__subtitle">Первая школа фокусов в Ярославле. Ваш ребёнок раскроет уверенность, речь и артистизм через искусство иллюзии. Занятия, приложение, сцена — всё по-настоящему.</p>
-      <a href="https://magic-school-eight.vercel.app" target="_blank" class="magic-school__cta">Перейти на сайт школы →</a>
+      <button class="magic-school__cta" onclick="openPortal(event)">Войти в школу ✨</button>
     </div>
   </section>
 
@@ -2291,6 +2349,12 @@
     <div class="copy">&copy; 2026 &middot; Дмитрий Костюк &middot; Иллюзионист</div>
   </footer>
 
+
+  <!-- ===== PORTAL OVERLAY ===== -->
+  <div id="portalOverlay">
+    <div class="portal-circle" id="portalCircle"></div>
+    <div class="portal-text" id="portalText">✨ Добро пожаловать в Школу фокусов ✨</div>
+  </div>
 
   <!-- ===== QUIZ MODAL ===== -->
   <div id="quizOverlay"
@@ -3644,6 +3708,97 @@
         },
       });
     });
+  </script>
+
+  <!-- ===== PORTAL JS ===== -->
+  <script>
+    function openPortal(e) {
+      const overlay  = document.getElementById('portalOverlay');
+      const circle   = document.getElementById('portalCircle');
+      const text     = document.getElementById('portalText');
+      const url      = 'https://magic-school-eight.vercel.app/#video';
+
+      // Позиция клика
+      const cx = e.clientX || window.innerWidth / 2;
+      const cy = e.clientY || window.innerHeight / 2;
+
+      // Размер — должен покрыть весь экран с запасом
+      const maxR = Math.hypot(
+        Math.max(cx, window.innerWidth  - cx),
+        Math.max(cy, window.innerHeight - cy)
+      ) * 2.2;
+
+      // Позиционируем круг
+      circle.style.left   = cx + 'px';
+      circle.style.top    = cy + 'px';
+      circle.style.width  = maxR + 'px';
+      circle.style.height = maxR + 'px';
+      circle.style.transform = 'translate(-50%,-50%) scale(0)';
+      circle.style.transition = 'transform 0.75s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease';
+
+      // Частицы
+      spawnPortalParticles(cx, cy);
+
+      // Показываем overlay
+      overlay.classList.add('active');
+      overlay.style.opacity = 0;
+
+      // Запускаем расширение
+      requestAnimationFrame(() => {
+        circle.classList.add('open');
+        circle.style.transform = 'translate(-50%,-50%) scale(1)';
+
+        // Текст через 300ms
+        setTimeout(() => text.classList.add('show'), 300);
+
+        // Fade to black
+        setTimeout(() => {
+          circle.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.4s ease';
+          overlay.style.opacity    = '1';
+        }, 650);
+
+        // Переход
+        setTimeout(() => {
+          window.open(url, '_blank');
+          // Сброс
+          setTimeout(resetPortal, 600);
+        }, 1100);
+      });
+    }
+
+    function spawnPortalParticles(cx, cy) {
+      const colors = ['#cba128','#fff8d6','#9b59b6','#ffffff','#7b2fff'];
+      for (let i = 0; i < 28; i++) {
+        const p    = document.createElement('div');
+        p.className = 'portal-particle';
+        const size = 4 + Math.random() * 8;
+        const angle    = Math.random() * Math.PI * 2;
+        const velocity = 60 + Math.random() * 140;
+        p.style.cssText = `
+          left:${cx}px; top:${cy}px;
+          width:${size}px; height:${size}px;
+          background:${colors[Math.floor(Math.random()*colors.length)]};
+          --px:${Math.cos(angle)*velocity}px;
+          --py:${Math.sin(angle)*velocity}px;
+          animation-duration:${0.5 + Math.random()*0.5}s;
+          box-shadow: 0 0 6px currentColor;
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+      }
+    }
+
+    function resetPortal() {
+      const overlay = document.getElementById('portalOverlay');
+      const circle  = document.getElementById('portalCircle');
+      const text    = document.getElementById('portalText');
+      overlay.classList.remove('active');
+      overlay.style.opacity = '0';
+      circle.classList.remove('open');
+      circle.style.transform = 'translate(-50%,-50%) scale(0)';
+      text.classList.remove('show');
+    }
   </script>
 
 </body>
